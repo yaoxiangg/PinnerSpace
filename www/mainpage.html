@@ -19,9 +19,6 @@
 		data-scope="https://www.googleapis.com/auth/plus.login">
 	</span>
 </span>
-<div class="span3 offset9 signin-align">
-	<span> Login with <a href="/board">CLICK ME</a></span>
-</div>
 <script type="text/javascript">
 (function() {
 	var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
@@ -31,9 +28,7 @@
 
 function signinCallback(authResult) {
   if (authResult['status']['signed_in']) {
-    // Update the app to reflect a signed in user
-    // Hide the sign-in button now that the user is authorized, for example:
-    document.getElementById('signinButton').setAttribute('style', 'display: none');
+   	location.reload();
   } else {
     // Update the app to reflect a signed out user
     // Possible error values:
