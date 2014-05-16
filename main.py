@@ -48,7 +48,8 @@ class MainHandler(webapp2.RequestHandler):
 		user = users.get_current_user()
 		if user:
 			template_values = {
-			'user_mail': users.get_current_user().email(),
+			'user_mail': user.email(),
+			'user_nick': user.nickname(),
 			'logout': users.create_logout_url(self.request.host_url),
 			}
 			template = jinja_environment.get_template('index.html') #index
@@ -64,6 +65,7 @@ class ShowBoard(webapp2.RequestHandler):
 		if user:
 			parameters = {
 			'user_mail': user.email(),
+			'user_nick': user.nickname(),
 			'logout': users.create_logout_url(self.request.host_url),
 			}
 			webpage = jinja_environment.get_template('index.html')
