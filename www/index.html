@@ -1,10 +1,22 @@
+<!DOCTYPE HTML>
 <html>
 <head>
 	<title>Welcome back!</title>
+	<script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
+	<script type="text/javascript">
+	
+	</script>
 </head>
 <body>
 	<div class="span4 offset8 signin-align">
-		<span> Welcome back {{ user_mail }}! <a href="{{ logout }}">logout</a></span>
+		Welcome back {{ user_mail }}! <a href={{ logout }}>LogOut</a>
 	</div>
+	<script type="text/javascript">
+	(function() {
+		var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+		po.src = 'https://apis.google.com/js/client:plusone.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+	})();
+	</script>
 </body>
 </html>

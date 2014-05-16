@@ -51,10 +51,10 @@ class MainHandler(webapp2.RequestHandler):
 			'user_mail': users.get_current_user().email(),
 			'logout': users.create_logout_url(self.request.host_url),
 			}
-			template = jinja_environment.get_template('index.html')
+			template = jinja_environment.get_template('index.html') #index
 			self.response.out.write(template.render(template_values))
 		else:
-			template = jinja_environment.get_template('mainpage.html')
+			template = jinja_environment.get_template('mainpage.html') 
 			self.response.out.write(template.render())
 
 #ShowBoard
@@ -69,7 +69,7 @@ class ShowBoard(webapp2.RequestHandler):
 			webpage = jinja_environment.get_template('index.html')
 			self.response.out.write(webpage.render(parameters))
 		else:
-			self.redirect(self.request.host_url)
+			self.redirect(users.create_login_url(self.request.uri))
 
-
-app = webapp2.WSGIApplication([('/', MainHandler),('/board', ShowBoard)], debug=True)
+app = webapp2.WSGIApplication([('/', MainHandler),
+								('/board', ShowBoard)], debug=True)
