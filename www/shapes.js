@@ -9,7 +9,7 @@
 
 // Constructor for Shape objects to hold data for all drawn objects.
 // For now they will just be defined as rectangles.
-function Shape(x, y, w, h, fill) {
+function Shape(x, y, w, h, fill, text) {
   // This is a very simple and unsafe constructor. All we're doing is checking if the values exist.
   // "x || 0" just means "if there is a value for x, use that. Otherwise use 0."
   // But we aren't checking anything else! We could put "Lalala" for the value of x 
@@ -18,12 +18,18 @@ function Shape(x, y, w, h, fill) {
   this.w = w || 1;
   this.h = h || 1;
   this.fill = fill || '#AAAAAA';
+  this.text = text || 'Testing';
 }
 
 // Draws this shape to a given context
 Shape.prototype.draw = function(ctx) {
   ctx.fillStyle = this.fill;
   ctx.fillRect(this.x, this.y, this.w, this.h);
+  ctx.fillStyle = 'Black';
+  ctx.textBaseline = 'top';
+  //ctx.font = "24pt Helvetica";
+  ctx.fillText(this.text, this.x, this.y, this.w); // fourth field optional
+  // measureText(text) gives metric, metric.width gives pixels
 }
 
 // Determine if a point is inside the shape's bounds
