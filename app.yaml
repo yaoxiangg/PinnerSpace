@@ -9,6 +9,22 @@ handlers:
   static_files: favicon.ico
   upload: favicon\.ico
 
+- url: /stylesheets
+  static_dir: stylesheets
+
+- url: /images
+  static_dir: images
+
+- url: /scripts
+  static_dir: scripts
+
+# Twitter Bootstrap
+- url: /bootstrap
+  static_dir: bootstrap
+
+- url: /scripts
+  static_dir: scripts
+  
 - url: /.*
   script: main.app
 
