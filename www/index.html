@@ -23,6 +23,7 @@
 	</div>
 	
 	<div id="pinboard" style="width:1000px; height:500px; margin: 0 auto; padding: 5px">
+		<!--canvas id must be consistent with shapes.js for "add shapes" to work-->
 		<canvas id="canvas1" width="1000" height="500" style="border: 1px solid black; background: #FFDAB9;">
 			This text is displayed if your browser does not support HTML5 Canvas.
 		</canvas>
@@ -30,6 +31,7 @@
 		<div style="font-family: Verdana; font-size: 12px;">
 			<p>Click to select. Double click to create a new Shape.</p>
 		</div>
+<<<<<<< HEAD
 		<script type="text/javascript">
 		(function() {
 			var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
@@ -37,6 +39,10 @@
 			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
 		})();
 	</script>
+=======
+
+		<script src="./shapes.js"></script>
+>>>>>>> a53007beb4dd9fd616532328318df5d2b09b1828
 	</div>
 </body>
 </html>
