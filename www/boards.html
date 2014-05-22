@@ -44,7 +44,10 @@
 		<table>
 			{% for board in boards %}
 			<tr>
-				<td>Board{{ board.boardID }}: {{ board.boardName }}</td>
+				<td>Board{{ board.boardID }}: {{ board.boardName }}  <br> </td>
+				<td><form name="input" action="./deleteBoard" method="post">
+					<button name="boardID" type="submit" value={{ board.boardID }}>Delete</button>
+				</form></td>
 			</tr>
 			{% endfor %}
 		</table>

@@ -42,8 +42,9 @@ class Account(ndb.Model):
 	#email is key, refer using id
 	usernick = ndb.StringProperty()
 	accid = ndb.StringProperty()
-	numBoards = ndb.IntegerProperty()
-	defaultBoard = ndb.StructuredProperty(Board)
+	numBoards = ndb.IntegerProperty(default=0)
+	counter = ndb.IntegerProperty(default=0)
+	defaultBoard = ndb.IntegerProperty(default=0)
 
 #Handler - Displays '/'
 class MainHandler(webapp2.RequestHandler):
@@ -72,10 +73,12 @@ def loadBoard(user, self):
 	if userGet == None:
 		#Create Acc
 		logging.debug("Creating Account for: " + user.email() + ", " + user.nickname())
-		currUser = Account(id=user.email(), accid=user.user_id(), usernick=user.nickname(), numBoards=0)
+		currUser = Account(id=user.email(), accid=user.user_id(), usernick=user.nickname(), numBoards=0, defaultBoard=0)
 		userGet = currUser.put()
 		usernickname = user.nickname()
+		userdefaultBoard = 0
 	else:
+		userdefaultBoard = userGet.defaultBoard
 		usernickname = userGet.usernick
 
 	#Logging into Board - LoadBoard
@@ -85,8 +88,13 @@ def loadBoard(user, self):
 	'user_nick': usernickname,
 	'logout': users.create_logout_url(self.request.host_url),
 	}
-	webpage = jinja_environment.get_template('index.html')
-	self.response.out.write(webpage.render(parameters))
+
+	#if user has default board, display the board. else redirect to create board
+	if userdefaultBoard > 0:
+		webpage = jinja_environment.get_template('index.html')
+		self.response.out.write(webpage.render(parameters))
+	else:
+		self.redirect("/boards")
 
 #Settings page - Change nickname
 class UpdateProfile(webapp2.RequestHandler):
@@ -156,14 +164,16 @@ class AddBoard(webapp2.RequestHandler):
 				userGet = userKey.get()
 				if userGet.numBoards < MAX_BOARD:
 					userGet.numBoards += 1
-					currBoard = Board(parent=userKey, id=userGet.numBoards)
+					userGet.counter += 1
+					currBoard = Board(parent=userKey, id=userGet.counter)
 					currBoard.boardName = bName
-					currBoard.boardID = userGet.numBoards
+					currBoard.boardID = userGet.counter
 					currBoard.put()
 					if userGet.numBoards == 1:
 						#Set default board
-						userGet.defaultBoard = currBoard
-						userGet.put()
+						userGet.defaultBoard = currBoard.boardID
+					#save
+					userGet.put()
 				else:
 					error = "Reached maximum of %d Boards" % MAX_BOARD
 			except:
@@ -171,13 +181,32 @@ class AddBoard(webapp2.RequestHandler):
 		else:
 			error = "Board name cannot be empty."
 		#Finally
-		self.redirect("/boards?error="+error)
+		if error == "":
+			self.redirect("/boards")
+		else:
+			self.redirect("/boards?error="+error)
 
+class DeleteBoard(webapp2.RequestHandler):
+	def post(self):
+		#Delete Board
+		boardid = self.request.get('boardID')
+		userKey = ndb.Key('Account', users.get_current_user().email())
+		userGet = userKey.get()
+		#Delete Board Entity
+		boardKey = ndb.Key('Account', users.get_current_user().email(), 'Board', int(boardid))
+		boardKey.delete()
+		if (userGet.numBoards > 0):
+			userGet.numBoards -= 1
+		if (userGet.defaultBoard == int(boardid)):
+			userGet.defaultBoard = 0
+		userGet.put()
+		self.redirect("/boards")
 
 #App
 app = webapp2.WSGIApplication([('/', MainHandler),
 	('/board', ShowBoard),
 	('/newBoard', AddBoard),
+	('/deleteBoard', DeleteBoard),
 	('/boards', DisplayAllBoards),
 	('/settings', UpdateProfile),
 	('/update', UpdateProfile)], debug=True)

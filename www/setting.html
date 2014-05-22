@@ -33,18 +33,18 @@
 	</div>
 	
 	<!--BODY-->
-	{% if update_status == "" %}
+	{% if update_status != "Updated Successfully!" %}
     <div id="changeForm" align="center">
 		<form name="input" action="./update" method="post">
 			Change display name: <input type="text" name="newnickname"  value="{{ user_nick }}">
 			<input type="submit" value="Submit">
 		</form>
 		</div>
-	{% else %}
+    {% endif %}
 	<div id="status" align="center">
 		<b>{{ update_status }}</b> 
 	</div>
-    {% endif %}
+
 	<!--END BODY-->
 </body>
 </html>
