@@ -63,6 +63,7 @@ class ShowBoard(webapp2.RequestHandler):
 	def get(self):
 		user=users.get_current_user()
 		if user:
+			#how do we pass values back and forth from the pinboard?
 			parameters = {
 			'user_mail': user.email(),
 			'user_nick': user.nickname(),
