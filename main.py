@@ -94,6 +94,7 @@ class UpdateProfile(webapp2.RequestHandler):
 			'user_mail': users.get_current_user().email(),
 			'user_nick': userGet.usernick,
 			'logout': users.create_logout_url(self.request.host_url),
+			'update_status': "",
 			}
 			webpage = jinja_environment.get_template('setting.html')
 			self.response.out.write(webpage.render(parameters))
