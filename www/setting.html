@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>PinnerSpace Home</title>
+	<title>PinnerSpace - Settings</title>
 	<link rel="stylesheet" href="../bootstrap/css/bootstrap.min.css">
 	<script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
 	<script src="../scripts/shapes.js" type="text/javascript"></script>
@@ -15,7 +15,7 @@
 	</script>
 	<!--End of Google Login Script-->
 </head>
-<body onload="init()">
+<body>
 	<div id="header">
 		<div class="jumbotron">
 			<h2 class="title" style="text-align: center">PinnerSpace</h2>
@@ -32,15 +32,12 @@
 		</div>
 	</div>
 	
-	<div id="pinboard" style="width:1000px; height:500px; margin: 0 auto; padding: 5px">
-		<!--canvas id must be consistent with shapes.js for "add shapes" to work-->
-		<canvas id="canvas1" width="1000" height="500" style="border: 1px solid black; background: #FFDAB9;">
-			This text is displayed if your browser does not support HTML5 Canvas.
-		</canvas>
-
-		<div style="font-family: Verdana; font-size: 12px;">
-			<p>Click to select. Double click to create a new Shape.</p>
-		</div>
+	<!--BODY-->
+	<div align="center">
+		<form name="input" action="./update" method="post">
+			New name: <input type="text" name="newnickname"  value="{{ newnickname }}">
+			<input type="submit" value="Submit">
+		</form>
 	</div>
 </body>
 </html>
