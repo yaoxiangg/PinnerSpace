@@ -19,15 +19,19 @@ jinja_environment = jinja2.Environment(
 #Item Datastore - Child of Board
 class Item(ndb.Model):
 	itemType = ndb.IntegerProperty()
+	coorx = ndb.IntegerProperty()
+	coory = ndb.IntegerProperty()
+	height = ndb.IntegerProperty()
+	width = ndb.IntegerProperty()
+	image = ndb.StringProperty()
 	text = ndb.TextProperty()
 	font = ndb.StringProperty()
 	fontSize = ndb.IntegerProperty()
-	height = ndb.IntegerProperty()
-	width = ndb.IntegerProperty()
 
 #Board Datastore - Child of Account, Parent of Item
 class Board(ndb.Model):
 	boardID = ndb.IntegerProperty()
+	boardName =  ndb.StringProperty()
 	items = ndb.StructuredProperty(Item)
 
 #Account Datastore - Parent of Board
@@ -35,6 +39,7 @@ class Account(ndb.Model):
 	#email is key, refer using id
 	usernick = ndb.StringProperty()
 	accid = ndb.StringProperty()
+	numBoards = ndb.IntegerProperty()
 	defaultBoard = ndb.StructuredProperty(Board)
 
 #Handler - Displays '/'
@@ -58,16 +63,16 @@ class ShowBoard(webapp2.RequestHandler):
 
 #loadBoard - Function to display board
 def loadBoard(user, self):
-	userKey = ndb.Key('Account', user.email()).get()
+	userGet = ndb.Key('Account', user.email()).get()
 
-	if userKey == None:
+	if userGet == None:
 		#Create Acc
 		logging.debug("Creating Account for: " + user.email() + ", " + user.nickname())
-		currUser = Account(id=user.email(), accid=user.user_id(), usernick=user.nickname())
-		userKey = currUser.put()
+		currUser = Account(id=user.email(), accid=user.user_id(), usernick=user.nickname(), numBoards=0)
+		userGet = currUser.put()
 		usernickname = user.nickname()
 	else:
-		usernickname = userKey.usernick
+		usernickname = userGet.usernick
 
 	#Logging into Board - LoadBoard
 	logging.debug("Logging in to: " + user.email())
@@ -80,13 +85,13 @@ def loadBoard(user, self):
 	self.response.out.write(webpage.render(parameters))
 
 #Settings page - Change nickname
-class updateProfile(webapp2.RequestHandler):
+class UpdateProfile(webapp2.RequestHandler):
 	def get(self):
-		userKey = ndb.Key('Account', users.get_current_user().email()).get()
-		if userKey:
+		userGet = ndb.Key('Account', users.get_current_user().email()).get()
+		if userGet:
 			parameters = {
 			'user_mail': users.get_current_user().email(),
-			'user_nick': userKey.usernick,
+			'user_nick': userGet.usernick,
 			'logout': users.create_logout_url(self.request.host_url),
 			}
 			webpage = jinja_environment.get_template('setting.html')
@@ -95,13 +100,63 @@ class updateProfile(webapp2.RequestHandler):
 			self.redirect(users.create_login_url(self.request.uri))
 
 	def post(self):
-		userKey = ndb.Key('Account', users.get_current_user().email()).get()
-		userKey.usernick = self.request.get('newnickname')
-		userKey.put()
-		self.redirect(self.request.uri)
+		try:
+			userGet = ndb.Key('Account', users.get_current_user().email()).get()
+			userGet.usernick = self.request.get('newnickname')
+			userGet.put()
+		except:
+			pass
+		#Success
+		parameters = {
+		'user_mail': users.get_current_user().email(),
+		'user_nick': userGet.usernick,
+		'logout': users.create_logout_url(self.request.host_url),
+		'update_status': "Updated Successfully!",
+		}
+		webpage = jinja_environment.get_template('setting.html')
+		self.response.out.write(webpage.render(parameters))
+
+class DisplayAllBoards(webapp2.RequestHandler):
+	def get(self):
+		userKey = ndb.Key('Account', users.get_current_user().email())
+		#Get All Board, for each board, display the link.
+		query = ndb.gql("SELECT * "
+			"FROM Board "
+			"WHERE ANCESTOR IS :1 "
+			"ORDER BY boardID ASC",
+			userKey)
+
+		template_values = {
+		'user_mail': users.get_current_user().email(),
+		'user_nick': userKey.get().usernick,
+		'logout': users.create_logout_url(self.request.host_url),
+		'boards': query,
+		}
+		template = jinja_environment.get_template('boards.html')
+		self.response.out.write(template.render(template_values))
+
+class AddBoard(webapp2.RequestHandler):
+	def post(self):
+		#addBoard
+		try:
+			userKey = ndb.Key('Account', users.get_current_user().email())
+			userGet = userKey.get()
+			userGet.numBoards += 1
+			userGet.put()
+			currBoard = Board(parent=userKey, id=userGet.numBoards)
+			currBoard.boardName = self.request.get('boardName')
+			currBoard.boardID = userGet.numBoards
+			currBoard.put()
+		except:
+			pass
+		#Finally
+		self.redirect('/boards')
+
 
 #App
 app = webapp2.WSGIApplication([('/', MainHandler),
 	('/board', ShowBoard),
-	('/settings', updateProfile),
-	('/update', updateProfile)], debug=True)
+	('/newBoard', AddBoard),
+	('/boards', DisplayAllBoards),
+	('/settings', UpdateProfile),
+	('/update', UpdateProfile)], debug=True)

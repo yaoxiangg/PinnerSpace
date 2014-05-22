@@ -14,4 +14,3 @@ indexes:
   ancestor: yes
   properties:
   - name: boardID
-    direction: asc
