@@ -11,6 +11,9 @@ import logging
 from google.appengine.ext import ndb
 from google.appengine.api import users
 
+#CONSTANTS
+MAX_BOARD = 5
+
 jinja_environment = jinja2.Environment(
 	loader=jinja2.FileSystemLoader(os.path.dirname(__file__) + "/www"), autoescape=True)
 
@@ -104,8 +107,12 @@ class UpdateProfile(webapp2.RequestHandler):
 	def post(self):
 		try:
 			userGet = ndb.Key('Account', users.get_current_user().email()).get()
-			userGet.usernick = self.request.get('newnickname')
-			userGet.put()
+			if (self.request.get('newnickname') != ""):
+				userGet.usernick = self.request.get('newnickname')
+				userGet.put()
+				status = "Updated Successfully!"
+			else:
+				status = "Nickname is empty"
 		except:
 			pass
 		#Success
@@ -113,7 +120,7 @@ class UpdateProfile(webapp2.RequestHandler):
 		'user_mail': users.get_current_user().email(),
 		'user_nick': userGet.usernick,
 		'logout': users.create_logout_url(self.request.host_url),
-		'update_status': "Updated Successfully!",
+		'update_status': status,
 		}
 		webpage = jinja_environment.get_template('setting.html')
 		self.response.out.write(webpage.render(parameters))
@@ -133,6 +140,7 @@ class DisplayAllBoards(webapp2.RequestHandler):
 		'user_nick': userKey.get().usernick,
 		'logout': users.create_logout_url(self.request.host_url),
 		'boards': query,
+		'error' : self.request.get('error'),
 		}
 		template = jinja_environment.get_template('boards.html')
 		self.response.out.write(template.render(template_values))
@@ -140,19 +148,30 @@ class DisplayAllBoards(webapp2.RequestHandler):
 class AddBoard(webapp2.RequestHandler):
 	def post(self):
 		#addBoard
-		try:
-			userKey = ndb.Key('Account', users.get_current_user().email())
-			userGet = userKey.get()
-			userGet.numBoards += 1
-			userGet.put()
-			currBoard = Board(parent=userKey, id=userGet.numBoards)
-			currBoard.boardName = self.request.get('boardName')
-			currBoard.boardID = userGet.numBoards
-			currBoard.put()
-		except:
-			pass
+		error = ""
+		bName = self.request.get('boardName')
+		if bName != "":
+			try:
+				userKey = ndb.Key('Account', users.get_current_user().email())
+				userGet = userKey.get()
+				if userGet.numBoards < MAX_BOARD:
+					userGet.numBoards += 1
+					currBoard = Board(parent=userKey, id=userGet.numBoards)
+					currBoard.boardName = bName
+					currBoard.boardID = userGet.numBoards
+					currBoard.put()
+					if userGet.numBoards == 1:
+						#Set default board
+						userGet.defaultBoard = currBoard
+						userGet.put()
+				else:
+					error = "Reached maximum of %d Boards" % MAX_BOARD
+			except:
+				pass
+		else:
+			error = "Board name cannot be empty."
 		#Finally
-		self.redirect('/boards')
+		self.redirect("/boards?error="+error)
 
 
 #App
