@@ -15,9 +15,15 @@
 		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
 	})();
 	</script>
+	<script type = "text/javascript">
+	function loadCanvas(board){
+		var canvas = new fabric.Canvas('canvas');
+		canvas.loadFromJSON(board);
+	}
+	</script>
 	<!--End of Google Login Script-->
 </head>
-<body onload="init()">
+<body onload="loadCanvas({{boardData}})">
 	<div id="header">
 		<div class="jumbotron">
 			<h2 class="title" style="text-align: center">PinnerSpace</h2>
@@ -40,21 +46,26 @@
 		<canvas id="canvas" width="1000" height="500" style="border: 1px solid black;">
 			This text is displayed if your browser does not support HTML5 Canvas.
 		</canvas>
-		<script type = "text/javascript">
+	</div>
+	<!--END BODY-->
+</body>
+</html>
+
+
+<!--Old stuff
 		var canvas = new fabric.Canvas('canvas');
-		canvas.backgroundColor = 'black';
+		canvas.backgroundColor = 'green';
 		var rect = new fabric.Rect({
 			left: 100,
 			top: 100,
-			fill: 'red',
+			fill: 'black',
 			width: 20,
 			height: 20
 		});
 
 		// "add" rectangle onto canvas
 		canvas.add(rect);
-		</script>
-	</div>
-	<!--END BODY-->
-</body>
-</html>
+
+		var canvasStr = JSON.stringify(canvas);
+		console.log(canvasStr);
+-->

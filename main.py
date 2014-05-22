@@ -36,6 +36,8 @@ class Board(ndb.Model):
 	boardID = ndb.IntegerProperty()
 	boardName =  ndb.StringProperty()
 	items = ndb.StructuredProperty(Item)
+	#TESTING
+	boardJSON = ndb.StringProperty()
 
 #Account Datastore - Parent of Board
 class Account(ndb.Model):
@@ -67,16 +69,34 @@ class ShowBoard(webapp2.RequestHandler):
 
 #loadBoard - Function to display board
 def loadBoard(user, self):
-	userGet = ndb.Key('Account', user.email()).get()
+	userKey = ndb.Key('Account', user.email())
+	userGet = userKey.get()
 
 	if userGet == None:
 		#Create Acc
 		logging.debug("Creating Account for: " + user.email() + ", " + user.nickname())
 		currUser = Account(id=user.email(), accid=user.user_id(), usernick=user.nickname(), numBoards=0)
+		userKey = currUser
 		userGet = currUser.put()
 		usernickname = user.nickname()
 	else:
 		usernickname = userGet.usernick
+
+	#TESTING
+	#boardGet = ndb.Key('Account', user.email()).get().defaultBoard
+	#if boardGet == None:
+	#	#must have a board
+	#	userGet.numBoards = 1
+	#	defBoard = Board(parent=userKey, id=1, boardName='board1', boardID=1)
+	#	defBoard.boardJSON = '{"objects":[{"type":"rect","left":50,"top":50,"width":20,"height":20,"fill":"green","overlayFill":null,"stroke":null,"strokeWidth":1,"strokeDashArray":null,"scaleX":1,"scaleY":1,"angle":0,"flipX":false,"flipY":false,"opacity":1,"selectable":true,"hasControls":true,"hasBorders":true,"hasRotatingPoint":false,"transparentCorners":true,"perPixelTargetFind":false,"rx":0,"ry":0}],"background":"rgba(0, 0, 0, 0)"}'
+	#	defBoard.put()
+	#	userGet.defaultBoard = defBoard
+	#	userGet.put()
+	#	# the board we'll work with
+	#	boardGet = defBoard
+	#else:
+	#	pass
+	boardDat = '{"objects":[{"type":"rect","originX":"left","originY":"top","left":100,"top":100,"width":20,"height":20,"fill":"black","stroke":null,"strokeWidth":1,"strokeDashArray":null,"strokeLineCap":"butt","strokeLineJoin":"miter","strokeMiterLimit":10,"scaleX":1,"scaleY":1,"angle":0,"flipX":false,"flipY":false,"opacity":1,"shadow":null,"visible":true,"clipTo":null,"backgroundColor":"","rx":0,"ry":0,"x":0,"y":0}],"background":"green"}'
 
 	#Logging into Board - LoadBoard
 	logging.debug("Logging in to: " + user.email())
@@ -84,6 +104,7 @@ def loadBoard(user, self):
 	'user_mail': user.email(),
 	'user_nick': usernickname,
 	'logout': users.create_logout_url(self.request.host_url),
+	'boardData': boardDat,
 	}
 	webpage = jinja_environment.get_template('index.html')
 	self.response.out.write(webpage.render(parameters))
