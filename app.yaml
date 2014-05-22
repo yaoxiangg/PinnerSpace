@@ -25,8 +25,12 @@ handlers:
 - url: /scripts
   static_dir: scripts
   
+- url: /
+  script: main.app
+
 - url: /.*
   script: main.app
+  login: required
 
 libraries:
 - name: webapp2
