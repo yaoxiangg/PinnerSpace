@@ -57,6 +57,7 @@ class ShowBoard(webapp2.RequestHandler):
 	def get(self):
 		user=users.get_current_user()
 		if user:
+			#how do we pass values back and forth from the pinboard?
 			loadBoard(user, self)
 		else:
 			self.redirect(users.create_login_url(self.request.uri))
