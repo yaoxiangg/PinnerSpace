@@ -15,11 +15,6 @@ jinja_environment = jinja2.Environment(
 	loader=jinja2.FileSystemLoader(os.path.dirname(__file__) + "/www"), autoescape=True)
 
 #DataStructure for PinnerSpace
-#Account Datastore - Parent of Board
-class Account(ndb.Model):
-	#email is key, refer using id
-	accid = ndb.StringProperty()
-	usernick = ndb.StringProperty()
 
 #Item Datastore - Child of Board
 class Item(ndb.Model):
@@ -34,6 +29,13 @@ class Item(ndb.Model):
 class Board(ndb.Model):
 	boardID = ndb.IntegerProperty()
 	items = ndb.StructuredProperty(Item)
+
+#Account Datastore - Parent of Board
+class Account(ndb.Model):
+	#email is key, refer using id
+	usernick = ndb.StringProperty()
+	accid = ndb.StringProperty()
+	defaultBoard = ndb.StructuredProperty(Board)
 
 #Handler - Displays '/'
 class MainHandler(webapp2.RequestHandler):
@@ -63,15 +65,18 @@ def loadBoard(user, self):
 
 	if userKey == None:
 		#Create Acc
-		logging.debug("Creating Account for: " + user.email())
+		logging.debug("Creating Account for: " + user.email() + ", " + user.nickname())
 		currUser = Account(id=user.email(), accid=user.user_id(), usernick=user.nickname())
 		userKey = currUser.put()
+		usernickname = user.nickname()
+	else:
+		usernickname = userKey.usernick
 
 	#Logging into Board - LoadBoard
 	logging.debug("Logging in to: " + user.email())
 	parameters = {
 	'user_mail': user.email(),
-	'user_nick': userKey.usernick,
+	'user_nick': usernickname,
 	'logout': users.create_logout_url(self.request.host_url),
 	}
 	webpage = jinja_environment.get_template('index.html')
