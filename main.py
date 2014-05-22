@@ -52,9 +52,7 @@ class ShowBoard(webapp2.RequestHandler):
 	def get(self):
 		user=users.get_current_user()
 		if user:
-<<<<<<< HEAD
 			#how do we pass values back and forth from the pinboard?
-=======
 			loadBoard(user, self)
 		else:
 			self.redirect(users.create_login_url(self.request.uri))
@@ -87,7 +85,6 @@ class updateProfile(webapp2.RequestHandler):
 	def get(self):
 		userKey = ndb.Key('Account', users.get_current_user().email()).get()
 		if userKey:
->>>>>>> 1e86d16d4c00412facfd26fec0baaaaa8acac356
 			parameters = {
 			'user_mail': users.get_current_user().email(),
 			'user_nick': userKey.usernick,
