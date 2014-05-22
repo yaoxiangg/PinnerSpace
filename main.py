@@ -1,24 +1,12 @@
-#!/usr/bin/env python
-#
-# Copyright 2007 Google Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+#PinnerSpace - Justin and Yao Xiang
+#Virtual PinBoard WebApp
+
 import urllib
 import webapp2
 import jinja2
 import os
 import datetime
+import logging
 
 from google.appengine.ext import ndb
 from google.appengine.api import users
@@ -26,53 +14,93 @@ from google.appengine.api import users
 jinja_environment = jinja2.Environment(
 	loader=jinja2.FileSystemLoader(os.path.dirname(__file__) + "/www"), autoescape=True)
 
+#DataStructure for PinnerSpace
+#Account Datastore - Parent of Board
 class Account(ndb.Model):
-	email = ndb.StringProperty()
-	accid = ndb.IntegerProperty()
+	#email is key, refer using id
+	accid = ndb.StringProperty()
+	usernick = ndb.StringProperty()
 
+#Item Datastore - Child of Board
 class Item(ndb.Model):
-		itemType = ndb.IntegerProperty()
-		text = ndb.TextProperty()
-		font = ndb.StringProperty()
-		fontSize = ndb.IntegerProperty()
-		height = ndb.IntegerProperty()
-		width = ndb.IntegerProperty()
+	itemType = ndb.IntegerProperty()
+	text = ndb.TextProperty()
+	font = ndb.StringProperty()
+	fontSize = ndb.IntegerProperty()
+	height = ndb.IntegerProperty()
+	width = ndb.IntegerProperty()
 
+#Board Datastore - Child of Account, Parent of Item
 class Board(ndb.Model):
-		boardID = ndb.IntegerProperty()
-		items = ndb.StructuredProperty(Item)
+	boardID = ndb.IntegerProperty()
+	items = ndb.StructuredProperty(Item)
 
-#Handler
+#Handler - Displays '/'
 class MainHandler(webapp2.RequestHandler):
 	def get(self):
 		user = users.get_current_user()
 		if user:
-			template_values = {
-			'user_mail': user.email(),
-			'user_nick': user.nickname(),
-			'logout': users.create_logout_url(self.request.host_url),
-			}
-			template = jinja_environment.get_template('index.html') #index
-			self.response.out.write(template.render(template_values))
+			loadBoard(user, self)
 		else:
 			template = jinja_environment.get_template('mainpage.html') 
 			self.response.out.write(template.render())
 
-#ShowBoard
+#ShowBoard - Displays '/board'
 class ShowBoard(webapp2.RequestHandler):
 	def get(self):
 		user=users.get_current_user()
 		if user:
+<<<<<<< HEAD
 			#how do we pass values back and forth from the pinboard?
+=======
+			loadBoard(user, self)
+		else:
+			self.redirect(users.create_login_url(self.request.uri))
+
+#loadBoard - Function to display board
+def loadBoard(user, self):
+	userKey = ndb.Key('Account', user.email()).get()
+
+	if userKey == None:
+		#Create Acc
+		logging.debug("Creating Account for: " + user.email())
+		currUser = Account(id=user.email(), accid=user.user_id(), usernick=user.nickname())
+		userKey = currUser.put()
+
+	#Logging into Board - LoadBoard
+	logging.debug("Logging in to: " + user.email())
+	parameters = {
+	'user_mail': user.email(),
+	'user_nick': userKey.usernick,
+	'logout': users.create_logout_url(self.request.host_url),
+	}
+	webpage = jinja_environment.get_template('index.html')
+	self.response.out.write(webpage.render(parameters))
+
+#Settings page - Change nickname
+class updateProfile(webapp2.RequestHandler):
+	def get(self):
+		userKey = ndb.Key('Account', users.get_current_user().email()).get()
+		if userKey:
+>>>>>>> 1e86d16d4c00412facfd26fec0baaaaa8acac356
 			parameters = {
-			'user_mail': user.email(),
-			'user_nick': user.nickname(),
+			'user_mail': users.get_current_user().email(),
+			'user_nick': userKey.usernick,
 			'logout': users.create_logout_url(self.request.host_url),
 			}
-			webpage = jinja_environment.get_template('index.html')
+			webpage = jinja_environment.get_template('setting.html')
 			self.response.out.write(webpage.render(parameters))
 		else:
 			self.redirect(users.create_login_url(self.request.uri))
 
+	def post(self):
+		userKey = ndb.Key('Account', users.get_current_user().email()).get()
+		userKey.usernick = self.request.get('newnickname')
+		userKey.put()
+		self.redirect(self.request.uri)
+
+#App
 app = webapp2.WSGIApplication([('/', MainHandler),
-								('/board', ShowBoard)], debug=True)
+	('/board', ShowBoard),
+	('/settings', updateProfile),
+	('/update', updateProfile)], debug=True)
