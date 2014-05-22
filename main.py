@@ -76,12 +76,8 @@ def loadBoard(user, self):
 	if userGet == None:
 		#Create Acc
 		logging.debug("Creating Account for: " + user.email() + ", " + user.nickname())
-<<<<<<< HEAD
 		currUser = Account(id=user.email(), accid=user.user_id(), usernick=user.nickname(), numBoards=0, defaultBoard=0)
-=======
-		currUser = Account(id=user.email(), accid=user.user_id(), usernick=user.nickname(), numBoards=0)
 		userKey = currUser
->>>>>>> b583c6b4e57ea3602197bb9e3d3610491071086b
 		userGet = currUser.put()
 		usernickname = user.nickname()
 		userdefaultBoard = 0
@@ -200,11 +196,11 @@ class AddBoard(webapp2.RequestHandler):
 					#save
 					userGet.put()
 				else:
-					error = "Reached maximum of %d Boards" % MAX_BOARD
+					error = "You cannot create anymore, reached a maximum of %d Boards." % MAX_BOARD
 			except:
 				pass
 		else:
-			error = "Board name cannot be empty."
+			error = "Create board failed. Board name cannot be empty."
 		#Finally
 		if error == "":
 			self.redirect("/boards")
@@ -223,7 +219,16 @@ class DeleteBoard(webapp2.RequestHandler):
 		if (userGet.numBoards > 0):
 			userGet.numBoards -= 1
 		if (userGet.defaultBoard == int(boardid)):
-			userGet.defaultBoard = 0
+			query = ndb.gql("SELECT * "
+			"FROM Board "
+			"WHERE ANCESTOR IS :1 "
+			"ORDER BY boardID ASC",
+			userKey)
+			nextBoard = query.fetch(1)
+			if (len(nextBoard) > 0):
+				userGet.defaultBoard = nextBoard[0].boardID
+			else:
+				userGet.defaultBoard = 0
 		userGet.put()
 		self.redirect("/boards")
 
