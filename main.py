@@ -286,6 +286,19 @@ class DeleteBoard(webapp2.RequestHandler):
 		userGet.put()
 		self.redirect("/boards")
 
+#Save Board
+#class SaveBoard(webapp2.RequestHandler):
+#	def post(self):
+#		bData = self.request.get('save')
+#		if bData == "saveCanvas()":
+#			self.redirect("/error")
+#			return
+#		userGet = ndb.Key('Account', users.get_current_user().email()).get()
+#		defBoard = ndb.Key('Account', users.get_current_user().email(), 'Board', int(userGet.defaultBoard)).get()
+#		defBoard.boardJSON = bData
+#		defBoard.put()
+#		self.redirect("/board") #consider just running loadBoard
+
 #Change Default Board
 class ChangeDefaultBoard(webapp2.RequestHandler):
 	def post(self):
@@ -302,6 +315,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
 	('/board', ShowBoard),
 	('/newBoard', AddBoard),
 	('/deleteBoard', DeleteBoard),
+#	('/saveBoard', SaveBoard),
 	('/boards', DisplayAllBoards),
 	('/changeDefaultBoard', ChangeDefaultBoard),
 	('/settings', UpdateProfile),
