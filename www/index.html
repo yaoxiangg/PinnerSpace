@@ -24,8 +24,9 @@
 	}
 	function saveCanvas(){
 		$.post("/saveBoard", { 
+			boardUser: "{{ currBoard.boardUser }}",
 			boardID: {{ currBoard.boardID }},
-			data: JSON.stringify(canvas) 
+			data: JSON.stringify(canvas)
 		});
 	}
 	</script>
@@ -49,17 +50,17 @@
 	
 	<!--BODY-->
 	<div id="boardInfo" align="center">
-		Board{{ currBoard.boardID }}
+		Board{{ currBoard.boardID }} {{ currBoard.boardUser }}
 	</div>
 	<center>
 		<div class="btn-group">
 			<button class="disabled btn btn-primary">{{ currBoard.boardName }}</button>
-			{% if user.numBoards > 1 %}
+			{% if user.numBoards > 0 %}
 			<button data-toggle="dropdown" class="btn btn-primary dropdown-toggle"><span class="caret"></span></button>
 			<ul class="dropdown-menu">
 				{% for board in boards %}
-					{% if board.boardID != currBoard.boardID %}
-					<li><a href="./board?boardID={{ board.boardID }} ">{{ board.boardName }}</a></li>
+					{% if board.boardID != currBoard.boardID or board.boardUser != currBoard.boardUser %}
+					<li><a href="./board?boardID={{ board.boardID }}&boardUser={{ board.boardUser }}">{{ board.boardName }}</a></li>
 					{% endif %}
 				{% endfor %}
 			</ul>

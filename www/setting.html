@@ -28,7 +28,7 @@
 				<li><a href="./settings">Settings</a></li>
 			</ul>
 			<ul class="nav nav-pills pull-right"> <!--class="span4 offset8 signin-align"-->
-				<li class="disabled"><a>Welcome back <b>{{ user_nick }}</b>!</a></li>
+				<li class="disabled"><a>Welcome back <b>{{ user.usernick }}</b>!</a></li>
 				<li><a href="{{ logout }}">Logout</a></li>
 			</ul>
 		</div>
@@ -37,7 +37,7 @@
 	<!--BODY-->
 	<div id = "userProfile" align="center">
 		<table>
-			<tr><td>Email:</td><td>{{ user_mail }}</td></tr>
+			<tr><td>Email:</td><td>{{ user.email }}</td></tr>
 			<tr><td>Total boards created:</td><td>{{ user_createdTotal }}</td></tr>
 			<tr><td>Total boards followed:</td><td>{{ user_followedTotal }}</td></tr>
 		</table>
@@ -46,7 +46,7 @@
 	{% if update_status != "Updated Successfully!" %}
     <div id="changeForm" align="center">
 		<form name="input" action="./update" method="post">
-			Change display name: <input type="text" name="newnickname"  value="{{ user_nick }}">
+			Change display name: <input type="text" name="newnickname"  value="{{ user.usernick }}">
 			<input type="submit" value="Submit">
 		</form>
 		</div>

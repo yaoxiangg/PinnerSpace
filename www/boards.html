@@ -28,7 +28,7 @@
 				<li><a href="./settings">Settings</a></li>
 			</ul>
 			<ul class="nav nav-pills pull-right"> <!--class="span4 offset8 signin-align"-->
-				<li class="disabled"><a>Welcome back <b>{{ user_nick }}</b>!</a></li>
+				<li class="disabled"><a>Welcome back <b>{{ user.usernick }}</b>!</a></li>
 				<li><a href="{{ logout }}">Logout</a></li>
 			</ul>
 		</div>
@@ -47,22 +47,34 @@
 			<input type="submit" value="Submit">
 		</form>
 		<p><p>
-		<table width="300em">
+		<table>
 			{% for board in boards %}
 			<tr>
+				{% if board.boardUser == user.email %}
 				<form class="form-inline navbar-form" name="input" action="./deleteBoard" method="post">
 					<td valign="baseline"><button class="btn btn-default btn-xs glyphicon glyphicon-remove" name="boardID" type="submit" value={{ board.boardID }}></button></td>
-					<td valign="baseline">Board{{ board.boardID }}: {{ board.boardName }}</td>
-				</form>
-				<td valign="baseline">
-				{% if board.boardID == defaultBoardID %}
-				<span class="label label-primary">Default</span>
-				{% else %}
-				<form name="input" action="./changeDefaultBoard" method="post">
-					<button class="btn btn-default btn-xs" name="boardID" type="submit" value={{ board.boardID }}>Set as default</button>
 				</form>
 				{% endif %}
+				<td valign="baseline">Board{{ board.boardID }}: {{ board.boardName }}</td>
+				{% if board.boardID == user.defaultBoardID and board.boardUser == user.defaultBoardUser %}
+				<td valign="baseline">
+				<span class="label label-primary">Default</span>
 				</td>
+				{% elif user.email in board.followers or board.boardUser == user.email %}
+				<td>
+				<form name="input" action="./changeDefaultBoard" method="post">
+					<input type="hidden" name="boardUser" value={{ targetMail }}>
+					<button class="btn btn-default btn-xs" name="boardID" type="submit" value={{ board.boardID }}>Set as default</button>
+				</form>
+				</td>
+				{% else %}
+				<td>
+				<form name="input" action="./followBoard" method="post">
+					<input type="hidden" name="boardUser" value={{ targetMail }}>
+					<button class="btn btn-info btn-xs" name="boardID" type="submit" value={{ board.boardID }}>Follow</button>
+				</form>
+				</td>
+				{% endif %}
 			</tr>
 			{% endfor %}
 		</table>
