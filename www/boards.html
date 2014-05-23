@@ -38,8 +38,12 @@
 			Board Name: <input type="text" name="boardName">
 			<input type="submit" value="Create new board">
 		</form>
-		<p><p>
-		{{ error }}
+		<p>
+		<p>
+		<form name="input" action="./boards" method="post">
+			Find board for: <input type="text" name="targetMail"  value="">
+			<input type="submit" value="Submit">
+		</form>
 		<p><p>
 		<table>
 			{% for board in boards %}
@@ -51,6 +55,9 @@
 			</tr>
 			{% endfor %}
 		</table>
+		<p><p>
+		<b>{{ error }}</b>
+		<p><p>
 	</div>
 	<!--END BODY-->
 </body>

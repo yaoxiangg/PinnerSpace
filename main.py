@@ -36,6 +36,7 @@ class Board(ndb.Model):
 	boardID = ndb.IntegerProperty()
 	boardName =  ndb.StringProperty()
 	items = ndb.StructuredProperty(Item)
+	followers = ndb.IntegerProperty(default=0)
 	#TESTING
 	boardJSON = ndb.StringProperty()
 
@@ -47,6 +48,7 @@ class Account(ndb.Model):
 	numBoards = ndb.IntegerProperty(default=0)
 	counter = ndb.IntegerProperty(default=0)
 	defaultBoard = ndb.IntegerProperty(default=0)
+	following = ndb.PickleProperty(indexed=True)
 
 #Handler - Displays '/'
 class MainHandler(webapp2.RequestHandler):
@@ -76,13 +78,13 @@ def loadBoard(user, self):
 	if userGet == None:
 		#Create Acc
 		logging.debug("Creating Account for: " + user.email() + ", " + user.nickname())
-		currUser = Account(id=user.email(), accid=user.user_id(), usernick=user.nickname(), numBoards=0, defaultBoard=0)
+		currUser = Account(id=user.email(), accid=user.user_id(), usernick=user.nickname())
 		userKey = currUser
 		userGet = currUser.put()
 		usernickname = user.nickname()
-		userdefaultBoard = 0
+		userdefaultBoardID = 0
 	else:
-		userdefaultBoard = userGet.defaultBoard
+		userdefaultBoardID = userGet.defaultBoard
 		usernickname = userGet.usernick
 
 	#TESTING
@@ -101,17 +103,26 @@ def loadBoard(user, self):
 	#	pass
 	boardDat = '{"objects":[{"type":"rect","originX":"left","originY":"top","left":100,"top":100,"width":20,"height":20,"fill":"black","stroke":null,"strokeWidth":1,"strokeDashArray":null,"strokeLineCap":"butt","strokeLineJoin":"miter","strokeMiterLimit":10,"scaleX":1,"scaleY":1,"angle":0,"flipX":false,"flipY":false,"opacity":1,"shadow":null,"visible":true,"clipTo":null,"backgroundColor":"","rx":0,"ry":0,"x":0,"y":0}],"background":"green"}'
 
+	#Get default board if available
+	try:
+		boardKey = ndb.Key('Account', users.get_current_user().email(), 'Board', userdefaultBoardID)
+		boardName = boardKey.get().boardName
+	except:
+		boardName = ""
+
 	#Logging into Board - LoadBoard
 	logging.debug("Logging in to: " + user.email())
 	parameters = {
 	'user_mail': user.email(),
 	'user_nick': usernickname,
 	'logout': users.create_logout_url(self.request.host_url),
+	'boardID': userdefaultBoardID,
+	'boardName': boardName,
 	'boardData': boardDat,
 	}
 
 	#if user has default board, display the board. else redirect to create board
-	if userdefaultBoard > 0:
+	if userdefaultBoardID > 0:
 		webpage = jinja_environment.get_template('index.html')
 		self.response.out.write(webpage.render(parameters))
 	else:
@@ -126,6 +137,8 @@ class UpdateProfile(webapp2.RequestHandler):
 			'user_mail': users.get_current_user().email(),
 			'user_nick': userGet.usernick,
 			'logout': users.create_logout_url(self.request.host_url),
+			'user_createdTotal': userGet.numBoards,
+			'user_followedTotal': userGet.following,
 			'update_status': "",
 			}
 			webpage = jinja_environment.get_template('setting.html')
@@ -141,38 +154,69 @@ class UpdateProfile(webapp2.RequestHandler):
 				userGet.put()
 				status = "Updated Successfully!"
 			else:
-				status = "Nickname is empty"
+				status = "Nickname is empty."
 		except:
 			pass
+
 		#Success
 		parameters = {
 		'user_mail': users.get_current_user().email(),
 		'user_nick': userGet.usernick,
 		'logout': users.create_logout_url(self.request.host_url),
+		'user_createdTotal': userGet.numBoards,
+		'user_followedTotal': userGet.following,
 		'update_status': status,
 		}
 		webpage = jinja_environment.get_template('setting.html')
 		self.response.out.write(webpage.render(parameters))
 
 class DisplayAllBoards(webapp2.RequestHandler):
-	def get(self):
-		userKey = ndb.Key('Account', users.get_current_user().email())
-		#Get All Board, for each board, display the link.
-		query = ndb.gql("SELECT * "
+	def showBoardsOf(self, _target, email, template_values):
+		if email != "" and email != "#":
+			userKey = ndb.Key('Account', email)
+			#Get All Board, for each board, display the link.
+			query = ndb.gql("SELECT * "
 			"FROM Board "
 			"WHERE ANCESTOR IS :1 "
 			"ORDER BY boardID ASC",
 			userKey)
+			template_values.update({'boards': query,})
+			if query.count() == 0:
+				template_values.update({'error': "Cannot find any board for %s" % email,})
+		else:
+			template_values.update({'error': "User does not exist",})
 
+		template = jinja_environment.get_template(_target)
+		self.response.out.write(template.render(template_values))
+
+	def get(self):
+		userKey = ndb.Key('Account', users.get_current_user().email())
 		template_values = {
 		'user_mail': users.get_current_user().email(),
 		'user_nick': userKey.get().usernick,
 		'logout': users.create_logout_url(self.request.host_url),
-		'boards': query,
-		'error' : self.request.get('error'),
+		'error': self.request.get('error'),
 		}
-		template = jinja_environment.get_template('boards.html')
-		self.response.out.write(template.render(template_values))
+		self.showBoardsOf("boards.html", users.get_current_user().email(), template_values)
+
+	def post(self):
+		userKey = ndb.Key('Account', users.get_current_user().email())
+		target_mail = self.request.get('targetMail')
+		try:
+			target = ndb.Key('Account', target_mail).get()
+			template_values = {
+				'user_mail': users.get_current_user().email(),
+				'user_nick': userKey.get().usernick,
+				'logout': users.create_logout_url(self.request.host_url),
+			}
+			if target != None:
+				template_values.update({'target_mail': target_mail,})
+				self.showBoardsOf("boards.html", target_mail, template_values)
+			else:
+				self.showBoardsOf("boards.html", "#", template_values)
+		except:
+			template_values = {'error': "User does not exist",}
+			self.showBoardsOf("boards.html", "", template_values)
 
 class AddBoard(webapp2.RequestHandler):
 	def post(self):

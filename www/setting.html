@@ -33,6 +33,14 @@
 	</div>
 	
 	<!--BODY-->
+	<div id = "userProfile" align="center">
+		<table>
+			<tr><td>Email:</td><td>{{ user_mail }}</td></tr>
+			<tr><td>Total boards created:</td><td>{{ user_createdTotal }}</td></tr>
+			<tr><td>Total boards followed:</td><td>{{ user_followedTotal }}</td></tr>
+		</table>
+	</div>
+	<p><p>
 	{% if update_status != "Updated Successfully!" %}
     <div id="changeForm" align="center">
 		<form name="input" action="./update" method="post">
