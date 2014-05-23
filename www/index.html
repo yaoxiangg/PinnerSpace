@@ -23,7 +23,8 @@
 		canvas.loadFromJSON(board);
 	}
 	function saveCanvas(){
-		return JSON.stringify(canvas);
+		var data = JSON.stringify(canvas)
+		$.post("/saveBoard", data);
 	}
 	</script>
 </head>
@@ -71,7 +72,7 @@
 		</canvas>
 	</div>
 	<form class="form-inline navbar-form" name="save" action="./saveBoard" method="post" float="center">
-		<button class="btn" name="save" type="submit" value=saveCanvas() float="center"></button>
+		<button class="btn" name="save" type="submit" onclick="saveCanvas()" float="center"></button>
 	</form>
 	<!--END BODY-->
 </body>
