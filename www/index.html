@@ -23,8 +23,10 @@
 		canvas.loadFromJSON(board);
 	}
 	function saveCanvas(){
-		var data = JSON.stringify(canvas)
-		$.post("/saveBoard", data);
+		$.post("/saveBoard", { 
+			boardID: {{ currBoard.boardID }},
+			data: JSON.stringify(canvas) 
+		});
 	}
 	</script>
 </head>
@@ -71,9 +73,9 @@
 			This text is displayed if your browser does not support HTML5 Canvas.
 		</canvas>
 	</div>
-	<form class="form-inline navbar-form" name="save" action="./saveBoard" method="post" float="center">
-		<button class="btn" name="save" type="submit" onclick="saveCanvas()" float="center"></button>
-	</form>
+	<div>
+	<button class="btn" value="save" type="submit" onclick="saveCanvas()" float="center">Save</button>
+	</div>
 	<!--END BODY-->
 </body>
 </html>
