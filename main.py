@@ -290,12 +290,12 @@ class DeleteBoard(webapp2.RequestHandler):
 #Save Board
 class SaveBoard(webapp2.RequestHandler):
 	def post(self):
-		bData = self.request.get('save')
+		boardID = self.request.get('boardID')
+		bData = self.request.get('data')
 		userGet = ndb.Key('Account', users.get_current_user().email()).get()
-		defBoard = ndb.Key('Account', users.get_current_user().email(), 'Board', int(userGet.defaultBoard)).get()
-		defBoard.boardJSON = bData
-		defBoard.put()
-		self.redirect("/board") #consider just running loadBoard
+		currBoard = ndb.Key('Account', users.get_current_user().email(), 'Board', int(boardID)).get()
+		currBoard.boardJSON = bData
+		currBoard.put()
 
 #Change Default Board
 class ChangeDefaultBoard(webapp2.RequestHandler):
