@@ -38,7 +38,7 @@ class Board(ndb.Model):
 	items = ndb.StructuredProperty(Item)
 	followers = ndb.IntegerProperty(default=0)
 	#TESTING
-	boardJSON = ndb.StringProperty()
+	boardJSON = ndb.TextProperty()
 
 #Account Datastore - Parent of Board
 class Account(ndb.Model):
@@ -91,33 +91,24 @@ def loadBoard(self, user, boardID):
 			boardID = userGet.defaultBoard
 		usernickname = userGet.usernick
 
-	#TESTING
-	#boardGet = ndb.Key('Account', user.email()).get().defaultBoard
-	#if boardGet == None:
-	#	#must have a board
-	#	userGet.numBoards = 1
-	#	defBoard = Board(parent=userKey, id=1, boardName='board1', boardID=1)
-	#	defBoard.boardJSON = '{"objects":[{"type":"rect","left":50,"top":50,"width":20,"height":20,"fill":"green","overlayFill":null,"stroke":null,"strokeWidth":1,"strokeDashArray":null,"scaleX":1,"scaleY":1,"angle":0,"flipX":false,"flipY":false,"opacity":1,"selectable":true,"hasControls":true,"hasBorders":true,"hasRotatingPoint":false,"transparentCorners":true,"perPixelTargetFind":false,"rx":0,"ry":0}],"background":"rgba(0, 0, 0, 0)"}'
-	#	defBoard.put()
-	#	userGet.defaultBoard = defBoard
-	#	userGet.put()
-	#	# the board we'll work with
-	#	boardGet = defBoard
-	#else:
-	#	pass
-	boardDat = '{"objects":[{"type":"rect","originX":"left","originY":"top","left":100,"top":100,"width":20,"height":20,"fill":"black","stroke":null,"strokeWidth":1,"strokeDashArray":null,"strokeLineCap":"butt","strokeLineJoin":"miter","strokeMiterLimit":10,"scaleX":1,"scaleY":1,"angle":0,"flipX":false,"flipY":false,"opacity":1,"shadow":null,"visible":true,"clipTo":null,"backgroundColor":"","rx":0,"ry":0,"x":0,"y":0}],"background":"green"}'
-
 	#Get default board if available
 	try:
+<<<<<<< HEAD
 		if (boardID > 0):
 			boardKey = ndb.Key('Account', users.get_current_user().email(), 'Board', int(boardID))
 			currBoard = boardKey.get()
 		else:
 			currBoard = None
+=======
+		boardKey = ndb.Key('Account', users.get_current_user().email(), 'Board', userdefaultBoardID)
+		boardName = boardKey.get().boardName
+		boardData = boardKey.get().boardJSON
+>>>>>>> 6bac58064c1a67eb14bdabee1b19349ae4498688
 	except:
 		#ERROR BOARD DOES NOT EXISST
 		self.redirect("/")
 		boardName = ""
+		boardData = ""
 
 	#Logging into Board - LoadBoard
 	logging.debug("Logging in to: " + user.email())
@@ -126,8 +117,14 @@ def loadBoard(self, user, boardID):
 	'user_mail': user.email(),
 	'user_nick': usernickname,
 	'logout': users.create_logout_url(self.request.host_url),
+<<<<<<< HEAD
 	'currBoard': currBoard,
 	'boardData': boardDat,
+=======
+	'boardID': userdefaultBoardID,
+	'boardName': boardName,
+	'boardData': boardData,
+>>>>>>> 6bac58064c1a67eb14bdabee1b19349ae4498688
 	}
 
 	query = ndb.gql("SELECT * "
@@ -253,6 +250,7 @@ class AddBoard(webapp2.RequestHandler):
 					currBoard = Board(parent=userKey, id=userGet.counter)
 					currBoard.boardName = bName
 					currBoard.boardID = userGet.counter
+					currBoard.boardJSON = '{"objects":[{"type":"rect","originX":"left","originY":"top","left":100,"top":100,"width":20,"height":20,"fill":"black","stroke":null,"strokeWidth":1,"strokeDashArray":null,"strokeLineCap":"butt","strokeLineJoin":"miter","strokeMiterLimit":10,"scaleX":1,"scaleY":1,"angle":0,"flipX":false,"flipY":false,"opacity":1,"shadow":null,"visible":true,"clipTo":null,"backgroundColor":"","rx":0,"ry":0,"x":0,"y":0}],"background":"green"}'
 					currBoard.put()
 					if userGet.numBoards == 1:
 						#Set default board
