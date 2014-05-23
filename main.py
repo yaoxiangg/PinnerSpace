@@ -170,6 +170,7 @@ class UpdateProfile(webapp2.RequestHandler):
 		webpage = jinja_environment.get_template('setting.html')
 		self.response.out.write(webpage.render(parameters))
 
+#Show all Board
 class DisplayAllBoards(webapp2.RequestHandler):
 	def showBoardsOf(self, _target, email, template_values):
 		if email != "" and email != "#":
@@ -181,7 +182,7 @@ class DisplayAllBoards(webapp2.RequestHandler):
 			"ORDER BY boardID ASC",
 			userKey)
 			template_values.update({'boards': query,})
-			if query.count() == 0:
+			if query.count() == 0 and email != users.get_current_user().email():
 				template_values.update({'error': "Cannot find any board for %s" % email,})
 		else:
 			template_values.update({'error': "User does not exist",})
@@ -195,6 +196,7 @@ class DisplayAllBoards(webapp2.RequestHandler):
 		'user_mail': users.get_current_user().email(),
 		'user_nick': userKey.get().usernick,
 		'logout': users.create_logout_url(self.request.host_url),
+		'defaultBoardID': userKey.get().defaultBoard,
 		'error': self.request.get('error'),
 		}
 		self.showBoardsOf("boards.html", users.get_current_user().email(), template_values)
@@ -208,6 +210,7 @@ class DisplayAllBoards(webapp2.RequestHandler):
 				'user_mail': users.get_current_user().email(),
 				'user_nick': userKey.get().usernick,
 				'logout': users.create_logout_url(self.request.host_url),
+				'defaultBoardID': userKey.get().defaultBoard,
 			}
 			if target != None:
 				template_values.update({'target_mail': target_mail,})
@@ -218,6 +221,7 @@ class DisplayAllBoards(webapp2.RequestHandler):
 			template_values = {'error': "User does not exist",}
 			self.showBoardsOf("boards.html", "", template_values)
 
+#Add Board
 class AddBoard(webapp2.RequestHandler):
 	def post(self):
 		#addBoard
@@ -251,6 +255,7 @@ class AddBoard(webapp2.RequestHandler):
 		else:
 			self.redirect("/boards?error="+error)
 
+#Delete Board
 class DeleteBoard(webapp2.RequestHandler):
 	def post(self):
 		#Delete Board
@@ -276,11 +281,23 @@ class DeleteBoard(webapp2.RequestHandler):
 		userGet.put()
 		self.redirect("/boards")
 
+#Change Default Board
+class ChangeDefaultBoard(webapp2.RequestHandler):
+	def post(self):
+		#Change Default Board
+		boardid = self.request.get('boardID')
+		userKey = ndb.Key('Account', users.get_current_user().email())
+		userGet = userKey.get()
+		userGet.defaultBoard = int(boardid)
+		userGet.put()
+		self.redirect("/boards")
+
 #App
 app = webapp2.WSGIApplication([('/', MainHandler),
 	('/board', ShowBoard),
 	('/newBoard', AddBoard),
 	('/deleteBoard', DeleteBoard),
 	('/boards', DisplayAllBoards),
+	('/changeDefaultBoard', ChangeDefaultBoard),
 	('/settings', UpdateProfile),
 	('/update', UpdateProfile)], debug=True)

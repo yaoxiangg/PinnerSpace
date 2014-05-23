@@ -45,13 +45,22 @@
 			<input type="submit" value="Submit">
 		</form>
 		<p><p>
-		<table>
+		<table height="90em" width="300em">
 			{% for board in boards %}
 			<tr>
-				<td>Board{{ board.boardID }}: {{ board.boardName }}  <br> </td>
-				<td><form name="input" action="./deleteBoard" method="post">
-					<button name="boardID" type="submit" value={{ board.boardID }}>Delete</button>
-				</form></td>
+				<form class="form-inline navbar-form" name="input" action="./deleteBoard" method="post">
+					<td valign="baseline"><button class="btn btn-default btn-xs glyphicon glyphicon-remove" name="boardID" type="submit" value={{ board.boardID }}></button></td>
+					<td valign="middle">Board{{ board.boardID }}: {{ board.boardName }}</td>
+				</form>
+				<td valign="middle">
+				{% if board.boardID == defaultBoardID %}
+				<span class="label label-primary">Default</span>
+				{% else %}
+				<form name="input" action="./changeDefaultBoard" method="post">
+					<button class="btn btn-default btn-xs" name="boardID" type="submit" value={{ board.boardID }}>Set as default</button>
+				</form>
+				{% endif %}
+				</td>
 			</tr>
 			{% endfor %}
 		</table>
