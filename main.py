@@ -21,6 +21,7 @@ jinja_environment = jinja2.Environment(
 
 #Item Datastore - Child of Board
 class Item(ndb.Model):
+	boardID = ndb.IntegerProperty()
 	itemType = ndb.IntegerProperty()
 	coorx = ndb.IntegerProperty()
 	coory = ndb.IntegerProperty()
@@ -35,7 +36,6 @@ class Item(ndb.Model):
 class Board(ndb.Model):
 	boardID = ndb.IntegerProperty()
 	boardName =  ndb.StringProperty()
-	items = ndb.StructuredProperty(Item)
 	followers = ndb.IntegerProperty(default=0)
 	#TESTING
 	boardJSON = ndb.TextProperty()
