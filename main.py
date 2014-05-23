@@ -55,7 +55,7 @@ class MainHandler(webapp2.RequestHandler):
 	def get(self):
 		user = users.get_current_user()
 		if user:
-			loadBoard(user, self)
+			loadBoard(self, user, -1)
 		else:
 			template = jinja_environment.get_template('mainpage.html') 
 			self.response.out.write(template.render())
@@ -66,12 +66,15 @@ class ShowBoard(webapp2.RequestHandler):
 		user=users.get_current_user()
 		if user:
 			#how do we pass values back and forth from the pinboard?
-			loadBoard(user, self)
+			if (self.request.get('boardID') > 0):
+				loadBoard(self, user, self.request.get('boardID'))
+			else:	
+				loadBoard(self, user, -1)
 		else:
 			self.redirect(users.create_login_url(self.request.uri))
 
 #loadBoard - Function to display board
-def loadBoard(user, self):
+def loadBoard(self, user, boardID):
 	userKey = ndb.Key('Account', user.email())
 	userGet = userKey.get()
 
@@ -82,33 +85,47 @@ def loadBoard(user, self):
 		userKey = currUser
 		userGet = currUser.put()
 		usernickname = user.nickname()
-		userdefaultBoardID = 0
+		boardID = 0
 	else:
-		userdefaultBoardID = userGet.defaultBoard
+		if (boardID == -1):
+			boardID = userGet.defaultBoard
 		usernickname = userGet.usernick
 
 	#Get default board if available
 	try:
-		boardKey = ndb.Key('Account', users.get_current_user().email(), 'Board', userdefaultBoardID)
-		boardName = boardKey.get().boardName
-		boardData = boardKey.get().boardJSON
+		if (boardID > 0):
+			boardKey = ndb.Key('Account', users.get_current_user().email(), 'Board', int(boardID))
+			currBoard = boardKey.get()
+			boardData = boardKey.get().boardJSON
+		else:
+			currBoard = None
+			
 	except:
+		#ERROR BOARD DOES NOT EXISST
 		boardName = ""
 		boardData = ""
-
+		self.redirect("/")
+		
 	#Logging into Board - LoadBoard
 	logging.debug("Logging in to: " + user.email())
 	parameters = {
+	'user': userGet,
 	'user_mail': user.email(),
 	'user_nick': usernickname,
 	'logout': users.create_logout_url(self.request.host_url),
-	'boardID': userdefaultBoardID,
-	'boardName': boardName,
+	'currBoard': currBoard,
 	'boardData': boardData,
 	}
 
+	query = ndb.gql("SELECT * "
+	"FROM Board "
+	"WHERE ANCESTOR IS :1 "
+	"ORDER BY boardID ASC",
+	userKey)
+	parameters.update({'boards': query,})
+
 	#if user has default board, display the board. else redirect to create board
-	if userdefaultBoardID > 0:
+	if boardID > 0:
 		webpage = jinja_environment.get_template('index.html')
 		self.response.out.write(webpage.render(parameters))
 	else:
