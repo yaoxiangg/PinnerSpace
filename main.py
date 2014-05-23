@@ -93,23 +93,19 @@ def loadBoard(self, user, boardID):
 
 	#Get default board if available
 	try:
-<<<<<<< HEAD
 		if (boardID > 0):
 			boardKey = ndb.Key('Account', users.get_current_user().email(), 'Board', int(boardID))
 			currBoard = boardKey.get()
+			boardData = boardKey.get().boardJSON
 		else:
 			currBoard = None
-=======
-		boardKey = ndb.Key('Account', users.get_current_user().email(), 'Board', userdefaultBoardID)
-		boardName = boardKey.get().boardName
-		boardData = boardKey.get().boardJSON
->>>>>>> 6bac58064c1a67eb14bdabee1b19349ae4498688
+			
 	except:
 		#ERROR BOARD DOES NOT EXISST
-		self.redirect("/")
 		boardName = ""
 		boardData = ""
-
+		self.redirect("/")
+		
 	#Logging into Board - LoadBoard
 	logging.debug("Logging in to: " + user.email())
 	parameters = {
@@ -117,14 +113,8 @@ def loadBoard(self, user, boardID):
 	'user_mail': user.email(),
 	'user_nick': usernickname,
 	'logout': users.create_logout_url(self.request.host_url),
-<<<<<<< HEAD
 	'currBoard': currBoard,
-	'boardData': boardDat,
-=======
-	'boardID': userdefaultBoardID,
-	'boardName': boardName,
 	'boardData': boardData,
->>>>>>> 6bac58064c1a67eb14bdabee1b19349ae4498688
 	}
 
 	query = ndb.gql("SELECT * "
