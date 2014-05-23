@@ -60,7 +60,10 @@ class MainHandler(webapp2.RequestHandler):
 		if user:
 			userKey = ndb.Key('Account', user.email())
 			userGet = userKey.get()
-			loadBoard(self, user, -1, userGet.defaultBoardUser)
+			if userGet:
+				loadBoard(self, user, -1, userGet.defaultBoardUser)
+			else:
+				loadBoard(self, user, -1, user.email())
 		else:
 			template = jinja_environment.get_template('mainpage.html') 
 			self.response.out.write(template.render())
