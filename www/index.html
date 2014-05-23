@@ -13,13 +13,17 @@
 		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
 	})();
 	</script>
+	<!--End of Google Login Script-->
 	<script type = "text/javascript">
+	var canvas;
 	function loadCanvas(board){
-		var canvas = new fabric.Canvas('canvas');
+		canvas = new fabric.Canvas('canvas');
 		canvas.loadFromJSON(board);
 	}
+	function saveCanvas(){
+		return JSON.stringify(canvas);
+	}
 	</script>
-	<!--End of Google Login Script-->
 </head>
 <body onload="loadCanvas({{boardData}})">
 	<div id="header">
@@ -43,11 +47,14 @@
 		Board{{ boardID }} : {{ boardName }}  
 	</div>
 	<div id="pinboard" style="width:1000px; height:500px; margin: 0 auto; padding: 5px">
-		<!--canvas id must be consistent with shapes.js for "add shapes" to work-->
+		<!--canvas id must be consistent-->
 		<canvas id="canvas" width="1000" height="500" style="border: 1px solid black;">
 			This text is displayed if your browser does not support HTML5 Canvas.
 		</canvas>
 	</div>
+	<form class="form-inline navbar-form" name="save" action="./saveBoard" method="post" float="center">
+		<button class="btn" name="save" type="submit" value=saveCanvas() float="center"></button>
+	</form>
 	<!--END BODY-->
 </body>
 </html>
