@@ -7,6 +7,7 @@
 	<script src="../scripts/jquery-1.11.1.min.js" type="text/javascript"></script>
 	<script src="../bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
 	<script src="../scripts/fabric.js" type="text/javascript"></script>
+	<script src="../scripts/jscolor/jscolor.js" type="text/javascript"></script>
 	<!--Google Login Script-->
 	<script type="text/javascript">
 	(function() {
@@ -16,6 +17,7 @@
 	})();
 	</script>
 	<!--End of Google Login Script-->
+	<!--Canvas Script--> <!--Maybe should move to another file? When it's more or less done?-->
 	<script type = "text/javascript">
 	var canvas;
 	function loadCanvas(board){
@@ -28,10 +30,45 @@
 			boardID: {{ currBoard.boardID }},
 			data: JSON.stringify(canvas)
 		});
+		alert("Successfully saved!");
+	}
+	//INCOMPLETE
+	function revert(board){
+		var resp=confirm("You sure? All your unsaved work will be lost...<STILL EMPTY>");
+		if (resp==true){
+  			// Need to reload with curr JSON data not the one just passed through
+  		}
+
+	}
+	function clearCanvas(){
+		var resp=confirm("You sure? This will clear everything!");
+		if (resp==true){
+  			canvas.clear();
+  		}
+	}
+	function addBlock(){
+		var center = canvas.getCenter();
+		var rect = new fabric.Rect({
+			left: center.left,
+			top: center.top,
+			width: 30,
+			height: 30,
+		})
+		canvas.add(rect);
+	}
+	function delBlock(){
+		var curr = canvas.getActiveObject();
+		canvas.remove(curr);
+	}
+	var bgcolor = 'FFFFFF';
+	function setBG(){
+		canvas.setBackgroundColor("#" + bgcolor.toUpperCase(), canvas.renderAll.bind(canvas));
 	}
 	</script>
+	<!--End of Canvas Script-->
 </head>
 <body onload="loadCanvas({{boardData}})">
+	<!--HEADER-->
 	<div id="header">
 		<div class="jumbotron">
 			<h2 class="title" style="text-align: center">PinnerSpace</h2>
@@ -48,7 +85,7 @@
 		</div>
 	</div>
 	
-	<!--BODY-->
+	<!--BOARD NAME/SELECTOR-->
 	<div id="boardInfo" align="center">
 		Board{{ currBoard.boardID }} {{ currBoard.boardUser }}
 	</div>
@@ -66,16 +103,32 @@
 			</ul>
 			{% endif %}
 		</div>
+	</center>
 
-	
+	<!--PinBoard-->
 	<div id="pinboard" style="width:1000px; height:500px; margin: 0 auto; padding: 5px">
-		<!--canvas id must be consistent-->
+		<!--canvas id must be consistent with js script-->
 		<canvas id="canvas" width="1000" height="500" style="border: 1px solid black;">
 			This text is displayed if your browser does not support HTML5 Canvas.
 		</canvas>
 	</div>
-	<div>
-	<button class="btn" value="save" type="submit" onclick="saveCanvas()" float="center">Save</button>
+
+	<!--Modifiers-->
+	<div align="center" style="padding: 5px">
+		<p>
+		<button class="btn" value="add" type="submit" onclick="addBlock()" float="center">New Block</button>
+		<button class="btn" value="delblock" type="submit" onclick="delBlock()" float="center">Delete Block</button>
+		<button class="btn" value="clear" type="submit" onclick="clearCanvas()" float="center">Clear Board</button>
+		</p>
+		<p>
+		<button class="btn" value="save" type="submit" onclick="saveCanvas()" float="center">Save Changes</button>
+		<button class="btn" value="revert" type="submit" onclick="revert({{boardData}})" float="center">Reset Changes</button>
+		</p>
+		<p>
+			Change background colour:
+			<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="bgcolor=this.color.toString()">
+			<input type="submit" value="Apply" onclick="setBG()">
+		</p>
 	</div>
 	<!--END BODY-->
 </body>
@@ -98,4 +151,7 @@
 
 		var canvasStr = JSON.stringify(canvas);
 		console.log(canvasStr);
+
+alert('Please enter a value!');
+input.focus(); // focuses on the blank to fill (didn't know that)
 -->
