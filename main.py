@@ -164,7 +164,6 @@ def loadBoard(self, user, boardID, boardUser):
 
 	#if user has default board, display the board. else redirect to create board
 	if boardID > 0:
-		logging.debug(boardID)
 		webpage = jinja_environment.get_template('index.html')
 		self.response.out.write(webpage.render(parameters))
 	else:
@@ -270,7 +269,6 @@ class DisplayAllBoards(webapp2.RequestHandler):
 
 	def post(self):
 		userKey = ndb.Key('Account', users.get_current_user().email())
-		logging.debug(userKey.get().email)
 		target_mail = self.request.get('targetMail')
 		if target_mail == "":
 			template_values = {
@@ -409,7 +407,17 @@ class DeleteBoard(webapp2.RequestHandler):
 		userGet = userKey.get()
 		#Delete Board Entity
 		boardKey = ndb.Key('Account', users.get_current_user().email(), 'Board', int(boardid))
-		logging.debug(boardKey)
+
+		#Delete from all followers
+		#following - 1 for all followers.
+		for follower in boardKey.get().followers:
+			followerGet = ndb.Key('Account', follower).get()
+			followerGet.following -= 1
+			if followerGet.defaultBoardID == int(boardid) and followerGet.defaultBoardUser == userGet.email:
+				followerGet.defaultBoardUser = ""
+				followerGet.defaultBoardID = 0
+			followerGet.put()
+		
 		boardKey.delete()
 		if (userGet.numBoards > 0):
 			userGet.numBoards -= 1
@@ -427,6 +435,7 @@ class DeleteBoard(webapp2.RequestHandler):
 				userGet.defaultBoardID = 0
 				userGet.defaultBoardUser = ""
 		userGet.put()
+		
 		self.redirect("/boards")
 
 #Save Board

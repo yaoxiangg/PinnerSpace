@@ -92,7 +92,7 @@
 	<center>
 		<div class="btn-group">
 			<button class="disabled btn btn-primary">{{ currBoard.boardName }}</button>
-			{% if user.numBoards > 0 %}
+			{% if user.numBoards > 0 or user.following > 0 %}
 			<button data-toggle="dropdown" class="btn btn-primary dropdown-toggle"><span class="caret"></span></button>
 			<ul class="dropdown-menu">
 				{% for board in boards %}
