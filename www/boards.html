@@ -50,7 +50,7 @@
 		<table>
 			{% if targetMail != user.email and targetMail %}
 			<tr>Boards of {{ targetMail }}<tr>
-			{% else %}
+			{% elif targetMail %}
 			<tr>My Boards</tr>
 			{% endif %}
 			{% for board in boards %}

@@ -100,6 +100,12 @@
 					<li><a href="./board?boardID={{ board.boardID }}&boardUser={{ board.boardUser }}">{{ board.boardName }}</a></li>
 					{% endif %}
 				{% endfor %}
+				<li class="divider"></li>
+				{% for board2 in boards2 %}
+					{% if board2.boardID != currBoard.boardID or board2.boardUser != currBoard.boardUser %}
+					<li><a href="./board?boardID={{ board2.boardID }}&boardUser={{ board2.boardUser }}">{{ board2.boardName }}</a></li>
+					{% endif %}
+				{% endfor %}
 			</ul>
 			{% endif %}
 		</div>

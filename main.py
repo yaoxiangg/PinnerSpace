@@ -51,7 +51,12 @@ class Account(ndb.Model):
 	counter = ndb.IntegerProperty(default=0)
 	defaultBoardID = ndb.IntegerProperty(default=0)
 	defaultBoardUser = ndb.StringProperty(default="")
-	following = ndb.PickleProperty(indexed=True)
+	following = ndb.IntegerProperty(default=0)
+
+class PairFollowerOwner(ndb.Model):
+	follower = ndb.StringProperty()
+	owner = ndb.StringProperty()
+	boardID = ndb.IntegerProperty(repeated=True)
 
 #Handler - Displays '/'
 class MainHandler(webapp2.RequestHandler):
@@ -134,10 +139,28 @@ def loadBoard(self, user, boardID, boardUser):
 	"WHERE ANCESTOR IS :1 "
 	"ORDER BY boardID ASC",
 	userKey)
-	parameters.update({'boards': query,})
+	
+	parameters.update({'boards': query,
+	'boards2': [],
+	})
 
-	#Need to add more to the query, such that it also includes the board that the user has followed
+	#PairFollowerOwner - owner = ?, follower = ?, boardID = ?
+	follows = (ndb.gql("SELECT * "
+	"FROM PairFollowerOwner "
+	"WHERE ANCESTOR IS :1 ",
+	userKey))
 
+	#This includes the board that the user has followed
+	for follow in follows:
+		queryBoard = ndb.gql("SELECT * "
+		"FROM Board "
+		"WHERE ANCESTOR IS :1 "
+		"ORDER BY boardID ASC",
+		ndb.Key('Account', follow.owner))
+
+		for board in queryBoard:
+			if board.boardID in follow.boardID:
+				parameters['boards2'].append(board)
 
 	#if user has default board, display the board. else redirect to create board
 	if boardID > 0:
@@ -297,8 +320,23 @@ class FollowBoard(webapp2.RequestHandler):
 		currBoard = boardKey.get()
 		currBoard.followers.append(users.get_current_user().email())
 		currBoard.put()
+		query = ndb.gql("SELECT * "
+		"FROM PairFollowerOwner "
+		"WHERE ANCESTOR IS :1 "
+		"AND owner = :2",
+		userKey, boardUser)
+		pairFollower = query.fetch(1)
+		if pairFollower:
+			pairGet = pairFollower[0]
+			pairGet.boardID.append(int(boardID))
+			pairGet.put()
+		else:
+			pairFollower = PairFollowerOwner(parent=userKey, follower=users.get_current_user().email(), owner=boardUser, boardID=[int(boardID)])
+			pairGet = pairFollower.put()
+		userKey.get().following += 1
+		userKey.get().put()
 		refreshBoard(self, boardUser, userKey)
-		#add to userkey.get().following - pair of boardid and boardUser, and .put()
+		
 
 #Unfollow Board
 class UnfollowBoard(webapp2.RequestHandler):
@@ -310,6 +348,19 @@ class UnfollowBoard(webapp2.RequestHandler):
 		currBoard = boardKey.get()
 		currBoard.followers.remove(users.get_current_user().email())
 		currBoard.put()
+		query = ndb.gql("SELECT * "
+		"FROM PairFollowerOwner "
+		"WHERE ANCESTOR IS :1 "
+		"AND owner = :2",
+		userKey, boardUser)
+		pairFollower = query.fetch(1)
+		pairFollower = pairFollower[0]
+		pairFollower.boardID.remove(int(boardID))
+		pairFollower.put()
+		if (len(pairFollower.boardID) == 0):
+			pairFollower.key.delete()
+		userKey.get().following -= 1
+		userKey.get().put()
 		refreshBoard(self, boardUser, userKey)
 
 #Add Board
@@ -358,6 +409,7 @@ class DeleteBoard(webapp2.RequestHandler):
 		userGet = userKey.get()
 		#Delete Board Entity
 		boardKey = ndb.Key('Account', users.get_current_user().email(), 'Board', int(boardid))
+		logging.debug(boardKey)
 		boardKey.delete()
 		if (userGet.numBoards > 0):
 			userGet.numBoards -= 1
