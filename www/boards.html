@@ -59,8 +59,16 @@
 				<form class="form-inline navbar-form" name="input" action="./deleteBoard" method="post">
 					<td valign="baseline"><button class="btn btn-default btn-xs glyphicon glyphicon-remove" name="boardID" type="submit" value={{ board.boardID }}></button></td>
 				</form>
-				{% endif %}
+				<td>
+				<form name="input" action="./boardSettings" method="post">
+					<button class="btn btn-default btn-xs" name="boardID" type="submit" value={{ board.boardID }}>Board{{ board.boardID }}: {{ board.boardName }}</button>
+				</form>
+				</td>
+				{% else %}
 				<td valign="baseline">Board{{ board.boardID }}: {{ board.boardName }}</td>
+				{% endif %}
+
+
 				{% if board.boardID == user.defaultBoardID and board.boardUser == user.defaultBoardUser %}
 				<td valign="baseline">
 				<button class="btn disabled btn-primary btn-xs" name="label">Default</button>

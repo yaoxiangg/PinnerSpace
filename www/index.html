@@ -121,6 +121,15 @@
 		</canvas>
 	</div>
 
+	<!--TO BE FILLED-->
+	{% if user.email in currBoard.boardEditor %}
+	<!--Show set of buttons exclusive to board editors-->
+	{% elif user.email in currBoard.boardPoster %}
+	<!--Show set of buttons exclusive to board posters-->
+	{% else %}
+	<!--Show set of buttons exclusive to board viewers-->
+	{% endif %}
+
 	<!--Modifiers-->
 	<div align="center" style="padding: 5px">
 		<p>

@@ -38,6 +38,8 @@ class Board(ndb.Model):
 	boardID = ndb.IntegerProperty()
 	boardName =  ndb.StringProperty()
 	followers = ndb.StringProperty(repeated=True)
+	boardEditor = ndb.StringProperty(repeated=True)
+	boardPoster = ndb.StringProperty(repeated=True)
 	#TESTING
 	boardJSON = ndb.TextProperty()
 
@@ -448,6 +450,48 @@ class SaveBoard(webapp2.RequestHandler):
 		currBoard.boardJSON = bData
 		currBoard.put()
 
+
+def show(instance, boardID):
+	userGet = ndb.Key('Account', users.get_current_user().email()).get()
+	currBoard = ndb.Key('Account', users.get_current_user().email(), 'Board', int(boardID)).get()
+	if userGet:
+		parameters = {
+		'user': userGet,
+		'logout': users.create_logout_url(instance.request.host_url),
+		'board': currBoard,
+		}
+		webpage = jinja_environment.get_template('boardsettings.html')
+		instance.response.out.write(webpage.render(parameters))
+	else:
+		instance.redirect(users.create_login_url(instance.request.uri))
+
+class ShowBoardSettings(webapp2.RequestHandler):
+	def post(self):
+		show(self, self.request.get('boardID'))
+
+#Update Board Settings
+class UpdateBoard(webapp2.RequestHandler):
+	def post(self):
+		boardID = self.request.get('boardID')
+		userGranted = self.request.get('userGranted')
+		userPermission = self.request.get('userPermission')
+		userState = self.request.get('state')
+		currBoard = ndb.Key('Account', users.get_current_user().email(), 'Board', int(boardID)).get()
+
+		if userState == "editor":
+			currBoard.boardEditor.remove(userGranted)
+		if userState == "poster":
+			currBoard.boardPoster.remove(userGranted)
+
+		if userPermission == "edit":
+			currBoard.boardEditor.append(userGranted)
+		if userPermission == "post":
+			currBoard.boardPoster.append(userGranted)
+
+		currBoard.put()
+		show(self, boardID)
+
+
 #App
 app = webapp2.WSGIApplication([('/', MainHandler),
 	('/board', ShowBoard),
@@ -458,5 +502,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
 	('/followBoard', FollowBoard),
 	('/unfollowBoard', UnfollowBoard),
 	('/changeDefaultBoard', ChangeDefaultBoard),
+	('/boardSettings', ShowBoardSettings),
+	('/updateBoard', UpdateBoard),
 	('/settings', UpdateProfile),
 	('/update', UpdateProfile)], debug=True)
