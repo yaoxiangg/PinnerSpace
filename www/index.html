@@ -20,6 +20,8 @@
 	<!--Canvas Script--> <!--Maybe should move to another file? When it's more or less done?-->
 	<script type = "text/javascript">
 	var canvas;
+	var bgcolor = 'FFFFFF';
+	var blkcolor = '000000';
 	function loadCanvas(board){
 		canvas = new fabric.Canvas('canvas');
 		canvas.loadFromJSON(board);
@@ -53,6 +55,7 @@
 			top: center.top,
 			width: 30,
 			height: 30,
+			fill: blkcolor,
 		})
 		canvas.add(rect);
 	}
@@ -60,9 +63,8 @@
 		var curr = canvas.getActiveObject();
 		canvas.remove(curr);
 	}
-	var bgcolor = 'FFFFFF';
 	function setBG(){
-		canvas.setBackgroundColor("#" + bgcolor.toUpperCase(), canvas.renderAll.bind(canvas));
+		canvas.setBackgroundColor(bgcolor, canvas.renderAll.bind(canvas));
 	}
 	</script>
 	<!--End of Canvas Script-->
@@ -122,7 +124,7 @@
 	<!--Modifiers-->
 	<div align="center" style="padding: 5px">
 		<p>
-		<button class="btn" value="add" type="submit" onclick="addBlock()" float="center">New Block</button>
+		<button class="btn" value="addblock" type="submit" onclick="addBlock()" float="center">New Block</button>
 		<button class="btn" value="delblock" type="submit" onclick="delBlock()" float="center">Delete Block</button>
 		<button class="btn" value="clear" type="submit" onclick="clearCanvas()" float="center">Clear Board</button>
 		</p>
@@ -132,8 +134,14 @@
 		</p>
 		<p>
 			Change background colour:
-			<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="bgcolor=this.color.toString()">
+			<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="bgcolor='#'+this.color.toString().toUpperCase()">
 			<input type="submit" value="Apply" onclick="setBG()">
+		</p>
+		<p>
+			Change block colour:
+			<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="blkcolor='#'+this.color.toString().toUpperCase()">
+			<input type="submit" value="New Block" onclick="addBlock()">
+			<!--CONSIDER making it an apply thing? either change default or change selected block-->
 		</p>
 	</div>
 	<!--END BODY-->
