@@ -25,6 +25,11 @@
 	function loadCanvas(board){
 		canvas = new fabric.Canvas('canvas');
 		canvas.loadFromJSON(board);
+		//canvas.on('object:moving', onObjectMoving);
+		canvas.on('object:scaling', onObjectScaling);
+		//canvas.on('object:rotating', onObjectMoving);
+    	canvas.on('object:modified', onObjectMoving);
+    	canvas.on('after:render', onObjectMoving);
 	}
 	function saveCanvas(){
 		$.post("/saveBoard", { 
@@ -55,6 +60,7 @@
 			top: center.top,
 			width: 30,
 			height: 30,
+			minScaleLimit: 1,
 			fill: blkcolor,
 		})
 		canvas.add(rect);
@@ -66,6 +72,69 @@
 	function setBG(){
 		canvas.setBackgroundColor(bgcolor, canvas.renderAll.bind(canvas));
 	}
+	// Code to set limit to boundaries //
+    function onObjectMoving(e){
+        var selectedObject = e.target;
+        if(!selectedObject) return;
+        var updateCoords = false,
+            coords = selectedObject.getBoundingRect(),
+            maxWidth = canvas.getWidth(),
+            maxHeight = canvas.getHeight();
+
+
+        //if the object overflow to the right/bottom reposition it
+        if((coords.width+coords.left)>maxWidth){
+            updateCoords = true;
+            var newLeft = (coords.width/2) + (maxWidth - coords.width)-10;
+            selectedObject.set({left: newLeft});
+        }
+        if((coords.height+coords.top)>maxHeight){
+            updateCoords = true;
+            var newTop = (coords.height/2) + (maxHeight - coords.height)-10;
+            selectedObject.set({top: newTop});
+        }
+
+        //if the object is moved "AWAY" on the left/top of the canvas reposition it
+        if(coords.left<0){
+            updateCoords = true;
+            selectedObject.set({left: (coords.width/2)});
+        }
+        if(coords.top<0){
+            updateCoords = true;
+            selectedObject.set({top: (coords.height/2)});
+        }
+
+        if(updateCoords){
+            selectedObject.setCoords();
+        }
+    }
+
+	function onObjectScaling(e){
+        var shape = e.target;
+        if(!shape) return;
+        var cWidth = canvas.getWidth(),
+            cHeight = canvas.getHeight(),
+            currLeft = shape.left,
+            currTop = shape.top,
+            actualWidth = shape.scaleX * shape.width,
+            actualHeight = shape.scaleY * shape.height;
+
+        // if scaling extends beyond right/bottom
+        if(actualWidth+currLeft>cWidth){
+            shape.set({scaleX:(cWidth-currLeft)/shape.width});
+        }
+        if(actualHeight+currTop>cHeight){
+            shape.set({scaleY:(cHeight-currTop)/shape.height});
+        }
+
+        // if scaling extends beyond left/top
+        if(actualWidth+currLeft<0){
+            shape.set({scaleX:-(currLeft)/shape.width});
+        }
+        if(actualHeight+currTop<0){
+            shape.set({scaleY:-(currTop)/shape.height});
+        }
+    }
 	</script>
 	<!--End of Canvas Script-->
 </head>
