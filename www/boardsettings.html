@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>PinnerSpace - Board Settings</title>
+	<link rel="stylesheet" href="../bootstrap/css/bootstrap.min.css">
+	<link rel="stylesheet" href="../bootstrap/css/bootstrap-theme.min.css">
+	<script src="../scripts/jquery-1.11.1.min.js" type="text/javascript"></script>
+	<script src="../bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+	<script src="../scripts/shapes.js" type="text/javascript"></script>
+	<!--Google Login Script-->
+	<script type="text/javascript">
+		(function() {
+			var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+			po.src = 'https://apis.google.com/js/client:plusone.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+		})();
+	</script>
+	<!--End of Google Login Script-->
+</head>
+<body>
+	<div id="header">
+		<div class="jumbotron">
+			<h2 class="title" style="text-align: center">PinnerSpace</h2>
+			
+			<ul class="nav nav-pills pull-left clearfix">
+				<li><a href="./">Home</a></li> <!--stubs-->
+				<li><a href="./boards">Boards</a></li>
+				<li><a href="./settings">Settings</a></li>
+			</ul>
+			<ul class="nav nav-pills pull-right"> <!--class="span4 offset8 signin-align"-->
+				<li class="disabled"><a>Welcome back <b>{{ user.usernick }}</b>!</a></li>
+				<li><a href="{{ logout }}">Logout</a></li>
+			</ul>
+		</div>
+	</div>
+	
+	<!--BODY-->
+	<center>
+	<b>Settings Page for Board{{ board.boardID }} : {{ board.boardName }}</b>
+	<table align="center">
+	{% for follower in board.followers %}
+	<tr>
+		<td>{{ follower }}</td>
+		{% if follower in board.boardEditor %}
+		<td><form name="input" action="./updateBoard" method="post">
+			<input type="hidden" name="userGranted" value={{ follower }}>
+			<input type="hidden" name="state" value="editor">
+			<input type="hidden" name="boardID" value={{ board.boardID }}>
+			<button class="btn btn-warning btn-xs" name="userPermission" type="submit" value="post">Post Only</button>
+		</form>
+		</td>
+		<td><form name="input" action="./updateBoard" method="post">
+			<input type="hidden" name="userGranted" value={{ follower }}>
+			<input type="hidden" name="state" value="editor">
+			<input type="hidden" name="boardID" value={{ board.boardID }}>
+			<button class="btn btn-danger btn-xs" name="userPermission" type="submit" value="view">View Only</button>
+		</form>
+		</td>
+		{% elif follower in board.boardPoster %}
+		<td><form name="input" action="./updateBoard" method="post">
+			<input type="hidden" name="userGranted" value={{ follower }}>
+			<input type="hidden" name="state" value="poster">
+			<input type="hidden" name="boardID" value={{ board.boardID }}>
+			<button class="btn btn-success btn-xs" name="userPermission" type="submit" value="edit">Enable All Edits</button>
+		</form>
+		</td>
+		<td><form name="input" action="./updateBoard" method="post">
+			<input type="hidden" name="userGranted" value={{ follower }}>
+			<input type="hidden" name="state" value="poster">
+			<input type="hidden" name="boardID" value={{ board.boardID }}>
+			<button class="btn btn-danger btn-xs" name="userPermission" type="submit" value="view">View Only</button>
+		</form>
+		</td>
+		{% else %}
+		<td><form name="input" action="./updateBoard" method="post">
+			<input type="hidden" name="userGranted" value={{ follower }}>
+			<input type="hidden" name="state" value="viewer">
+			<input type="hidden" name="boardID" value={{ board.boardID }}>
+			<button class="btn btn-success btn-xs" name="userPermission" type="submit" value="edit">Enable All Edits</button>
+		</form>
+		</td>
+		<td><form name="input" action="./updateBoard" method="post">
+			<input type="hidden" name="userGranted" value={{ follower }}>
+			<input type="hidden" name="state" value="viewer">
+			<input type="hidden" name="boardID" value={{ board.boardID }}>
+			<button class="btn btn-warning btn-xs" name="userPermission" type="submit" value="post">Post Only</button>
+		</form>
+		</td>
+		{% endif %}
+	</tr>
+	{% endfor %}
+	</table>
+	<!--END BODY-->
+</body>
+</html>
