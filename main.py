@@ -120,12 +120,8 @@ def loadBoard(self, user, boardID, boardUser):
 		currBoard = None
 		
 	#Logging into Board - LoadBoard
-	logging.debug("Logging in to: " + user.email())
-	logging.debug(boardID)
-
 	parameters = {
 	'user': userGet,
-	'user_mail': user.email(),
 	'user_nick': usernickname,
 	'logout': users.create_logout_url(self.request.host_url),
 	'currBoard': currBoard,
@@ -191,29 +187,55 @@ class UpdateProfile(webapp2.RequestHandler):
 		webpage = jinja_environment.get_template('setting.html')
 		self.response.out.write(webpage.render(parameters))
 
+#This function is used by DisplayAllBoards, refreshBoard
+def showBoardsOf(instance, _target, email, template_values):
+	if email != "" and email != "#":
+		userKey = ndb.Key('Account', email)
+		#Get All Board, for each board, display the link.
+		query = ndb.gql("SELECT * "
+		"FROM Board "
+		"WHERE ANCESTOR IS :1 "
+		"ORDER BY boardID ASC",
+		userKey)
+		template_values.update({
+		'targetMail': email,
+		'boards': query,
+		})
+		if query.count() == 0 and email != users.get_current_user().email():
+			template_values.update({'error': "Cannot find any board for %s" % email,})
+	else:
+		template_values.update({'error': "User does not exist",})
+
+	template = jinja_environment.get_template(_target)
+	instance.response.out.write(template.render(template_values))
+
+#This function is used in ChangeDefaultBoard, FollowBoard, UnfollowBaord
+def refreshBoard(instance, boardUser, userKey):
+	if boardUser == "":
+		template_values = {
+		'user': userKey.get(),
+		'logout': users.create_logout_url(instance.request.host_url),
+		'error': "User does not exist",
+		}
+		showBoardsOf(instance, "boards.html", "", template_values)
+	else:
+		try:
+			target = ndb.Key('Account', boardUser).get()
+			template_values = {
+			'user': userKey.get(),
+			'logout': users.create_logout_url(instance.request.host_url),
+			}
+			if target != None:
+				template_values.update({'target_mail': boardUser,})
+				showBoardsOf(instance, "boards.html", boardUser, template_values)
+			else:
+				showBoardsOf(instance, "boards.html", "#", template_values)
+		except:
+			template_values = {'error': "User does not exist",}
+			showBoardsOf(instance, "boards.html", "", template_values)
+
 #Show all Board
 class DisplayAllBoards(webapp2.RequestHandler):
-	def showBoardsOf(self, _target, email, template_values):
-		if email != "" and email != "#":
-			userKey = ndb.Key('Account', email)
-			#Get All Board, for each board, display the link.
-			query = ndb.gql("SELECT * "
-			"FROM Board "
-			"WHERE ANCESTOR IS :1 "
-			"ORDER BY boardID ASC",
-			userKey)
-			template_values.update({
-			'targetMail': email,
-			'boards': query,
-			})
-			if query.count() == 0 and email != users.get_current_user().email():
-				template_values.update({'error': "Cannot find any board for %s" % email,})
-		else:
-			template_values.update({'error': "User does not exist",})
-
-		template = jinja_environment.get_template(_target)
-		self.response.out.write(template.render(template_values))
-
 	def get(self):
 		userKey = ndb.Key('Account', users.get_current_user().email())
 		template_values = {
@@ -221,7 +243,7 @@ class DisplayAllBoards(webapp2.RequestHandler):
 		'logout': users.create_logout_url(self.request.host_url),
 		'error': self.request.get('error'),
 		}
-		self.showBoardsOf("boards.html", users.get_current_user().email(), template_values)
+		showBoardsOf(self, "boards.html", users.get_current_user().email(), template_values)
 
 	def post(self):
 		userKey = ndb.Key('Account', users.get_current_user().email())
@@ -234,7 +256,7 @@ class DisplayAllBoards(webapp2.RequestHandler):
 				'logout': users.create_logout_url(self.request.host_url),
 				'error': "User does not exist",
 			}
-			self.showBoardsOf("boards.html", "", template_values)
+			showBoardsOf(self, "boards.html", "", template_values)
 		else:
 			try:
 				target = ndb.Key('Account', target_mail).get()
@@ -245,12 +267,50 @@ class DisplayAllBoards(webapp2.RequestHandler):
 				}
 				if target != None:
 					template_values.update({'target_mail': target_mail,})
-					self.showBoardsOf("boards.html", target_mail, template_values)
+					showBoardsOf(self, "boards.html", target_mail, template_values)
 				else:
-					self.showBoardsOf("boards.html", "#", template_values)
+					showBoardsOf(self, "boards.html", "#", template_values)
 			except:
 				template_values = {'error': "User does not exist",}
-				self.showBoardsOf("boards.html", "", template_values)
+				showBoardsOf(self, "boards.html", "", template_values)
+
+#Change Default Board
+class ChangeDefaultBoard(webapp2.RequestHandler):
+	def post(self):
+		#Change Default Board - Only available to user when user has followed
+		boardid = self.request.get('boardID')
+		boardUser = self.request.get('boardUser')
+		userKey = ndb.Key('Account', users.get_current_user().email())
+		userGet = userKey.get()
+		userGet.defaultBoardID = int(boardid)
+		userGet.defaultBoardUser = boardUser
+		userGet.put()
+		refreshBoard(self, boardUser, userKey)
+
+#Follow Board
+class FollowBoard(webapp2.RequestHandler):
+	def post(self):
+		boardID = self.request.get('boardID')
+		boardUser = self.request.get('boardUser')
+		userKey = ndb.Key('Account', users.get_current_user().email())
+		boardKey = ndb.Key('Account', boardUser, 'Board', int(boardID))
+		currBoard = boardKey.get()
+		currBoard.followers.append(users.get_current_user().email())
+		currBoard.put()
+		refreshBoard(self, boardUser, userKey)
+		#add to userkey.get().following - pair of boardid and boardUser, and .put()
+
+#Unfollow Board
+class UnfollowBoard(webapp2.RequestHandler):
+	def post(self):
+		boardID = self.request.get('boardID')
+		boardUser = self.request.get('boardUser')
+		userKey = ndb.Key('Account', users.get_current_user().email())
+		boardKey = ndb.Key('Account', boardUser, 'Board', int(boardID))
+		currBoard = boardKey.get()
+		currBoard.followers.remove(users.get_current_user().email())
+		currBoard.put()
+		refreshBoard(self, boardUser, userKey)
 
 #Add Board
 class AddBoard(webapp2.RequestHandler):
@@ -327,32 +387,6 @@ class SaveBoard(webapp2.RequestHandler):
 		currBoard.boardJSON = bData
 		currBoard.put()
 
-#Change Default Board
-class ChangeDefaultBoard(webapp2.RequestHandler):
-	def post(self):
-		#Change Default Board - Only available to user when user has followed
-		boardid = self.request.get('boardID')
-		boardUser = self.request.get('boardUser')
-		userKey = ndb.Key('Account', users.get_current_user().email())
-		userGet = userKey.get()
-		userGet.defaultBoardID = int(boardid)
-		userGet.defaultBoardUser = boardUser
-		userGet.put()
-		self.redirect("/boards")
-
-#Follow Board
-class FollowBoard(webapp2.RequestHandler):
-	def post(self):
-		boardID = self.request.get('boardID')
-		boardUser = self.request.get('boardUser')
-		userKey = ndb.Key('Account', users.get_current_user().email())
-		boardKey = ndb.Key('Account', boardUser, 'Board', int(boardID))
-		currBoard = boardKey.get()
-		currBoard.followers.append(users.get_current_user().email())
-		currBoard.put()
-		#add to userkey.get().following - pair of boardid and boardUser, and .put()
-		self.redirect("/boards")
-
 #App
 app = webapp2.WSGIApplication([('/', MainHandler),
 	('/board', ShowBoard),
@@ -361,6 +395,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
 	('/saveBoard', SaveBoard),
 	('/boards', DisplayAllBoards),
 	('/followBoard', FollowBoard),
+	('/unfollowBoard', UnfollowBoard),
 	('/changeDefaultBoard', ChangeDefaultBoard),
 	('/settings', UpdateProfile),
 	('/update', UpdateProfile)], debug=True)

@@ -48,6 +48,11 @@
 		</form>
 		<p><p>
 		<table>
+			{% if targetMail != user.email and targetMail %}
+			<tr>Boards of {{ targetMail }}<tr>
+			{% else %}
+			<tr>My Boards</tr>
+			{% endif %}
 			{% for board in boards %}
 			<tr>
 				{% if board.boardUser == user.email %}
@@ -58,7 +63,7 @@
 				<td valign="baseline">Board{{ board.boardID }}: {{ board.boardName }}</td>
 				{% if board.boardID == user.defaultBoardID and board.boardUser == user.defaultBoardUser %}
 				<td valign="baseline">
-				<span class="label label-primary">Default</span>
+				<button class="btn disabled btn-primary btn-xs" name="label">Default</button>
 				</td>
 				{% elif user.email in board.followers or board.boardUser == user.email %}
 				<td>
@@ -67,6 +72,14 @@
 					<button class="btn btn-default btn-xs" name="boardID" type="submit" value={{ board.boardID }}>Set as default</button>
 				</form>
 				</td>
+					{% if user.email != board.boardUser %}
+					<td>
+					<form name="input" action="./unfollowBoard" method="post">
+						<input type="hidden" name="boardUser" value={{ targetMail }}>
+						<button class="btn btn-danger btn-xs" name="boardID" type="submit" value={{ board.boardID }}>Unfollow</button>
+					</form>
+					</td>
+					{% endif %}
 				{% else %}
 				<td>
 				<form name="input" action="./followBoard" method="post">
