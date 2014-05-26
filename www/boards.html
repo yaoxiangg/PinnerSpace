@@ -16,6 +16,14 @@
 	})();
 	</script>
 	<!--End of Google Login Script-->
+	<style>
+	.btntext {
+		text-align: left;
+	}
+	.btn {
+		width: 100%;
+	}
+	</style>
 </head>
 <body>
 	<div id="header">
@@ -56,43 +64,44 @@
 			{% for board in boards %}
 			<tr>
 				{% if board.boardUser == user.email %}
-				<form class="form-inline navbar-form" name="input" action="./deleteBoard" method="post">
-					<td valign="baseline"><button class="btn btn-default btn-xs glyphicon glyphicon-remove" name="boardID" type="submit" value={{ board.boardID }}></button></td>
+				<form name="input" action="./deleteBoard" method="post">
+					<td valign="baseline"><button class="btn btn-default glyphicon glyphicon-remove" name="boardID" type="submit" value={{ board.boardID }}></button></td>
 				</form>
 				<td>
-				<form name="input" action="./boardSettings" method="post">
-					<button class="btn btn-default btn-xs" name="boardID" type="submit" value={{ board.boardID }}>Board{{ board.boardID }}: {{ board.boardName }}</button>
+				<form name="input" action="./boardSettings" method="post" width="100%">
+					<button class="btn btntext btn-primary btn-sm" name="boardID" type="submit" width="100%" value={{ board.boardID }}>Board{{ board.boardID }}: {{ board.boardName }}</button>
 				</form>
 				</td>
 				{% else %}
-				<td valign="baseline">Board{{ board.boardID }}: {{ board.boardName }}</td>
+				<td class="btntext btn btntext btn-sm btn-primary disabled" valign="baseline">Board{{ board.boardID }}: {{ board.boardName }}</td>
 				{% endif %}
 
 
 				{% if board.boardID == user.defaultBoardID and board.boardUser == user.defaultBoardUser %}
-				<td valign="baseline">
-				<button class="btn disabled btn-primary btn-xs" name="label">Default</button>
+				<td valign="middle">
+				<button class="btn disabled badge" name="label">Default</button>
 				</td>
 				{% elif user.email in board.followers or board.boardUser == user.email %}
-				<td>
-				<form name="input" action="./changeDefaultBoard" method="post">
-					<input type="hidden" name="boardUser" value={{ targetMail }}>
-					<button class="btn btn-default btn-xs" name="boardID" type="submit" value={{ board.boardID }}>Set as default</button>
-				</form>
-				</td>
 					{% if user.email != board.boardUser %}
 					<td>
 					<form name="input" action="./unfollowBoard" method="post">
 						<input type="hidden" name="boardUser" value={{ targetMail }}>
-						<button class="btn btn-danger btn-xs" name="boardID" type="submit" value={{ board.boardID }}>Unfollow</button>
+						<button class="btn btn-danger btn-sm" name="boardID" type="submit" value={{ board.boardID }}>Unfollow</button>
 					</form>
 					</td>
 					{% endif %}
+				<td>
+				<form name="input" action="./changeDefaultBoard" method="post">
+					<input type="hidden" name="boardUser" value={{ targetMail }}>
+					<button class="btn btn-default btn-sm" name="boardID" type="submit" value={{ board.boardID }}>Set as default</button>
+				</form>
+				</td>
+					
 				{% else %}
 				<td>
 				<form name="input" action="./followBoard" method="post">
 					<input type="hidden" name="boardUser" value={{ targetMail }}>
-					<button class="btn btn-info btn-xs" name="boardID" type="submit" value={{ board.boardID }}>Follow</button>
+					<button class="btn btn-info btn-sm" name="boardID" type="submit" value={{ board.boardID }}>Follow</button>
 				</form>
 				</td>
 				{% endif %}
