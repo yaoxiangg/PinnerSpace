@@ -25,12 +25,7 @@
 	function loadCanvas(board){
 		canvas = new fabric.Canvas('canvas');
 		canvas.loadFromJSON(board);
-		//canvas.on('object:moving', onObjectMoving);
-		//canvas.on('object:scaling', onObjectScaling);
-		//canvas.on('object:rotating', onObjectMoving);
     	canvas.on('object:modified', checkOOB);
-    	//canvas.on('after:render', onObjectMoving);
-
 	}
 	function saveCanvas(){
 		$.post("/saveBoard", { 
@@ -78,15 +73,25 @@
 		canvas.setBackgroundColor(bgcolor, canvas.renderAll.bind(canvas));
 	}
 	// Code to set limit to boundaries //
-    function checkOOB(e){
-        var curr = e.target;
-        if(!curr) return;
-        var updateCoords = false,
-            coords = curr.getBoundingRect(),
-            maxWidth = canvas.getWidth(),
-            maxHeight = canvas.getHeight(),
-            currAngle = curr.angle%360;
+	function checkOOB(e){
+		var curr = e.target;
+		if(!curr) return;
+		var updateCoords = false,
+			coords = curr.getBoundingRect(),
+			maxWidth = canvas.getWidth(),
+			maxHeight = canvas.getHeight(),
+			currAngle = curr.angle%360;
 
+		// If larger than canvas [incomplete]
+		if(coords.width>maxWidth){
+			if(currAngle<=90 || (currAngle>=180 && currAngle<=270)){
+				curr.set({scaleX:((maxWidth-Math.sin((currAngle%90)*Math.PI/180)*curr.height*curr.scaleY)/Math.cos((currAngle%90)*Math.PI/180))/curr.width});
+			}else if(currAngle>90 && currAngle<180){
+
+			}
+			curr.setCoords();
+			coords = curr.getBoundingRect();
+		}
 		// Exceed Right
 		if((coords.width+coords.left)>maxWidth){
 			updateCoords = true;
@@ -113,7 +118,6 @@
 				curr.set({top: maxHeight-Math.ceil(Math.cos((360-currAngle)*Math.PI/180))*curr.height*curr.scaleY});
 			}
 		}
-
 		// Exceed Left
 		if(coords.left<0){
 			updateCoords = true;
@@ -127,7 +131,6 @@
 				curr.set({left: 0});
 			}
 		}
-
 		// Exceed Top
 		if(coords.top<0){
 			updateCoords = true;
@@ -147,33 +150,6 @@
 			curr.setCoords();
 		}
 	}
-
-	function onObjectScaling(e){
-        var shape = e.target;
-        if(!shape) return;
-        var cWidth = canvas.getWidth(),
-            cHeight = canvas.getHeight(),
-            currLeft = shape.left,
-            currTop = shape.top,
-            actualWidth = shape.scaleX * shape.width,
-            actualHeight = shape.scaleY * shape.height;
-
-        // if scaling extends beyond right/bottom
-        if(actualWidth+currLeft>cWidth){
-            shape.set({scaleX:(cWidth-currLeft)/shape.width});
-        }
-        if(actualHeight+currTop>cHeight){
-            shape.set({scaleY:(cHeight-currTop)/shape.height});
-        }
-
-        // if scaling extends beyond left/top
-        if(actualWidth+currLeft<0){
-            shape.set({scaleX:-(currLeft)/shape.width});
-        }
-        if(actualHeight+currTop<0){
-            shape.set({scaleY:-(currTop)/shape.height});
-        }
-    }
 	</script>
 	<!--End of Canvas Script-->
 </head>

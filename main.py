@@ -380,7 +380,7 @@ class AddBoard(webapp2.RequestHandler):
 					currBoard.boardName = bName
 					currBoard.boardUser = users.get_current_user().email()
 					currBoard.boardID = userGet.counter
-					currBoard.boardJSON = '{"objects":[{"type":"rect","originX":"left","originY":"top","left":100,"top":100,"width":20,"height":20,"fill":"black","stroke":null,"strokeWidth":1,"strokeDashArray":null,"strokeLineCap":"butt","strokeLineJoin":"miter","strokeMiterLimit":10,"scaleX":1,"scaleY":1,"angle":0,"flipX":false,"flipY":false,"opacity":1,"shadow":null,"visible":true,"clipTo":null,"backgroundColor":"","rx":0,"ry":0,"x":0,"y":0}],"background":"white"}'
+					currBoard.boardJSON = '{"objects":[],"background":"white"}'
 					currBoard.put()
 					if userGet.numBoards == 1:
 						#Set default board
