@@ -28,8 +28,9 @@
 		//canvas.on('object:moving', onObjectMoving);
 		//canvas.on('object:scaling', onObjectScaling);
 		//canvas.on('object:rotating', onObjectMoving);
-    	canvas.on('object:modified', onObjectMoving);
+    	canvas.on('object:modified', checkOOB);
     	//canvas.on('after:render', onObjectMoving);
+
 	}
 	function saveCanvas(){
 		$.post("/saveBoard", { 
@@ -61,6 +62,10 @@
 			width: 30,
 			height: 30,
 			minScaleLimit: 1,
+			borderColor: 'rgba(67,46,79,0.75)',
+			cornerColor: 'rgba(58,174,175,0.85)',
+			cornerSize: 9,
+			transparentCorners: false,
 			fill: blkcolor,
 		})
 		canvas.add(rect);
@@ -73,7 +78,7 @@
 		canvas.setBackgroundColor(bgcolor, canvas.renderAll.bind(canvas));
 	}
 	// Code to set limit to boundaries //
-    function onObjectMoving(e){
+    function checkOOB(e){
         var curr = e.target;
         if(!curr) return;
         var updateCoords = false,
@@ -82,72 +87,67 @@
             maxHeight = canvas.getHeight(),
             currAngle = curr.angle%360;
 
-
-        //if the object overflow to the right/bottom reposition it
-        if((coords.width+coords.left)>maxWidth){
-        	updateCoords = true;
+		// Exceed Right
+		if((coords.width+coords.left)>maxWidth){
+			updateCoords = true;
 			if(currAngle>0 && currAngle<90){
-        		curr.set({left: maxWidth-Math.ceil(Math.cos(currAngle*Math.PI/180)*curr.width*curr.scaleX)});
+				curr.set({left: maxWidth-Math.ceil(Math.cos(currAngle*Math.PI/180)*curr.width*curr.scaleX)});
+			}else if(currAngle>=90 && currAngle<=180){
+				curr.set({left: maxWidth});
 			}else if(currAngle>180 && currAngle<270){
-        		curr.set({left: maxWidth-Math.ceil(Math.cos((270-currAngle)*Math.PI/180)*curr.height*curr.scaleY)});
-        	}else{
-        		curr.set({left: maxWidth-coords.width});
-        	}
-        }
-        if((coords.height+coords.top)>maxHeight){
-        	
-        }
-/*
-        //if the object is moved "AWAY" on the left/top of the canvas reposition it
-        if(coords.left<0){
-            updateCoords = true;
-            curr.set({left: (coords.width/2)});
-        }
-        if(coords.top<0){
-            updateCoords = true;
-            curr.set({top: (coords.height/2)});
-        }
-*/
-        if(updateCoords){
-            curr.setCoords();
-        }
-    }
-/*
-    function onObjectMoving(e){
-        var selectedObject = e.target;
-        if(!selectedObject) return;
-        var updateCoords = false,
-            coords = selectedObject.getBoundingRect(),
-            maxWidth = canvas.getWidth(),
-            maxHeight = canvas.getHeight();
+				curr.set({left: maxWidth-Math.ceil(Math.cos((270-currAngle)*Math.PI/180)*curr.height*curr.scaleY)});
+			}else{
+				curr.set({left: maxWidth-coords.width});
+			}
+		}
+		// Exceed Bottom
+		if((coords.height+coords.top)>maxHeight){
+			updateCoords = true;
+			if(currAngle>=0 && currAngle<=90){
+				curr.set({top: maxHeight-coords.height});
+			}else if(currAngle>90 && currAngle<180){
+				curr.set({top: maxHeight-Math.ceil(Math.cos((currAngle-90)*Math.PI/180)*curr.width*curr.scaleX)});
+			}else if(currAngle>=180 && currAngle<=270){
+				curr.set({top: maxHeight});
+			}else{
+				curr.set({top: maxHeight-Math.ceil(Math.cos((360-currAngle)*Math.PI/180))*curr.height*curr.scaleY});
+			}
+		}
 
+		// Exceed Left
+		if(coords.left<0){
+			updateCoords = true;
+			if(currAngle>0 && currAngle<90){
+				curr.set({left: Math.ceil(Math.cos((90-currAngle)*Math.PI/180)*curr.height*curr.scaleY)});
+			}else if(currAngle>=90 && currAngle<=180){
+				curr.set({left: coords.width});
+			}else if(currAngle>180 && currAngle<270){
+				curr.set({left: Math.ceil(Math.cos((currAngle-180)*Math.PI/180)*curr.width*curr.scaleX)});
+			}else{
+				curr.set({left: 0});
+			}
+		}
 
-        //if the object overflow to the right/bottom reposition it
-        if((coords.width+coords.left)>maxWidth){
-            updateCoords = true;
-            var newLeft = (coords.width/2) + (maxWidth - coords.width)-10;
-            selectedObject.set({left: newLeft});
-        }
-        if((coords.height+coords.top)>maxHeight){
-            updateCoords = true;
-            var newTop = (coords.height/2) + (maxHeight - coords.height)-10;
-            selectedObject.set({top: newTop});
-        }
+		// Exceed Top
+		if(coords.top<0){
+			updateCoords = true;
+			if(currAngle>=0 && currAngle<90){
+				curr.set({top: 0});
+			}else if(currAngle>=90 && currAngle<180){
+				curr.set({top: Math.ceil(Math.cos((180-currAngle)*Math.PI/180)*curr.height*curr.scaleY)});
+			}else if(currAngle>=180 && currAngle<270){
+				curr.set({top: coords.height});
+			}else if(currAngle>=270){
+				curr.set({top: Math.ceil(Math.cos((currAngle-270)*Math.PI/180))*curr.width*curr.scaleX});
+			}
+		}
 
-        //if the object is moved "AWAY" on the left/top of the canvas reposition it
-        if(coords.left<0){
-            updateCoords = true;
-            selectedObject.set({left: (coords.width/2)});
-        }
-        if(coords.top<0){
-            updateCoords = true;
-            selectedObject.set({top: (coords.height/2)});
-        }
+		// Implement new coordinates
+		if(updateCoords){
+			curr.setCoords();
+		}
+	}
 
-        if(updateCoords){
-            selectedObject.setCoords();
-        }
-    }*/
 	function onObjectScaling(e){
         var shape = e.target;
         if(!shape) return;
