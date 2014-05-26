@@ -20,16 +20,16 @@
 	<!--Canvas Script--> <!--Maybe should move to another file? When it's more or less done?-->
 	<script type = "text/javascript">
 	var canvas;
-	var bgcolor = 'FFFFFF';
-	var blkcolor = '000000';
+	var bgcolor = '#FFFFFF';
+	var blkcolor = '#000000';
 	function loadCanvas(board){
 		canvas = new fabric.Canvas('canvas');
 		canvas.loadFromJSON(board);
 		//canvas.on('object:moving', onObjectMoving);
-		canvas.on('object:scaling', onObjectScaling);
+		//canvas.on('object:scaling', onObjectScaling);
 		//canvas.on('object:rotating', onObjectMoving);
     	canvas.on('object:modified', onObjectMoving);
-    	canvas.on('after:render', onObjectMoving);
+    	//canvas.on('after:render', onObjectMoving);
 	}
 	function saveCanvas(){
 		$.post("/saveBoard", { 
@@ -74,6 +74,46 @@
 	}
 	// Code to set limit to boundaries //
     function onObjectMoving(e){
+        var curr = e.target;
+        if(!curr) return;
+        var updateCoords = false,
+            coords = curr.getBoundingRect(),
+            maxWidth = canvas.getWidth(),
+            maxHeight = canvas.getHeight(),
+            currAngle = curr.angle%360;
+
+
+        //if the object overflow to the right/bottom reposition it
+        if((coords.width+coords.left)>maxWidth){
+        	updateCoords = true;
+			if(currAngle>0 && currAngle<90){
+        		curr.set({left: maxWidth-Math.ceil(Math.cos(currAngle*Math.PI/180)*curr.width*curr.scaleX)});
+			}else if(currAngle>180 && currAngle<270){
+        		curr.set({left: maxWidth-Math.ceil(Math.cos((270-currAngle)*Math.PI/180)*curr.height*curr.scaleY)});
+        	}else{
+        		curr.set({left: maxWidth-coords.width});
+        	}
+        }
+        if((coords.height+coords.top)>maxHeight){
+        	
+        }
+/*
+        //if the object is moved "AWAY" on the left/top of the canvas reposition it
+        if(coords.left<0){
+            updateCoords = true;
+            curr.set({left: (coords.width/2)});
+        }
+        if(coords.top<0){
+            updateCoords = true;
+            curr.set({top: (coords.height/2)});
+        }
+*/
+        if(updateCoords){
+            curr.setCoords();
+        }
+    }
+/*
+    function onObjectMoving(e){
         var selectedObject = e.target;
         if(!selectedObject) return;
         var updateCoords = false,
@@ -107,8 +147,7 @@
         if(updateCoords){
             selectedObject.setCoords();
         }
-    }
-
+    }*/
 	function onObjectScaling(e){
         var shape = e.target;
         if(!shape) return;
