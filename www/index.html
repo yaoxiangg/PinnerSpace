@@ -22,10 +22,12 @@
 	var canvas;
 	var bgcolor = '#FFFFFF';
 	var blkcolor = '#000000';
+	var orig;
 	function loadCanvas(board){
 		canvas = new fabric.Canvas('canvas');
 		canvas.loadFromJSON(board);
-    	canvas.on('object:modified', checkOOB);
+		canvas.on('object:modified', checkOOB);
+    	//canvas.on('object:selected', function(e){saveOrig(e)}); // this prevents immediate dragging. not sure why. 
 	}
 	function saveCanvas(){
 		$.post("/saveBoard", { 
@@ -34,12 +36,14 @@
 			data: JSON.stringify(canvas)
 		});
 		alert("Successfully saved!");
+		console.log(JSON.stringify(canvas));
 	}
 	//INCOMPLETE
 	function revert(board){
 		var resp=confirm("You sure? All your unsaved work will be lost...<STILL EMPTY>");
 		if (resp==true){
   			// Need to reload with curr JSON data not the one just passed through
+  			//location.reload(true);
   		}
 
 	}
@@ -60,7 +64,7 @@
 			borderColor: 'rgba(67,46,79,0.75)',
 			cornerColor: 'rgba(58,174,175,0.85)',
 			cornerSize: 9,
-			transparentCorners: false,
+			transparentCorners: false, //these info not saved
 			fill: blkcolor,
 		})
 		canvas.add(rect);
@@ -73,6 +77,9 @@
 		canvas.setBackgroundColor(bgcolor, canvas.renderAll.bind(canvas));
 	}
 	// Code to set limit to boundaries //
+	function saveOrig(e){
+		orig = clone(e.target);
+	}
 	function checkOOB(e){
 		var curr = e.target;
 		if(!curr) return;
@@ -81,17 +88,28 @@
 			maxWidth = canvas.getWidth(),
 			maxHeight = canvas.getHeight(),
 			currAngle = curr.angle%360;
+		var sx = curr.getScaleX();
+		var sy = curr.getScaleY();
 
-		// If larger than canvas [incomplete]
-		if(coords.width>maxWidth){
-			if(currAngle<=90 || (currAngle>=180 && currAngle<=270)){
-				curr.set({scaleX:((maxWidth-Math.sin((currAngle%90)*Math.PI/180)*curr.height*curr.scaleY)/Math.cos((currAngle%90)*Math.PI/180))/curr.width});
-			}else if(currAngle>90 && currAngle<180){
-
+		// If larger than canvas [incomplete: can only work with 0-45 deg, 180-225deg i think]
+/*		if(orig.getScaleX() != sx || orig.getScaleY() != sy){
+			var corners = ['tl', 'tr', 'bl', 'br'];
+			var scaleCorner = target.__corner;
+			if(coords.width>maxWidth){
+				if(currAngle<=90 || (currAngle>=180 && currAngle<=270)){
+					curr.set({scaleX:((maxWidth-Math.sin((currAngle%90)*Math.PI/180)*curr.height*curr.scaleY)/Math.cos((currAngle%90)*Math.PI/180))/curr.width});
+					if(corners.indexOf(scaleCorner)>-1){
+						curr.set({scaleY: (curr.scaleX/sx) * sy});
+					}
+				}else{
+					curr.set({scaleY:((maxWidth-Math.sin((currAngle%90)*Math.PI/180)*curr.width*curr.scaleX)/Math.cos((currAngle%90)*Math.PI/180))/curr.height});
+				}
+				curr.setCoords();
+				coords = curr.getBoundingRect();
 			}
-			curr.setCoords();
-			coords = curr.getBoundingRect();
-		}
+			scaled = false;
+		}*/
+
 		// Exceed Right
 		if((coords.width+coords.left)>maxWidth){
 			updateCoords = true;
