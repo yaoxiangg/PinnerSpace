@@ -23,95 +23,141 @@
 	var bgcolor = '#FFFFFF';
 	var blkcolor = '#000000';
 	var orig;
-	function loadCanvas(board){
-		canvas = new fabric.Canvas('canvas');
+	var atLimit;
+	var lastSave;
+	function loadCanvas(board, init){
+		if(init){
+			canvas = new fabric.Canvas('canvas');
+			canvas.on({
+				'object:modified': checkOOB,
+				'object:selected': saveOrig,
+				'object:scaling': setLimit,
+			});
+			lastSave = board;
+		}
 		canvas.loadFromJSON(board);
-		canvas.on('object:modified', checkOOB);
-    	//canvas.on('object:selected', function(e){saveOrig(e)}); // this prevents immediate dragging. not sure why. 
+		canvas.forEachObject(function(o){
+			o.set({
+				minScaleLimit: 1,
+				borderColor: 'rgba(67,46,79,0.75)',
+				cornerColor: 'rgba(58,174,175,0.85)',
+				cornerSize: 9,
+				transparentCorners: false,
+			});
+		});
 	}
 	function saveCanvas(){
-		$.post("/saveBoard", { 
+		$.post("/saveBoard", {
 			boardUser: "{{ currBoard.boardUser }}",
 			boardID: {{ currBoard.boardID }},
 			data: JSON.stringify(canvas)
 		});
+		lastSave = JSON.stringify(canvas);
 		alert("Successfully saved!");
-		console.log(JSON.stringify(canvas));
 	}
 	//INCOMPLETE
 	function revert(board){
-		var resp=confirm("You sure? All your unsaved work will be lost...<STILL EMPTY>");
+		var resp=confirm("You sure? All your unsaved work will be lost...");
 		if (resp==true){
-  			// Need to reload with curr JSON data not the one just passed through
-  			//location.reload(true);
+  			loadCanvas(lastSave, false);
   		}
-
-	}
-	function clearCanvas(){
-		var resp=confirm("You sure? This will clear everything!");
-		if (resp==true){
+  	}
+  	function clearCanvas(){
+  		var resp=confirm("Are you sure? This will clear everything!");
+  		if (resp){
   			canvas.clear();
   		}
-	}
-	function addBlock(){
-		var center = canvas.getCenter();
-		var rect = new fabric.Rect({
-			left: center.left,
-			top: center.top,
-			width: 30,
-			height: 30,
-			minScaleLimit: 1,
-			borderColor: 'rgba(67,46,79,0.75)',
-			cornerColor: 'rgba(58,174,175,0.85)',
-			cornerSize: 9,
-			transparentCorners: false, //these info not saved
+  	}
+  	function addBlock(){
+  		var center = canvas.getCenter();
+  		var rect = new fabric.Rect({
+  			left: center.left,
+  			top: center.top,
+  			width: 10,
+  			height: 10,
+  			scaleX: 3,
+  			scaleY: 3,
+  			minScaleLimit: 1,
+  			borderColor: 'rgba(67,46,79,0.75)',
+  			cornerColor: 'rgba(58,174,175,0.85)',
+  			cornerSize: 9,
+			transparentCorners: false, // border/corner info not saved
 			fill: blkcolor,
 		})
-		canvas.add(rect);
-	}
-	function delBlock(){
-		var curr = canvas.getActiveObject();
-		canvas.remove(curr);
-	}
-	function setBG(){
-		canvas.setBackgroundColor(bgcolor, canvas.renderAll.bind(canvas));
-	}
+  		canvas.add(rect);
+  	}
+  	function delBlock() { canvas.remove(canvas.getActiveObject()); }
+  	function setBG() { canvas.setBackgroundColor(bgcolor, canvas.renderAll.bind(canvas)); }
+
 	// Code to set limit to boundaries //
-	function saveOrig(e){
-		orig = clone(e.target);
+	function saveOrig(e) { orig = fabric.util.object.clone(e.target); }
+	function setLimit(e){
+		var curr=e.target;
+		if(!curr) return;
+		curr.setCoords();
+		var bounds = curr.getBoundingRect(),
+			maxWidth = canvas.getWidth(),
+			maxHeight = canvas.getHeight();
+		var outOf = {
+			top: bounds.top<0,
+			left: bounds.left<0,
+			bottom: bounds.top+bounds.height>maxHeight,
+			right: bounds.left+bounds.width>maxWidth,
+		};
+
+		if(!((outOf.top || outOf.left) || (outOf.bottom || outOf.right))){
+			atLimit = {
+				top: curr.getTop(),
+				left: curr.getLeft(),
+				scaleX: curr.getScaleX(),
+				scaleY: curr.getScaleY(),
+			};
+		}
 	}
 	function checkOOB(e){
 		var curr = e.target;
 		if(!curr) return;
+		// if scale has been modified, checkScale for OOB
+		if((orig.getScaleX() != curr.getScaleX()) || (orig.getScaleY() != curr.getScaleY()))
+			checkScale(curr);
+		// otherwise check position
+		else
+			checkPos(curr);
+		orig = fabric.util.object.clone(curr);
+	}
+	function checkScale(curr){
 		var updateCoords = false,
-			coords = curr.getBoundingRect(),
+			bounds = curr.getBoundingRect(),
 			maxWidth = canvas.getWidth(),
 			maxHeight = canvas.getHeight(),
 			currAngle = curr.angle%360;
-		var sx = curr.getScaleX();
-		var sy = curr.getScaleY();
-
-		// If larger than canvas [incomplete: can only work with 0-45 deg, 180-225deg i think]
-/*		if(orig.getScaleX() != sx || orig.getScaleY() != sy){
-			var corners = ['tl', 'tr', 'bl', 'br'];
-			var scaleCorner = target.__corner;
-			if(coords.width>maxWidth){
-				if(currAngle<=90 || (currAngle>=180 && currAngle<=270)){
-					curr.set({scaleX:((maxWidth-Math.sin((currAngle%90)*Math.PI/180)*curr.height*curr.scaleY)/Math.cos((currAngle%90)*Math.PI/180))/curr.width});
-					if(corners.indexOf(scaleCorner)>-1){
-						curr.set({scaleY: (curr.scaleX/sx) * sy});
-					}
-				}else{
-					curr.set({scaleY:((maxWidth-Math.sin((currAngle%90)*Math.PI/180)*curr.width*curr.scaleX)/Math.cos((currAngle%90)*Math.PI/180))/curr.height});
-				}
-				curr.setCoords();
-				coords = curr.getBoundingRect();
-			}
-			scaled = false;
-		}*/
-
+		var outOf = {
+			top: bounds.top<0,
+			left: bounds.left<0,
+			bottom: bounds.top+bounds.height>maxHeight,
+			right: bounds.left+bounds.width>maxWidth,
+		};
+		// if out of bounds, reset to last "atLimit" state
+		if((outOf.top || outOf.left) || (outOf.bottom || outOf.right)){
+			curr.set(atLimit);
+			curr.setCoords();
+			// console.log("New curr: " + JSON.stringify(curr));
+		}
+	}
+	function checkPos(curr){
+		var updateCoords = false,
+		bounds = curr.getBoundingRect(),
+		maxWidth = canvas.getWidth(),
+		maxHeight = canvas.getHeight(),
+		currAngle = curr.angle%360;
+		var outOf = {
+			top: bounds.top<0,
+			left: bounds.left<0,
+			bottom: bounds.top+bounds.height>maxHeight,
+			right: bounds.left+bounds.width>maxWidth,
+		};
 		// Exceed Right
-		if((coords.width+coords.left)>maxWidth){
+		if(outOf.right){
 			updateCoords = true;
 			if(currAngle>0 && currAngle<90){
 				curr.set({left: maxWidth-Math.ceil(Math.cos(currAngle*Math.PI/180)*curr.width*curr.scaleX)});
@@ -120,29 +166,29 @@
 			}else if(currAngle>180 && currAngle<270){
 				curr.set({left: maxWidth-Math.ceil(Math.cos((270-currAngle)*Math.PI/180)*curr.height*curr.scaleY)});
 			}else{
-				curr.set({left: maxWidth-coords.width});
+				curr.set({left: maxWidth-bounds.width});
 			}
 		}
 		// Exceed Bottom
-		if((coords.height+coords.top)>maxHeight){
+		if(outOf.bottom){
 			updateCoords = true;
 			if(currAngle>=0 && currAngle<=90){
-				curr.set({top: maxHeight-coords.height});
+				curr.set({top: maxHeight-bounds.height});
 			}else if(currAngle>90 && currAngle<180){
 				curr.set({top: maxHeight-Math.ceil(Math.cos((currAngle-90)*Math.PI/180)*curr.width*curr.scaleX)});
 			}else if(currAngle>=180 && currAngle<=270){
 				curr.set({top: maxHeight});
 			}else{
-				curr.set({top: maxHeight-Math.ceil(Math.cos((360-currAngle)*Math.PI/180))*curr.height*curr.scaleY});
+				curr.set({top: maxHeight-Math.ceil(Math.cos((360-currAngle)*Math.PI/180)*curr.height*curr.scaleY)});
 			}
 		}
 		// Exceed Left
-		if(coords.left<0){
+		if(outOf.left){
 			updateCoords = true;
 			if(currAngle>0 && currAngle<90){
 				curr.set({left: Math.ceil(Math.cos((90-currAngle)*Math.PI/180)*curr.height*curr.scaleY)});
 			}else if(currAngle>=90 && currAngle<=180){
-				curr.set({left: coords.width});
+				curr.set({left: bounds.width});
 			}else if(currAngle>180 && currAngle<270){
 				curr.set({left: Math.ceil(Math.cos((currAngle-180)*Math.PI/180)*curr.width*curr.scaleX)});
 			}else{
@@ -150,16 +196,16 @@
 			}
 		}
 		// Exceed Top
-		if(coords.top<0){
+		if(outOf.top){
 			updateCoords = true;
 			if(currAngle>=0 && currAngle<90){
 				curr.set({top: 0});
 			}else if(currAngle>=90 && currAngle<180){
 				curr.set({top: Math.ceil(Math.cos((180-currAngle)*Math.PI/180)*curr.height*curr.scaleY)});
 			}else if(currAngle>=180 && currAngle<270){
-				curr.set({top: coords.height});
-			}else if(currAngle>=270){
-				curr.set({top: Math.ceil(Math.cos((currAngle-270)*Math.PI/180))*curr.width*curr.scaleX});
+				curr.set({top: bounds.height});
+			}else{
+				curr.set({top: Math.ceil( Math.cos( (currAngle-270) * Math.PI/180) * curr.width * curr.scaleX )});
 			}
 		}
 
@@ -171,7 +217,7 @@
 	</script>
 	<!--End of Canvas Script-->
 </head>
-<body onload="loadCanvas({{boardData}})">
+<body onload="loadCanvas({{boardData}}, true)">
 	<!--HEADER-->
 	<div id="header">
 		<div class="jumbotron">
@@ -200,15 +246,15 @@
 			<button data-toggle="dropdown" class="btn btn-primary dropdown-toggle"><span class="caret"></span></button>
 			<ul class="dropdown-menu">
 				{% for board in boards %}
-					{% if board.boardID != currBoard.boardID or board.boardUser != currBoard.boardUser %}
-					<li><a href="./board?boardID={{ board.boardID }}&boardUser={{ board.boardUser }}">{{ board.boardName }}</a></li>
-					{% endif %}
+				{% if board.boardID != currBoard.boardID or board.boardUser != currBoard.boardUser %}
+				<li><a href="./board?boardID={{ board.boardID }}&boardUser={{ board.boardUser }}">{{ board.boardName }}</a></li>
+				{% endif %}
 				{% endfor %}
 				<li class="divider"></li>
 				{% for board2 in boards2 %}
-					{% if board2.boardID != currBoard.boardID or board2.boardUser != currBoard.boardUser %}
-					<li><a href="./board?boardID={{ board2.boardID }}&boardUser={{ board2.boardUser }}">{{ board2.boardName }}</a></li>
-					{% endif %}
+				{% if board2.boardID != currBoard.boardID or board2.boardUser != currBoard.boardUser %}
+				<li><a href="./board?boardID={{ board2.boardID }}&boardUser={{ board2.boardUser }}">{{ board2.boardName }}</a></li>
+				{% endif %}
 				{% endfor %}
 			</ul>
 			{% endif %}
@@ -235,13 +281,13 @@
 	<!--Modifiers-->
 	<div align="center" style="padding: 5px">
 		<p>
-		<button class="btn" value="addblock" type="submit" onclick="addBlock()" float="center">New Block</button>
-		<button class="btn" value="delblock" type="submit" onclick="delBlock()" float="center">Delete Block</button>
-		<button class="btn" value="clear" type="submit" onclick="clearCanvas()" float="center">Clear Board</button>
+			<button class="btn" value="addblock" type="submit" onclick="addBlock()" float="center">New Block</button>
+			<button class="btn" value="delblock" type="submit" onclick="delBlock()" float="center">Delete Block</button>
+			<button class="btn" value="clear" type="submit" onclick="clearCanvas()" float="center">Clear Board</button>
 		</p>
 		<p>
-		<button class="btn" value="save" type="submit" onclick="saveCanvas()" float="center">Save Changes</button>
-		<button class="btn" value="revert" type="submit" onclick="revert({{boardData}})" float="center">Reset Changes</button>
+			<button class="btn" value="save" type="submit" onclick="saveCanvas()" float="center">Save Changes</button>
+			<button class="btn" value="revert" type="submit" onclick="revert({{boardData}})" float="center">Reset Changes</button>
 		</p>
 		<p>
 			Change background colour:
