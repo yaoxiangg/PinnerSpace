@@ -55,8 +55,7 @@
 		lastSave = JSON.stringify(canvas);
 		alert("Successfully saved!");
 	}
-	//INCOMPLETE
-	function revert(board){
+	function revert(){
 		var resp=confirm("You sure? All your unsaved work will be lost...");
 		if (resp==true){
   			loadCanvas(lastSave, false);
@@ -89,11 +88,17 @@
   	function delBlock() { canvas.remove(canvas.getActiveObject()); }
   	function setBG() { canvas.setBackgroundColor(bgcolor, canvas.renderAll.bind(canvas)); }
 
+  	// text
+  	function addText() {
+  		var input = "";
+  		alert('Please enter a value!');
+		input.focus(); // focuses on the blank to fill
+  	}
+
 	// Code to set limit to boundaries //
 	function saveOrig(e) { orig = fabric.util.object.clone(e.target); }
 	function setLimit(e){
 		var curr=e.target;
-		if(!curr) return;
 		curr.setCoords();
 		var bounds = curr.getBoundingRect(),
 			maxWidth = canvas.getWidth(),
@@ -105,6 +110,8 @@
 			right: bounds.left+bounds.width>maxWidth,
 		};
 
+		// if not out of bounds, save state
+		// (the interval is not very fast, so this method is not so precise if you move fast)
 		if(!((outOf.top || outOf.left) || (outOf.bottom || outOf.right))){
 			atLimit = {
 				top: curr.getTop(),
@@ -123,6 +130,7 @@
 		// otherwise check position
 		else
 			checkPos(curr);
+		// save new state into orig
 		orig = fabric.util.object.clone(curr);
 	}
 	function checkScale(curr){
@@ -287,7 +295,7 @@
 		</p>
 		<p>
 			<button class="btn" value="save" type="submit" onclick="saveCanvas()" float="center">Save Changes</button>
-			<button class="btn" value="revert" type="submit" onclick="revert({{boardData}})" float="center">Reset Changes</button>
+			<button class="btn" value="revert" type="submit" onclick="revert()" float="center">Reset Changes</button>
 		</p>
 		<p>
 			Change background colour:
@@ -304,25 +312,3 @@
 	<!--END BODY-->
 </body>
 </html>
-
-
-<!--Old stuff
-		var canvas = new fabric.Canvas('canvas');
-		canvas.backgroundColor = 'green';
-		var rect = new fabric.Rect({
-			left: 100,
-			top: 100,
-			fill: 'black',
-			width: 20,
-			height: 20
-		});
-
-		// "add" rectangle onto canvas
-		canvas.add(rect);
-
-		var canvasStr = JSON.stringify(canvas);
-		console.log(canvasStr);
-
-alert('Please enter a value!');
-input.focus(); // focuses on the blank to fill (didn't know that)
--->
