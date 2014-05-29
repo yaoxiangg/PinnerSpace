@@ -40,7 +40,7 @@
 		canvas.forEachObject(function(o){
 			o.set({
 				minScaleLimit: 1,
-				borderColor: 'rgba(67,46,79,0.75)',
+				borderColor: 'rgba(67,46,79,0.75)',		// may conflict with text
 				cornerColor: 'rgba(58,174,175,0.85)',
 				cornerSize: 9,
 				transparentCorners: false,
@@ -86,11 +86,11 @@
 		})
   		canvas.add(rect);
   	}
-  	function cloneBlock(){
+  	function cloneActive(){
   		var curr = canvas.getActiveObject();
   		var clone = fabric.util.object.clone(curr);
   		clone.center();
-  		curr.set('active', false);
+  		curr.set('active', false); // small bug: delActive() deletes the original object instead of clone
   		canvas.add(clone);
   	}
   	function delActive() {
@@ -109,11 +109,26 @@
 		canvas.renderAll();
 	}
 
-  	// text
+  	// text [ WIP ]
   	function addText() {
-  		var input = "";
-  		alert('Please enter a value!');
-		input.focus(); // focuses on the blank to fill
+  		var input = document.getElementById("newtext");
+  		var text = input.value;
+  		if(text == null || text.trim() == ""){
+  			alert('Please enter something!');
+			input.focus(); // focuses on the blank to fill
+			return;
+		}
+		var newText = new fabric.IText(text);
+		canvas.add(newText);
+		newText.center();
+		newText.set({
+			minScaleLimit: 1, // may not be a good idea. currently staying because of loadCanvas()
+  			editingBorderColor: 'rgba(67,46,79,0.75)',
+  			cornerColor: 'rgba(58,174,175,0.85)',
+  			cornerSize: 9,
+			transparentCorners: false,
+		});
+		newText.setCoords();
   	}
 
 	// Code to set limit to boundaries //
@@ -264,77 +279,99 @@
 		</div>
 	</div>
 	
-	<!--BOARD NAME/SELECTOR-->
-	<div id="boardInfo" align="center">
-		Board{{ currBoard.boardID }} {{ currBoard.boardUser }}
-	</div>
-	<center>
-		<div class="btn-group">
-			<button class="disabled btn btn-primary">{{ currBoard.boardName }}</button>
-			{% if user.numBoards > 0 or user.following > 0 %}
-			<button data-toggle="dropdown" class="btn btn-primary dropdown-toggle"><span class="caret"></span></button>
-			<ul class="dropdown-menu">
-				{% for board in boards %}
-				{% if board.boardID != currBoard.boardID or board.boardUser != currBoard.boardUser %}
-				<li><a href="./board?boardID={{ board.boardID }}&boardUser={{ board.boardUser }}">{{ board.boardName }}</a></li>
-				{% endif %}
-				{% endfor %}
-				<li class="divider"></li>
-				{% for board2 in boards2 %}
-				{% if board2.boardID != currBoard.boardID or board2.boardUser != currBoard.boardUser %}
-				<li><a href="./board?boardID={{ board2.boardID }}&boardUser={{ board2.boardUser }}">{{ board2.boardName }}</a></li>
-				{% endif %}
-				{% endfor %}
-			</ul>
-			{% endif %}
+	<!--BODY-->
+	<div class="row">
+		<!--LEFT: Pinboard-->
+		<div class="col-md-7">
+			<div id="pinboard" style="width:1000px; height:600px; margin: 0 auto;">
+				<!--canvas id must be consistent with js script-->
+				<canvas id="canvas" width="1000" height="600" style="border: 1px solid black;">
+					This text is displayed if your browser does not support HTML5 Canvas.
+				</canvas>
+			</div>
 		</div>
-	</center>
 
-	<!--PinBoard-->
-	<div id="pinboard" style="width:1000px; height:500px; margin: 0 auto; padding: 5px">
-		<!--canvas id must be consistent with js script-->
-		<canvas id="canvas" width="1000" height="500" style="border: 1px solid black;">
-			This text is displayed if your browser does not support HTML5 Canvas.
-		</canvas>
-	</div>
+		<!--RIGHT: Info++ -->
+		<div class="col-md-5">
+			<!--BOARD NAME/SELECTOR-->
+			<div id="boardInfo" align="left">
+				You are currently viewing <strong>Board{{ currBoard.boardID }} [{{ currBoard.boardUser }}]</strong><br>
+			</div>
+			<span>Want to view another board? Click here -> </span>
+			<div class="btn-group">
+				<button class="disabled btn btn-primary">{{ currBoard.boardName }}</button>
+				{% if user.numBoards > 0 or user.following > 0 %}
+				<button data-toggle="dropdown" class="btn btn-primary dropdown-toggle"><span class="caret"></span></button>
+				<ul class="dropdown-menu">
+					{% for board in boards %}
+					{% if board.boardID != currBoard.boardID or board.boardUser != currBoard.boardUser %}
+					<li><a href="./board?boardID={{ board.boardID }}&boardUser={{ board.boardUser }}">{{ board.boardName }}</a></li>
+					{% endif %}
+					{% endfor %}
+					<li class="divider"></li>
+					{% for board2 in boards2 %}
+					{% if board2.boardID != currBoard.boardID or board2.boardUser != currBoard.boardUser %}
+					<li><a href="./board?boardID={{ board2.boardID }}&boardUser={{ board2.boardUser }}">{{ board2.boardName }}</a></li>
+					{% endif %}
+					{% endfor %}
+				</ul>
+				{% endif %}
+			</div>
+			
+			<!--BREAK--><hr>
 
-	<!--TO BE FILLED-->
-	{% if user.email in currBoard.boardEditor %}
-	<!--Show set of buttons exclusive to board editors-->
-	{% elif user.email in currBoard.boardPoster %}
-	<!--Show set of buttons exclusive to board posters-->
-	{% else %}
-	<!--Show set of buttons exclusive to board viewers-->
-	{% endif %}
+			<!--TO BE FILLED-->
+			{% if user.email in currBoard.boardEditor %}
+			<!--Show set of buttons exclusive to board editors-->
+			{% elif user.email in currBoard.boardPoster %}
+			<!--Show set of buttons exclusive to board posters-->
+			{% else %}
+			<!--Show set of buttons exclusive to board viewers-->
+			{% endif %}
 
-	<!--Modifiers-->
-	<div align="center" style="padding: 5px">
-		<p>
-			<button class="btn" value="addblock" type="submit" onclick="addBlock()" float="center">New Block</button>
-			<button class="btn" value="delblock" type="submit" onclick="delActive()" float="center">Delete</button>
-			<button class="btn" value="cloneblock" type="submit" onclick="cloneBlock()" float="center">Clone Block</button>
-			<button class="btn" value="clear" type="submit" onclick="clearCanvas()" float="center">Clear Board</button>
-		</p>
-		<p>
-			<button class="btn" value="save" type="submit" onclick="saveCanvas()" float="center">Save Changes</button>
-			<button class="btn" value="revert" type="submit" onclick="revert()" float="center">Reset Changes</button>
-		</p>
-		<p>
-			Change background colour:
-			<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="bgcolor='#'+this.color.toString().toUpperCase()">
-			<input type="submit" value="Apply" onclick="setBG()">
-		</p>
-		<p>
-			Change new block colour:
-			<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="blkcolor='#'+this.color.toString().toUpperCase()">
-			<input type="submit" value="New Block" onclick="addBlock()">
-		</p>
-		<p>
-			Change current block colour:
-			<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
-			<input type="submit" value="Apply" onclick="setBlkColor()">
-			<!--CONSIDER making it an apply thing? either change default or change selected block-->
-		</p>
+			<!--Modifiers-->
+			<div align="left" style="padding: 5px">
+				<h4>>General Tools</h4>
+				<p>
+					<button class="btn" onclick="delActive()">Delete</button>
+					<button class="btn" onclick="cloneActive()">Clone</button>
+				</p>
+				<p>
+					<button class="btn btn-success" onclick="saveCanvas()">Save Changes</button>
+					<button class="btn btn-warning" onclick="revert()">Reset Changes</button>
+					<button class="btn btn-danger" onclick="clearCanvas()">Clear Board</button>
+				</p>
+				<p>
+					Change background colour:
+					<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="bgcolor='#'+this.color.toString().toUpperCase()">
+					<input type="submit" value="Apply" onclick="setBG()">
+				</p>
+				<p>
+					Change current block colour:
+					<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
+					<input type="submit" value="Apply" onclick="setBlkColor()">
+				</p>
+			</div>
+
+			<!--BREAK--><hr>
+
+			<!--Text Options-->
+			<div align="left" style="padding: 5px">
+				<h4>>Add Stuff</h4>
+				<p>
+					Add a Block:
+					<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="blkcolor='#'+this.color.toString().toUpperCase()">
+					<input type="submit" value="New Block" onclick="addBlock()">
+				</p>
+				<p>
+					Add Text:
+					<input type="text" id="newtext" placeholder="<insert text>">
+					<button onclick="addText()">Add it!</button>
+				</p>
+			</div>
+			
+		</div>
+		<!--END OF RIGHT COLUMN-->
 	</div>
 	<!--END BODY-->
 </body>
