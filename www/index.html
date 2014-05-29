@@ -21,7 +21,8 @@
 	<script type = "text/javascript">
 	var canvas;
 	var bgcolor = '#FFFFFF';
-	var blkcolor = '#000000';
+	var blkcolor = '#000000',
+		blkcolor2 = '#000000';
 	var orig;
 	var atLimit;
 	var lastSave;
@@ -85,8 +86,28 @@
 		})
   		canvas.add(rect);
   	}
-  	function delBlock() { canvas.remove(canvas.getActiveObject()); }
-  	function setBG() { canvas.setBackgroundColor(bgcolor, canvas.renderAll.bind(canvas)); }
+  	function cloneBlock(){
+  		var curr = canvas.getActiveObject();
+  		var clone = fabric.util.object.clone(curr);
+  		clone.center();
+  		curr.set('active', false);
+  		canvas.add(clone);
+  	}
+  	function delActive() {
+  		var currGrp = canvas.getActiveGroup();
+  		var curr = canvas.getActiveObject();
+		if(currGrp){
+			currGrp.forEachObject(function(o){ canvas.remove(o) });
+			canvas.discardActiveGroup().renderAll();
+		} else if(curr){
+			canvas.remove(canvas.getActiveObject());
+		}
+  	}
+	function setBG() { canvas.setBackgroundColor(bgcolor, canvas.renderAll.bind(canvas)); }
+	function setBlkColor() {
+		canvas.getActiveObject().setFill(blkcolor2);
+		canvas.renderAll();
+	}
 
   	// text
   	function addText() {
@@ -290,7 +311,8 @@
 	<div align="center" style="padding: 5px">
 		<p>
 			<button class="btn" value="addblock" type="submit" onclick="addBlock()" float="center">New Block</button>
-			<button class="btn" value="delblock" type="submit" onclick="delBlock()" float="center">Delete Block</button>
+			<button class="btn" value="delblock" type="submit" onclick="delActive()" float="center">Delete</button>
+			<button class="btn" value="cloneblock" type="submit" onclick="cloneBlock()" float="center">Clone Block</button>
 			<button class="btn" value="clear" type="submit" onclick="clearCanvas()" float="center">Clear Board</button>
 		</p>
 		<p>
@@ -303,9 +325,14 @@
 			<input type="submit" value="Apply" onclick="setBG()">
 		</p>
 		<p>
-			Change block colour:
+			Change new block colour:
 			<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="blkcolor='#'+this.color.toString().toUpperCase()">
 			<input type="submit" value="New Block" onclick="addBlock()">
+		</p>
+		<p>
+			Change current block colour:
+			<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
+			<input type="submit" value="Apply" onclick="setBlkColor()">
 			<!--CONSIDER making it an apply thing? either change default or change selected block-->
 		</p>
 	</div>
