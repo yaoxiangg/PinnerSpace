@@ -25,6 +25,10 @@ handlers:
 - url: /scripts
   static_dir: scripts
 
+- url: /login
+  script: main.app
+  login: required
+
 - url: /
   script: main.app
 

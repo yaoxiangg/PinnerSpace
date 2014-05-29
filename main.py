@@ -75,7 +75,7 @@ def current_user(self):
 			else:
 				user=users.get_current_user()
 				currUser = Account(id=user.email(), accid=user.user_id(), usernick=user.nickname(), email=user.email(), login_type="google")
-				self._current_user = currUser.put()
+				self._current_user = currUser.put().get()
 		elif self.request.cookies.get("fb_user"):
 			user_id = self.request.cookies.get("fb_user")
 			self._current_user = ndb.Key('Account', user_id).get()
@@ -567,6 +567,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
 	('/updateBoard', UpdateBoard),
 	('/settings', UpdateProfile),
 	('/update', UpdateProfile),
+	('/login', MainHandler),
 	('/login/FB', LoginFBHandler),
 	('/login/Google', LoginGoogleHandler),
 	('/logout', LogoutHandler),
