@@ -37,11 +37,7 @@
 	<!--BODY-->
 	<div id = "userProfile" align="center">
 		<table>
-			{% if user.login_type == "facebook" %}
-			<tr><td>FaceBook ID:</td><td>{{ user.email }}</td></tr>
-			{% else %}
-			<tr><td>Google ID:</td><td>{{ user.email }}</td></tr>
-			{% endif %}
+			<tr><td>User ID:</td><td>{{ user.email }}</td></tr>
 			<tr><td>Total boards created:</td><td>{{ user_createdTotal }}</td></tr>
 			<tr><td>Total boards followed:</td><td>{{ user_followedTotal }}</td></tr>
 		</table>

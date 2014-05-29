@@ -72,6 +72,8 @@ def current_user(self):
 			userKey = ndb.Key('Account', users.get_current_user().email())
 			if userKey.get():
 				self._current_user = userKey.get()
+				self._current_user.login_type = "google"
+				self._current_user.put()
 			else:
 				user=users.get_current_user()
 				currUser = Account(id=user.email(), accid=user.user_id(), usernick=user.nickname(), email=user.email(), login_type="google")
@@ -516,7 +518,7 @@ class UpdateBoard(webapp2.RequestHandler):
 
 class LoginFBHandler(webapp2.RequestHandler):
 	def get(self):
-		args = dict(client_id='1430441490551788', redirect_uri="http://pinnerspace.appspot.com/login/FB")
+		args = dict(client_id='1430441490551788', redirect_uri="http://pinnerspace.appspot.com/login/FB", scope="email")
 		self.redirect("https://graph.facebook.com/oauth/authorize?" + urllib.urlencode(args))
 		args["client_secret"] = '34ba2e64a0f9be54ec21f5a7e4646957'
 		args["code"] = self.request.get("code")
@@ -524,14 +526,15 @@ class LoginFBHandler(webapp2.RequestHandler):
 		access_token = response["access_token"][-1]
 
 		profile = json.load(urllib.urlopen("https://graph.facebook.com/me?" + urllib.urlencode(dict(access_token=access_token))))
-		fbuser = ndb.Key('Account', str(profile["id"]))
+		fbuser = ndb.Key('Account', str(profile["email"]))
 		if fbuser.get() == None:
-			user = Account(id=str(profile["id"]), accid=str(profile["id"]), usernick=profile["name"], email=str(profile["id"]), access_token=access_token, login_type="facebook")
+			user = Account(id=str(profile["email"]), accid=str(profile["id"]), usernick=profile["name"], email=str(profile["email"]), access_token=access_token, login_type="facebook")
 			user.put()
 		else:
 			fbuser.get().access_token = access_token
+			fbuser.get().login_type = "facebook"
 			fbuser.get().put()
-		self.response.set_cookie("fb_user", str(profile["id"]), expires=datetime.now() + timedelta(days=1))
+		self.response.set_cookie("fb_user", str(profile["email"]), expires=datetime.now() + timedelta(days=1))
 		self.redirect("/")
 
 class LoginFB(webapp2.RequestHandler):
