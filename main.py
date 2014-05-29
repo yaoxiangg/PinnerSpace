@@ -5,11 +5,14 @@ import urllib
 import webapp2
 import jinja2
 import os
+import cgi
 import datetime
 import logging
+import json
 
 from google.appengine.ext import ndb
 from google.appengine.api import users
+from datetime import datetime, date, time, timedelta
 
 #CONSTANTS
 MAX_BOARD = 5
@@ -54,23 +57,39 @@ class Account(ndb.Model):
 	defaultBoardID = ndb.IntegerProperty(default=0)
 	defaultBoardUser = ndb.StringProperty(default="")
 	following = ndb.IntegerProperty(default=0)
+	access_token = ndb.StringProperty()
+	login_type = ndb.StringProperty()
 
 class PairFollowerOwner(ndb.Model):
 	follower = ndb.StringProperty()
 	owner = ndb.StringProperty()
 	boardID = ndb.IntegerProperty(repeated=True)
 
+
+def current_user(self):
+	if not hasattr(self, "_current_user"):
+		if users.get_current_user():
+			userKey = ndb.Key('Account', users.get_current_user().email())
+			if userKey.get():
+				self._current_user = userKey.get()
+			else:
+				user=users.get_current_user()
+				currUser = Account(id=user.email(), accid=user.user_id(), usernick=user.nickname(), email=user.email(), login_type="google")
+				self._current_user = currUser.put()
+		elif self.request.cookies.get("fb_user"):
+			user_id = self.request.cookies.get("fb_user")
+			self._current_user = ndb.Key('Account', user_id).get()
+		else:
+			self._current_user = None
+	return self._current_user
+
+#ALL USERS BELOW WILL BE FROM CURRENT_USER. ALL WILL BE RETRIEVED FROM NDB
 #Handler - Displays '/'
 class MainHandler(webapp2.RequestHandler):
 	def get(self):
-		user = users.get_current_user()
+		user = current_user(self)
 		if user:
-			userKey = ndb.Key('Account', user.email())
-			userGet = userKey.get()
-			if userGet:
-				loadBoard(self, user, -1, userGet.defaultBoardUser)
-			else:
-				loadBoard(self, user, -1, user.email())
+				loadBoard(self, user, -1, user.defaultBoardUser)
 		else:
 			template = jinja_environment.get_template('mainpage.html') 
 			self.response.out.write(template.render())
@@ -78,36 +97,29 @@ class MainHandler(webapp2.RequestHandler):
 #ShowBoard - Displays '/board'
 class ShowBoard(webapp2.RequestHandler):
 	def get(self):
-		user=users.get_current_user()
+		user=current_user(self)
 		if user:
-			userKey = ndb.Key('Account', user.email())
-			userGet = userKey.get()
-			#how do we pass values back and forth from the pinboard?
 			if (self.request.get('boardID') > 0):
 				loadBoard(self, user, self.request.get('boardID'), self.request.get('boardUser'))
 			else:	
-				loadBoard(self, user, -1, userGet.defaultBoardUser)
+				loadBoard(self, user, -1, user.defaultBoardUser)
 		else:
-			self.redirect(users.create_login_url(self.request.uri))
+			self.redirect('/')
 
 #loadBoard - Function to display board
 def loadBoard(self, user, boardID, boardUser):
-	userKey = ndb.Key('Account', user.email())
-	userGet = userKey.get()
-
-	if userGet == None:
+	if user == None:
 		#Create Acc
-		logging.debug("Creating Account for: " + user.email() + ", " + user.nickname())
-		currUser = Account(id=user.email(), accid=user.user_id(), usernick=user.nickname(), email=user.email())
+		logging.debug("Creating Account for: " + user.email + ", " + user.usernick)
+		currUser = Account(id=user.email, usernick=user.usernick, email=user.email)
 		userGet = currUser.put()
-		userKey = ndb.Key('Account', user.email())
+		userKey = ndb.Key('Account', user.email)
 		usernickname = user.nickname()
 		boardID = 0
 		boardUser = ""
 	else:
 		if (boardID == -1):
-			boardID = userGet.defaultBoardID
-		usernickname = userGet.usernick
+			boardID = user.defaultBoardID
 
 	#Get default board if available
 	try:
@@ -128,13 +140,13 @@ def loadBoard(self, user, boardID, boardUser):
 		
 	#Logging into Board - LoadBoard
 	parameters = {
-	'user': userGet,
-	'user_nick': usernickname,
-	'logout': users.create_logout_url(self.request.host_url),
+	'user': user,
+	'user_nick': user.usernick,
 	'currBoard': currBoard,
 	'boardData': boardData,
 	}
 
+	userKey = ndb.Key('Account', user.email)
 	#Dropdown button
 	query = ndb.gql("SELECT * "
 	"FROM Board "
@@ -174,23 +186,27 @@ def loadBoard(self, user, boardID, boardUser):
 #Settings page - Change nickname
 class UpdateProfile(webapp2.RequestHandler):
 	def get(self):
-		userGet = ndb.Key('Account', users.get_current_user().email()).get()
-		if userGet:
-			parameters = {
-			'user': userGet,
-			'logout': users.create_logout_url(self.request.host_url),
-			'user_createdTotal': userGet.numBoards,
-			'user_followedTotal': userGet.following,
-			'update_status': "",
-			}
-			webpage = jinja_environment.get_template('setting.html')
-			self.response.out.write(webpage.render(parameters))
+		user=current_user(self)
+		if user:
+			userGet = ndb.Key('Account', user.email).get()
+			if userGet:
+				parameters = {
+				'user': userGet,
+				'user_createdTotal': userGet.numBoards,
+				'user_followedTotal': userGet.following,
+				'update_status': "",
+				}
+				webpage = jinja_environment.get_template('setting.html')
+				self.response.out.write(webpage.render(parameters))
+			else:
+				self.redirect('/')
 		else:
-			self.redirect(users.create_login_url(self.request.uri))
+			self.redirect('/')
 
 	def post(self):
+		user=current_user(self)
 		try:
-			userGet = ndb.Key('Account', users.get_current_user().email()).get()
+			userGet = ndb.Key('Account', user.email).get()
 			if (self.request.get('newnickname') != ""):
 				userGet.usernick = self.request.get('newnickname')
 				userGet.put()
@@ -203,7 +219,6 @@ class UpdateProfile(webapp2.RequestHandler):
 		#Success
 		parameters = {
 		'user': userGet,
-		'logout': users.create_logout_url(self.request.host_url),
 		'user_createdTotal': userGet.numBoards,
 		'user_followedTotal': userGet.following,
 		'update_status': status,
@@ -213,6 +228,7 @@ class UpdateProfile(webapp2.RequestHandler):
 
 #This function is used by DisplayAllBoards, refreshBoard
 def showBoardsOf(instance, _target, email, template_values):
+	user=current_user(instance)
 	if email != "" and email != "#":
 		userKey = ndb.Key('Account', email)
 		#Get All Board, for each board, display the link.
@@ -225,7 +241,7 @@ def showBoardsOf(instance, _target, email, template_values):
 		'targetMail': email,
 		'boards': query,
 		})
-		if query.count() == 0 and email != users.get_current_user().email():
+		if query.count() == 0 and email != user.email:
 			template_values.update({'error': "Cannot find any board for %s" % email,})
 	else:
 		template_values.update({'error': "User does not exist",})
@@ -238,7 +254,6 @@ def refreshBoard(instance, boardUser, userKey):
 	if boardUser == "":
 		template_values = {
 		'user': userKey.get(),
-		'logout': users.create_logout_url(instance.request.host_url),
 		'error': "User does not exist",
 		}
 		showBoardsOf(instance, "boards.html", "", template_values)
@@ -247,7 +262,6 @@ def refreshBoard(instance, boardUser, userKey):
 			target = ndb.Key('Account', boardUser).get()
 			template_values = {
 			'user': userKey.get(),
-			'logout': users.create_logout_url(instance.request.host_url),
 			}
 			if target != None:
 				template_values.update({'target_mail': boardUser,})
@@ -261,22 +275,25 @@ def refreshBoard(instance, boardUser, userKey):
 #Show all Board
 class DisplayAllBoards(webapp2.RequestHandler):
 	def get(self):
-		userKey = ndb.Key('Account', users.get_current_user().email())
-		template_values = {
-		'user': userKey.get(),
-		'logout': users.create_logout_url(self.request.host_url),
-		'error': self.request.get('error'),
-		}
-		showBoardsOf(self, "boards.html", users.get_current_user().email(), template_values)
+		user=current_user(self)
+		if user:
+			userKey = ndb.Key('Account', user.email)
+			template_values = {
+			'user': userKey.get(),
+			'error': self.request.get('error'),
+			}
+			showBoardsOf(self, "boards.html", user.email, template_values)
+		else:
+			self.redirect('/')
 
 	def post(self):
-		userKey = ndb.Key('Account', users.get_current_user().email())
+		user=current_user(self)
+		userKey = ndb.Key('Account', user.email)
 		target_mail = self.request.get('targetMail')
 		if target_mail == "":
 			template_values = {
 				'user': userKey.get(),
-				'user_mail': users.get_current_user().email(),
-				'logout': users.create_logout_url(self.request.host_url),
+				'user_mail': user.email,
 				'error': "User does not exist",
 			}
 			showBoardsOf(self, "boards.html", "", template_values)
@@ -285,8 +302,7 @@ class DisplayAllBoards(webapp2.RequestHandler):
 				target = ndb.Key('Account', target_mail).get()
 				template_values = {
 				'user': userKey.get(),
-				'user_mail': users.get_current_user().email(),
-				'logout': users.create_logout_url(self.request.host_url),
+				'user_mail': user.email,
 				}
 				if target != None:
 					template_values.update({'target_mail': target_mail,})
@@ -300,10 +316,11 @@ class DisplayAllBoards(webapp2.RequestHandler):
 #Change Default Board
 class ChangeDefaultBoard(webapp2.RequestHandler):
 	def post(self):
+		user=current_user(self)
 		#Change Default Board - Only available to user when user has followed
 		boardid = self.request.get('boardID')
 		boardUser = self.request.get('boardUser')
-		userKey = ndb.Key('Account', users.get_current_user().email())
+		userKey = ndb.Key('Account', user.email)
 		userGet = userKey.get()
 		userGet.defaultBoardID = int(boardid)
 		userGet.defaultBoardUser = boardUser
@@ -313,12 +330,13 @@ class ChangeDefaultBoard(webapp2.RequestHandler):
 #Follow Board
 class FollowBoard(webapp2.RequestHandler):
 	def post(self):
+		user=current_user(self)
 		boardID = self.request.get('boardID')
 		boardUser = self.request.get('boardUser')
-		userKey = ndb.Key('Account', users.get_current_user().email())
+		userKey = ndb.Key('Account', user.email)
 		boardKey = ndb.Key('Account', boardUser, 'Board', int(boardID))
 		currBoard = boardKey.get()
-		currBoard.followers.append(users.get_current_user().email())
+		currBoard.followers.append(user.email)
 		currBoard.put()
 		query = ndb.gql("SELECT * "
 		"FROM PairFollowerOwner "
@@ -331,7 +349,7 @@ class FollowBoard(webapp2.RequestHandler):
 			pairGet.boardID.append(int(boardID))
 			pairGet.put()
 		else:
-			pairFollower = PairFollowerOwner(parent=userKey, follower=users.get_current_user().email(), owner=boardUser, boardID=[int(boardID)])
+			pairFollower = PairFollowerOwner(parent=userKey, follower=user.email, owner=boardUser, boardID=[int(boardID)])
 			pairGet = pairFollower.put()
 		userKey.get().following += 1
 		userKey.get().put()
@@ -341,12 +359,13 @@ class FollowBoard(webapp2.RequestHandler):
 #Unfollow Board
 class UnfollowBoard(webapp2.RequestHandler):
 	def post(self):
+		user=current_user(self)
 		boardID = self.request.get('boardID')
 		boardUser = self.request.get('boardUser')
-		userKey = ndb.Key('Account', users.get_current_user().email())
+		userKey = ndb.Key('Account', user.email)
 		boardKey = ndb.Key('Account', boardUser, 'Board', int(boardID))
 		currBoard = boardKey.get()
-		currBoard.followers.remove(users.get_current_user().email())
+		currBoard.followers.remove(user.email)
 		currBoard.put()
 		query = ndb.gql("SELECT * "
 		"FROM PairFollowerOwner "
@@ -367,25 +386,26 @@ class UnfollowBoard(webapp2.RequestHandler):
 class AddBoard(webapp2.RequestHandler):
 	def post(self):
 		#addBoard
+		user=current_user(self)
 		error = ""
 		bName = self.request.get('boardName')
 		if bName != "":
 			try:
-				userKey = ndb.Key('Account', users.get_current_user().email())
+				userKey = ndb.Key('Account', user.email)
 				userGet = userKey.get()
 				if userGet.numBoards < MAX_BOARD:
 					userGet.numBoards += 1
 					userGet.counter += 1
 					currBoard = Board(parent=userKey, id=userGet.counter)
 					currBoard.boardName = bName
-					currBoard.boardUser = users.get_current_user().email()
+					currBoard.boardUser = user.email
 					currBoard.boardID = userGet.counter
 					currBoard.boardJSON = '{"objects":[],"background":"white"}'
 					currBoard.put()
 					if userGet.numBoards == 1:
 						#Set default board
 						userGet.defaultBoardID = currBoard.boardID
-						userGet.defaultBoardUser = users.get_current_user().email()
+						userGet.defaultBoardUser = user.email
 					#save
 					userGet.put()
 				else:
@@ -404,11 +424,12 @@ class AddBoard(webapp2.RequestHandler):
 class DeleteBoard(webapp2.RequestHandler):
 	def post(self):
 		#Delete Board
+		user=current_user(self)
 		boardid = self.request.get('boardID')
-		userKey = ndb.Key('Account', users.get_current_user().email())
+		userKey = ndb.Key('Account', user.email)
 		userGet = userKey.get()
 		#Delete Board Entity
-		boardKey = ndb.Key('Account', users.get_current_user().email(), 'Board', int(boardid))
+		boardKey = ndb.Key('Account', user.email, 'Board', int(boardid))
 
 		#Delete from all followers
 		#following - 1 for all followers.
@@ -432,7 +453,7 @@ class DeleteBoard(webapp2.RequestHandler):
 			nextBoard = query.fetch(1)
 			if (len(nextBoard) > 0):
 				userGet.defaultBoardID = nextBoard[0].boardID
-				userGet.defaultBoardUser = users.get_current_user().email()
+				userGet.defaultBoardUser = user.email
 			else:
 				userGet.defaultBoardID = 0
 				userGet.defaultBoardUser = ""
@@ -443,6 +464,7 @@ class DeleteBoard(webapp2.RequestHandler):
 #Save Board
 class SaveBoard(webapp2.RequestHandler):
 	def post(self):
+		user=current_user(self)
 		boardID = self.request.get('boardID')
 		boardUser = self.request.get('boardUser')
 		bData = self.request.get('data')
@@ -452,12 +474,12 @@ class SaveBoard(webapp2.RequestHandler):
 
 
 def show(instance, boardID):
-	userGet = ndb.Key('Account', users.get_current_user().email()).get()
-	currBoard = ndb.Key('Account', users.get_current_user().email(), 'Board', int(boardID)).get()
+	user=current_user(instance)
+	userGet = ndb.Key('Account', user.email).get()
+	currBoard = ndb.Key('Account', user.email, 'Board', int(boardID)).get()
 	if userGet:
 		parameters = {
 		'user': userGet,
-		'logout': users.create_logout_url(instance.request.host_url),
 		'board': currBoard,
 		}
 		webpage = jinja_environment.get_template('boardsettings.html')
@@ -472,11 +494,12 @@ class ShowBoardSettings(webapp2.RequestHandler):
 #Update Board Settings
 class UpdateBoard(webapp2.RequestHandler):
 	def post(self):
+		user=current_user(self)
 		boardID = self.request.get('boardID')
 		userGranted = self.request.get('userGranted')
 		userPermission = self.request.get('userPermission')
 		userState = self.request.get('state')
-		currBoard = ndb.Key('Account', users.get_current_user().email(), 'Board', int(boardID)).get()
+		currBoard = ndb.Key('Account', user.email, 'Board', int(boardID)).get()
 
 		if userState == "editor":
 			currBoard.boardEditor.remove(userGranted)
@@ -491,6 +514,44 @@ class UpdateBoard(webapp2.RequestHandler):
 		currBoard.put()
 		show(self, boardID)
 
+class LoginFBHandler(webapp2.RequestHandler):
+	def get(self):
+		args = dict(client_id='1430441490551788', redirect_uri="http://pinnerspace.appspot.com/login/FB")
+		self.redirect("https://graph.facebook.com/oauth/authorize?" + urllib.urlencode(args))
+		args["client_secret"] = '34ba2e64a0f9be54ec21f5a7e4646957'
+		args["code"] = self.request.get("code")
+		response = cgi.parse_qs(urllib.urlopen("https://graph.facebook.com/oauth/access_token?" + urllib.urlencode(args)).read())
+		access_token = response["access_token"][-1]
+
+		profile = json.load(urllib.urlopen("https://graph.facebook.com/me?" + urllib.urlencode(dict(access_token=access_token))))
+		fbuser = ndb.Key('Account', str(profile["id"]))
+		if fbuser.get() == None:
+			user = Account(id=str(profile["id"]), accid=str(profile["id"]), usernick=profile["name"], email=str(profile["id"]), access_token=access_token, login_type="facebook")
+			user.put()
+		else:
+			fbuser.get().access_token = access_token
+			fbuser.get().put()
+		self.response.set_cookie("fb_user", str(profile["id"]), expires=datetime.now() + timedelta(days=1))
+		self.redirect("/")
+
+class LoginFB(webapp2.RequestHandler):
+	def get(self):
+		args = dict(client_id='1430441490551788', redirect_uri="http://pinnerspace.appspot.com/login/FB")
+		self.redirect("https://graph.facebook.com/oauth/authorize?" + urllib.urlencode(args))
+
+class LoginGoogleHandler(webapp2.RequestHandler):
+	def get(self):
+		self.redirect(users.create_login_url(self.request.host_url))
+
+class LogoutHandler(webapp2.RequestHandler):
+	def get(self):
+		user=current_user(self)
+		if user.login_type == "google":
+			url = users.create_logout_url(self.request.host_url)
+			self.redirect(url)
+		else:
+			self.response.set_cookie("fb_user", "", expires=datetime.now() - timedelta(days=1) )
+			self.redirect('/')
 
 #App
 app = webapp2.WSGIApplication([('/', MainHandler),
@@ -505,4 +566,8 @@ app = webapp2.WSGIApplication([('/', MainHandler),
 	('/boardSettings', ShowBoardSettings),
 	('/updateBoard', UpdateBoard),
 	('/settings', UpdateProfile),
-	('/update', UpdateProfile)], debug=True)
+	('/update', UpdateProfile),
+	('/login/FB', LoginFBHandler),
+	('/login/Google', LoginGoogleHandler),
+	('/logout', LogoutHandler),
+	('/login/FaceBook', LoginFB)], debug=True)
