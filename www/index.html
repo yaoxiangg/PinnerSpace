@@ -37,6 +37,11 @@
 			lastSave = board;
 		}
 		canvas.loadFromJSON(board);
+		if(init && canvas._objects.length==0){
+			var input = document.getElementById("addblock");
+			alert("It appears your board is empty.\nPerhaps you would like to start by adding a block?");
+			input.focus();
+		}
 		canvas.forEachObject(function(o){
 			o.set({
 				minScaleLimit: 1,
@@ -259,6 +264,12 @@
 		}
 	}
 	</script>
+	<style>
+	table.center {
+    	margin-left:auto; 
+    	margin-right:auto;
+  	}
+	</style>
 	<!--End of Canvas Script-->
 </head>
 <body onload="loadCanvas({{boardData}}, true)">
@@ -280,99 +291,101 @@
 	</div>
 	
 	<!--BODY-->
-	<div class="row">
-		<!--LEFT: Pinboard-->
-		<div class="col-md-7">
-			<div id="pinboard" style="width:1000px; height:600px; margin: 0 auto;">
-				<!--canvas id must be consistent with js script-->
-				<canvas id="canvas" width="1000" height="600" style="border: 1px solid black;">
-					This text is displayed if your browser does not support HTML5 Canvas.
-				</canvas>
-			</div>
-		</div>
+	<table class="center">
+		<tr>
+			<!--LEFT: Pinboard-->
+			<td>
+				<div id="pinboard" style="width: 900px; height:600px; margin: 0 auto;">
+					<!--canvas id must be consistent with js script-->
+					<canvas id="canvas" width="900" height="600" style="border: 1px solid black;">
+						This text is displayed if your browser does not support HTML5 Canvas.
+					</canvas>
+				</div>
+			</td>
 
-		<!--RIGHT: Info++ -->
-		<div class="col-md-5">
-			<!--BOARD NAME/SELECTOR-->
-			<div id="boardInfo" align="left">
-				You are currently viewing <strong>Board{{ currBoard.boardID }} [{{ currBoard.boardUser }}]</strong><br>
-			</div>
-			<span>Want to view another board? Click here -> </span>
-			<div class="btn-group">
-				<button class="disabled btn btn-primary">{{ currBoard.boardName }}</button>
-				{% if user.numBoards > 0 or user.following > 0 %}
-				<button data-toggle="dropdown" class="btn btn-primary dropdown-toggle"><span class="caret"></span></button>
-				<ul class="dropdown-menu">
-					{% for board in boards %}
-					{% if board.boardID != currBoard.boardID or board.boardUser != currBoard.boardUser %}
-					<li><a href="./board?boardID={{ board.boardID }}&boardUser={{ board.boardUser }}">{{ board.boardName }}</a></li>
+			<!--RIGHT: Info++ -->
+			<td style="padding:10px">
+				<!--BOARD NAME/SELECTOR-->
+				<div id="boardInfo" align="left">
+					You are currently viewing <strong>Board{{ currBoard.boardID }} [{{ currBoard.boardUser }}]</strong><br>
+				</div>
+				<span>Want to view another board? Click here -> </span>
+				<div class="btn-group">
+					<button class="disabled btn btn-primary">{{ currBoard.boardName }}</button>
+					{% if user.numBoards > 0 or user.following > 0 %}
+					<button data-toggle="dropdown" class="btn btn-primary dropdown-toggle"><span class="caret"></span></button>
+					<ul class="dropdown-menu">
+						{% for board in boards %}
+						{% if board.boardID != currBoard.boardID or board.boardUser != currBoard.boardUser %}
+						<li><a href="./board?boardID={{ board.boardID }}&boardUser={{ board.boardUser }}">{{ board.boardName }}</a></li>
+						{% endif %}
+						{% endfor %}
+						<li class="divider"></li>
+						{% for board2 in boards2 %}
+						{% if board2.boardID != currBoard.boardID or board2.boardUser != currBoard.boardUser %}
+						<li><a href="./board?boardID={{ board2.boardID }}&boardUser={{ board2.boardUser }}">{{ board2.boardName }}</a></li>
+						{% endif %}
+						{% endfor %}
+					</ul>
 					{% endif %}
-					{% endfor %}
-					<li class="divider"></li>
-					{% for board2 in boards2 %}
-					{% if board2.boardID != currBoard.boardID or board2.boardUser != currBoard.boardUser %}
-					<li><a href="./board?boardID={{ board2.boardID }}&boardUser={{ board2.boardUser }}">{{ board2.boardName }}</a></li>
-					{% endif %}
-					{% endfor %}
-				</ul>
+				</div>
+				
+				<!--BREAK--><hr>
+
+				<!--TO BE FILLED-->
+				{% if user.email in currBoard.boardEditor %}
+				<!--Show set of buttons exclusive to board editors-->
+				{% elif user.email in currBoard.boardPoster %}
+				<!--Show set of buttons exclusive to board posters-->
+				{% else %}
+				<!--Show set of buttons exclusive to board viewers-->
 				{% endif %}
-			</div>
-			
-			<!--BREAK--><hr>
 
-			<!--TO BE FILLED-->
-			{% if user.email in currBoard.boardEditor %}
-			<!--Show set of buttons exclusive to board editors-->
-			{% elif user.email in currBoard.boardPoster %}
-			<!--Show set of buttons exclusive to board posters-->
-			{% else %}
-			<!--Show set of buttons exclusive to board viewers-->
-			{% endif %}
+				<!--Modifiers-->
+				<div align="left" style="padding: 5px">
+					<h4>>General Tools</h4>
+					<p>
+						<button class="btn" onclick="delActive()">Delete</button>
+						<button class="btn" onclick="cloneActive()">Clone</button>
+					</p>
+					<p>
+						<button class="btn btn-success" onclick="saveCanvas()">Save Changes</button>
+						<button class="btn btn-warning" onclick="revert()">Reset Changes</button>
+						<button class="btn btn-danger" onclick="clearCanvas()">Clear Board</button>
+					</p>
+					<p>
+						Change background colour:
+						<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="bgcolor='#'+this.color.toString().toUpperCase()">
+						<input type="submit" value="Apply" onclick="setBG()">
+					</p>
+					<p>
+						Change current block colour:
+						<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
+						<input type="submit" value="Apply" onclick="setBlkColor()">
+					</p>
+				</div>
 
-			<!--Modifiers-->
-			<div align="left" style="padding: 5px">
-				<h4>>General Tools</h4>
-				<p>
-					<button class="btn" onclick="delActive()">Delete</button>
-					<button class="btn" onclick="cloneActive()">Clone</button>
-				</p>
-				<p>
-					<button class="btn btn-success" onclick="saveCanvas()">Save Changes</button>
-					<button class="btn btn-warning" onclick="revert()">Reset Changes</button>
-					<button class="btn btn-danger" onclick="clearCanvas()">Clear Board</button>
-				</p>
-				<p>
-					Change background colour:
-					<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="bgcolor='#'+this.color.toString().toUpperCase()">
-					<input type="submit" value="Apply" onclick="setBG()">
-				</p>
-				<p>
-					Change current block colour:
-					<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
-					<input type="submit" value="Apply" onclick="setBlkColor()">
-				</p>
-			</div>
+				<!--BREAK--><hr>
 
-			<!--BREAK--><hr>
-
-			<!--Text Options-->
-			<div align="left" style="padding: 5px">
-				<h4>>Add Stuff</h4>
-				<p>
-					Add a Block:
-					<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="blkcolor='#'+this.color.toString().toUpperCase()">
-					<input type="submit" value="New Block" onclick="addBlock()">
-				</p>
-				<p>
-					Add Text:
-					<input type="text" id="newtext" placeholder="<insert text>">
-					<button onclick="addText()">Add it!</button>
-				</p>
-			</div>
-			
-		</div>
-		<!--END OF RIGHT COLUMN-->
-	</div>
+				<!--Text Options-->
+				<div align="left" style="padding: 5px">
+					<h4>>Add Stuff</h4>
+					<p>
+						Add a Block:
+						<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="blkcolor='#'+this.color.toString().toUpperCase()" id="addblock">
+						<input type="submit" value="New Block" onclick="addBlock()">
+					</p>
+					<p>
+						Add Text:
+						<input type="text" id="newtext" placeholder="<insert text>">
+						<button onclick="addText()">Add it!</button>
+					</p>
+				</div>
+				
+			</td>
+			<!--END OF RIGHT COLUMN-->
+		</tr>
+	</table>
 	<!--END BODY-->
 </body>
 </html>

@@ -242,6 +242,7 @@ def showBoardsOf(instance, _target, email, template_values):
 		template_values.update({
 		'targetMail': email,
 		'boards': query,
+		'numBoards': query.count(),
 		})
 		if query.count() == 0 and email != user.email:
 			template_values.update({'error': "Cannot find any board for %s" % email,})
@@ -402,7 +403,7 @@ class AddBoard(webapp2.RequestHandler):
 					currBoard.boardName = bName
 					currBoard.boardUser = user.email
 					currBoard.boardID = userGet.counter
-					currBoard.boardJSON = '{"objects":[],"background":"white"}'
+					currBoard.boardJSON = '{"objects":[],"background":"#966C42"}'
 					currBoard.put()
 					if userGet.numBoards == 1:
 						#Set default board

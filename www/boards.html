@@ -16,6 +16,15 @@
 	})();
 	</script>
 	<!--End of Google Login Script-->
+	<script type="text/javascript">
+		function init(numboards){
+			if(numboards == 0){
+				var input = document.getElementById("createboard");
+				alert("To start using PinnerSpace, you'll need a board.\nType a Board Name below, and hit 'Create a board'!\nWhen you're done, click 'Home' on the left to view your new board.");
+				input.focus();
+			}
+		}
+	</script>
 	<style>
 	.btntext {
 		text-align: left;
@@ -25,7 +34,7 @@
 	}
 	</style>
 </head>
-<body>
+<body onload="init({{numBoards}})">
 	<div id="header">
 		<div class="jumbotron">
 			<h2 class="title" style="text-align: center">PinnerSpace</h2>
@@ -45,7 +54,7 @@
 	<!--BODY-->
 	<div align="center">
 		<form name="input" action="./newBoard" method="post">
-			Board Name: <input type="text" name="boardName">
+			Board Name: <input type="text" name="boardName" id="createboard">
 			<input type="submit" value="Create new board">
 		</form>
 		<p>
