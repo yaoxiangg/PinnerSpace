@@ -64,6 +64,7 @@ class PairFollowerOwner(ndb.Model):
 	follower = ndb.StringProperty()
 	owner = ndb.StringProperty()
 	boardID = ndb.IntegerProperty(repeated=True)
+	boardName = ndb.StringProperty(repeated=True)
 
 
 def current_user(self):
@@ -243,6 +244,12 @@ def showBoardsOf(instance, _target, email, template_values):
 		'targetMail': email,
 		'boards': query,
 		})
+		if user.email == email:
+			query2 = ndb.gql("SELECT * "
+			"FROM PairFollowerOwner "
+			"WHERE ANCESTOR IS :1 ",
+			user.key)
+			template_values.update({'following': query2})
 		if query.count() == 0 and email != user.email:
 			template_values.update({'error': "Cannot find any board for %s" % email,})
 	else:
@@ -322,12 +329,16 @@ class ChangeDefaultBoard(webapp2.RequestHandler):
 		#Change Default Board - Only available to user when user has followed
 		boardid = self.request.get('boardID')
 		boardUser = self.request.get('boardUser')
+		callback = self.request.get('callback')
 		userKey = ndb.Key('Account', user.email)
 		userGet = userKey.get()
 		userGet.defaultBoardID = int(boardid)
 		userGet.defaultBoardUser = boardUser
 		userGet.put()
-		refreshBoard(self, boardUser, userKey)
+		if callback != "":
+			refreshBoard(self, callback, userKey)
+		else:
+			refreshBoard(self, boardUser, userKey)
 
 #Follow Board
 class FollowBoard(webapp2.RequestHandler):
@@ -349,9 +360,10 @@ class FollowBoard(webapp2.RequestHandler):
 		if pairFollower:
 			pairGet = pairFollower[0]
 			pairGet.boardID.append(int(boardID))
+			pairGet.boardName.append(currBoard.boardName)
 			pairGet.put()
 		else:
-			pairFollower = PairFollowerOwner(parent=userKey, follower=user.email, owner=boardUser, boardID=[int(boardID)])
+			pairFollower = PairFollowerOwner(parent=userKey, follower=user.email, owner=boardUser, boardID=[int(boardID)], boardName=[currBoard.boardName])
 			pairGet = pairFollower.put()
 		userKey.get().following += 1
 		userKey.get().put()
@@ -364,6 +376,7 @@ class UnfollowBoard(webapp2.RequestHandler):
 		user=current_user(self)
 		boardID = self.request.get('boardID')
 		boardUser = self.request.get('boardUser')
+		callback = self.request.get('callback')
 		userKey = ndb.Key('Account', user.email)
 		boardKey = ndb.Key('Account', boardUser, 'Board', int(boardID))
 		currBoard = boardKey.get()
@@ -376,13 +389,18 @@ class UnfollowBoard(webapp2.RequestHandler):
 		userKey, boardUser)
 		pairFollower = query.fetch(1)
 		pairFollower = pairFollower[0]
+		index = pairFollower.boardID.index(int(boardID))
 		pairFollower.boardID.remove(int(boardID))
+		del	pairFollower.boardName[index] 
 		pairFollower.put()
 		if (len(pairFollower.boardID) == 0):
 			pairFollower.key.delete()
 		userKey.get().following -= 1
 		userKey.get().put()
-		refreshBoard(self, boardUser, userKey)
+		if callback != "":
+			refreshBoard(self, callback, userKey)
+		else:
+			refreshBoard(self, boardUser, userKey)
 
 #Add Board
 class AddBoard(webapp2.RequestHandler):
