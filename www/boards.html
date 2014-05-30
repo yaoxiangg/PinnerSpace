@@ -32,6 +32,9 @@
 	.btn {
 		width: 100%;
 	}
+	th {
+		text-align: center;
+	}
 	</style>
 </head>
 <body onload="init({{numBoards}})">
@@ -66,9 +69,9 @@
 		<p><p>
 		<table>
 			{% if targetMail != user.email and targetMail %}
-			<tr>Boards of {{ targetMail }}<tr>
+			<tr><th colspan="3">Boards of {{ targetMail }}</th><tr>
 			{% elif targetMail %}
-			<tr>My Boards</tr>
+			<tr><th colspan="3">My Boards</th></tr>
 			{% endif %}
 			{% for board in boards %}
 			<tr>
@@ -116,7 +119,37 @@
 				{% endif %}
 			</tr>
 			{% endfor %}
-		</table>
+		<p><p>
+		{% if following %}
+		<tr><th colspan="3"><p></th></tr>
+		<tr><th colspan="3">Currently Following</th></tr>
+			{% for record in following %}
+				{% for boardID in record.boardID %}
+					<tr>
+						<td></td>
+						<td><button class="btn disabled btntext btn-primary btn-sm" name="boardID" type="submit" width="100%" value={{ boardID }}>Board{{ boardID }}: {{ record.boardName[loop.index0] }}</button></td>
+						<td>
+							{% if user.defaultBoardID == boardID and user.defaultBoardUser == record.owner %}
+							<button class="btn disabled badge" name="label">Default</button>
+							{% else %}
+							<form name="input" action="./changeDefaultBoard" method="post">
+							<input type="hidden" name="boardUser" value={{ record.owner }}>
+							<input type="hidden" name="callback" value={{ user.email }}>
+							<button class="btn btn-default btn-sm" name="boardID" type="submit" value={{ boardID }}>Set as default</button>
+							</form>
+							<td><form name="input" action="./unfollowBoard" method="post">
+							<input type="hidden" name="boardUser" value={{ record.owner }}>
+							<input type="hidden" name="callback" value={{ user.email }}>
+							<button class="btn btn-danger btn-sm" name="boardID" type="submit" value={{ boardID }}>Unfollow</button>
+							</form></td>
+							{% endif %}
+						</td>
+					</tr>
+				{% endfor %}
+			{% endfor %}
+		{% endif %}
+
+		</table>	
 		<p><p>
 		<b>{{ error }}</b>
 		<p><p>
