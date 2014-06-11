@@ -70,7 +70,17 @@ class PairFollowerOwner(ndb.Model):
 
 def current_user(self):
 	if not hasattr(self, "_current_user"):
-		if self.request.cookies.get("user"):
+		if users.get_current_user():
+			userKey = ndb.Key('Account', users.get_current_user().email())
+			if userKey.get():
+				self._current_user = userKey.get()
+				self._current_user.login_type = "google"
+				self._current_user.put()
+			else:
+				user=users.get_current_user()
+				currUser = Account(id=user.email(), accid=user.user_id(), usernick=user.nickname(), email=user.email(), login_type="google")
+				self._current_user = currUser.put().get()
+		elif self.request.cookies.get("user"):
 			user_id = self.request.cookies.get("user")
 			self._current_user = ndb.Key('Account', user_id).get()
 			#Reauthenticates user here using access token from cookie
@@ -591,9 +601,13 @@ class LoginGoogle(webapp2.RequestHandler):
 
 class LogoutHandler(webapp2.RequestHandler):
 	def get(self):
-		user=current_user(self)
-		self.response.set_cookie("user", "", expires=datetime.now() - timedelta(days=1) )
-		self.redirect('/')
+		if users.get_current_user:
+			url = users.create_logout_url(self.request.host_url)
+			self.redirect(url)
+		else:
+			user=current_user(self)
+			self.response.set_cookie("user", "", expires=datetime.now() - timedelta(days=1) )
+			self.redirect('/')
 
 #App
 app = webapp2.WSGIApplication([('/', MainHandler),
