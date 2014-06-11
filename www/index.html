@@ -15,15 +15,18 @@
     	window.location = window.location.href.replace(/#.*/, '');
 	}
 	window.onbeforeunload = function(e){
-		return "Are you ready to leave this page?\nFor example, have you saved your work?";
+		if(!isSaved){
+			return "Warning! Your board does NOT auto-save.\nAny unsaved changes will be lost (forever)!";
+		}
 	};
 	var canvas;
-	var bgcolor = '#FFFFFF';
-	var blkcolor = '#000000',
-		blkcolor2 = '#000000';
-	var orig;
-	var atLimit;
-	var lastSave;
+	var bgcolor = '#FFFFFF';	// Colour setter for background
+	var blkcolor = '#000000',	// Colour setter for new block
+		blkcolor2 = '#000000';	// Colour setter for current block
+	var orig;					// Holds last selected object (for clone)
+	var atLimit;				// Holds last acceptable position
+	var lastSave;				// Holds last save state (for revert)
+	var isSaved;				// Counter for whether changes have been made
 	function loadCanvas(board, init){
 		if(init){
 			canvas = new fabric.Canvas('canvas');
@@ -49,6 +52,7 @@
 				transparentCorners: false,
 			});
 		});
+		isSaved = true;
 	}
 	function saveCanvas(){
 		$.post("/saveBoard", {
@@ -58,17 +62,20 @@
 		});
 		lastSave = JSON.stringify(canvas);
 		alert("Successfully saved!");
+		isSaved = true;
 	}
 	function revert(){
 		var resp=confirm("You sure? All your unsaved work will be lost...");
 		if (resp==true){
   			loadCanvas(lastSave, false);
+  			// console.log(canvas); // debugging
   		}
   	}
   	function clearCanvas(){
   		var resp=confirm("Are you sure? This will clear everything!");
   		if (resp){
   			canvas.clear();
+  			isSaved = true;
   		}
   	}
   	function addBlock(){
@@ -88,13 +95,16 @@
 			fill: blkcolor,
 		})
   		canvas.add(rect);
+  		isSaved = false;
   	}
   	function cloneActive(){
   		var curr = canvas.getActiveObject();
+  		if(!curr) return;
   		var clone = fabric.util.object.clone(curr);
   		clone.center();
-  		curr.set('active', false); // small bug: delActive() deletes the original object instead of clone
   		canvas.add(clone);
+  		canvas.setActiveObject(clone);
+  		isSaved = false;
   	}
   	function delActive() {
   		var currGrp = canvas.getActiveGroup();
@@ -105,11 +115,16 @@
 		} else if(curr){
 			canvas.remove(canvas.getActiveObject());
 		}
+		isSaved = false;
   	}
-	function setBG() { canvas.setBackgroundColor(bgcolor, canvas.renderAll.bind(canvas)); }
+	function setBG() {
+		canvas.setBackgroundColor(bgcolor, canvas.renderAll.bind(canvas));
+		isSaved = false;
+	}
 	function setBlkColor() {
 		canvas.getActiveObject().setFill(blkcolor2);
 		canvas.renderAll();
+		isSaved = false;
 	}
 
   	// text [ WIP ]
@@ -132,15 +147,18 @@
 			transparentCorners: false,
 		});
 		newText.setCoords();
+		isSaved = false;
   	}
 
-	// Code to set limit to boundaries //
+	//-- Code to set limit to boundaries --//
+	// Save original state on selection (for clone)
 	function saveOrig(e) { 
-		if(e.target.get('type')=="i-text") {
+		/*if(e.target.get('type')=="i-text") {
 			canvas.getActiveObject().tooltip({ effect: 'slide'});
-  		}
-  		orig = fabric.util.object.clone(e.target); 
+  		}*/
+  		orig = fabric.util.object.clone(e.target);
   	}
+  	// Save last acceptable state (on scale)
 	function setLimit(e){
 		var curr=e.target;
 		curr.setCoords();
@@ -165,6 +183,7 @@
 			};
 		}
 	}
+	// Check if out of bounds (on modified)
 	function checkOOB(e){
 		var curr = e.target;
 		if(!curr) return;
@@ -176,6 +195,7 @@
 			checkPos(curr);
 		// save new state into orig
 		orig = fabric.util.object.clone(curr);
+		isSaved = false;
 	}
 	function checkScale(curr){
 		var updateCoords = false,
