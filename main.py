@@ -2,6 +2,7 @@
 #Virtual PinBoard WebApp
 
 import urllib
+import urllib2
 import webapp2
 import jinja2
 import os
@@ -69,19 +70,12 @@ class PairFollowerOwner(ndb.Model):
 
 def current_user(self):
 	if not hasattr(self, "_current_user"):
-		if users.get_current_user():
-			userKey = ndb.Key('Account', users.get_current_user().email())
-			if userKey.get():
-				self._current_user = userKey.get()
-				self._current_user.login_type = "google"
-				self._current_user.put()
-			else:
-				user=users.get_current_user()
-				currUser = Account(id=user.email(), accid=user.user_id(), usernick=user.nickname(), email=user.email(), login_type="google")
-				self._current_user = currUser.put().get()
-		elif self.request.cookies.get("fb_user"):
-			user_id = self.request.cookies.get("fb_user")
+		if self.request.cookies.get("user"):
+			user_id = self.request.cookies.get("user")
 			self._current_user = ndb.Key('Account', user_id).get()
+			#Reauthenticates user here using access token from cookie
+			access_token = self.request.cookies.get("token")
+		
 		else:
 			self._current_user = None
 	return self._current_user
@@ -243,7 +237,7 @@ def showBoardsOf(instance, _target, email, template_values):
 		template_values.update({
 		'targetMail': email,
 		'boards': query,
-		'numBoards': query.count(),
+		'numBoards': user.following + user.numBoards,
 		})
 		if user.email == email:
 			query2 = ndb.gql("SELECT * "
@@ -553,7 +547,8 @@ class LoginFBHandler(webapp2.RequestHandler):
 			fbuser.get().access_token = access_token
 			fbuser.get().login_type = "facebook"
 			fbuser.get().put()
-		self.response.set_cookie("fb_user", str(profile["email"]), expires=datetime.now() + timedelta(days=1))
+		self.response.set_cookie("user", str(profile["email"]), expires=datetime.now() + timedelta(days=1))
+		self.response.set_cookie("token", str(access_token), expires=datetime.now() + timedelta(days=1))
 		self.redirect("/")
 
 class LoginFB(webapp2.RequestHandler):
@@ -563,17 +558,42 @@ class LoginFB(webapp2.RequestHandler):
 
 class LoginGoogleHandler(webapp2.RequestHandler):
 	def get(self):
-		self.redirect(users.create_login_url(self.request.host_url))
+		args = dict(client_id='261144481778-2rppbrlfrr1uhkv6t1f0d27s7n2334rh.apps.googleusercontent.com', redirect_uri="http://pinnerspace.appspot.com/oauth2callback")
+		args["code"] = self.request.get("code")
+		args["client_secret"] = 'rXfCRY5tP8Q9OveqcnlPwJKe'
+		args["grant_type"] =  "authorization_code"
+		request = urllib2.Request(url="https://accounts.google.com/o/oauth2/token", data=urllib.urlencode(args))
+		response = json.load(urllib2.urlopen(request))
+		access_token = response["access_token"]
+		profile = json.load(urllib.urlopen("https://www.googleapis.com/plus/v1/people/me?" + urllib.urlencode(dict(access_token=access_token))))
+		
+		emailacc = ""
+		for email in profile["emails"]:
+			if (email["type"] == "account"):
+				emailacc = email["value"]
+
+		guser = ndb.Key('Account', str(emailacc))
+		if guser.get() == None:
+			user = Account(id=str(emailacc), accid=str(emailacc), usernick=profile["displayName"], email=str(emailacc), access_token=access_token, login_type="google")
+			user.put()
+		else:
+			guser.get().access_token = access_token
+			guser.get().login_type = "google"
+			guser.get().put()
+		self.response.set_cookie("user", str(emailacc), expires=datetime.now() + timedelta(days=1))
+		self.response.set_cookie("token", str(access_token), expires=datetime.now() + timedelta(days=1))
+		self.redirect("/")
+
+class LoginGoogle(webapp2.RequestHandler):
+	def get(self):
+		args = dict(response_type='code', client_id='261144481778-2rppbrlfrr1uhkv6t1f0d27s7n2334rh.apps.googleusercontent.com', redirect_uri="http://pinnerspace.appspot.com/oauth2callback", scope="email")
+		self.redirect("https://accounts.google.com/o/oauth2/auth?" + urllib.urlencode(args))
 
 class LogoutHandler(webapp2.RequestHandler):
 	def get(self):
 		user=current_user(self)
-		if user.login_type == "google":
-			url = users.create_logout_url(self.request.host_url)
-			self.redirect(url)
-		else:
-			self.response.set_cookie("fb_user", "", expires=datetime.now() - timedelta(days=1) )
-			self.redirect('/')
+		self.response.set_cookie("user", "", expires=datetime.now() - timedelta(days=1) )
+		self.redirect('/')
 
 #App
 app = webapp2.WSGIApplication([('/', MainHandler),
@@ -591,6 +611,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
 	('/update', UpdateProfile),
 	('/login', MainHandler),
 	('/login/FB', LoginFBHandler),
-	('/login/Google', LoginGoogleHandler),
+	('/oauth2callback', LoginGoogleHandler),
 	('/logout', LogoutHandler),
-	('/login/FaceBook', LoginFB)], debug=True)
+	('/login/FaceBook', LoginFB),
+	('/login/Google', LoginGoogle)], debug=True)
