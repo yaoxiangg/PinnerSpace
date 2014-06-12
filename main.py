@@ -85,7 +85,30 @@ def current_user(self):
 			self._current_user = ndb.Key('Account', user_id).get()
 			#Reauthenticates user here using access token from cookie
 			access_token = self.request.cookies.get("token")
-		
+			if access_token == None:
+				return None
+
+			profilename = ""
+			
+			#Facebook User
+			if self._current_user.login_type == "facebook":
+				profile = json.load(urllib.urlopen("https://graph.facebook.com/me?" + urllib.urlencode(dict(access_token=access_token))))
+				if profile["email"]:
+					profilename = str(profile["email"])
+				else:
+					return None
+			#Google User
+			else:
+				profile = json.load(urllib.urlopen("https://www.googleapis.com/plus/v1/people/me?" + urllib.urlencode(dict(access_token=access_token))))
+				for email in profile["emails"]:
+					if (email["type"] == "account"):
+						profilename = email["value"]
+
+			if profilename != user_id:
+				self._current_user = None
+				self.response.set_cookie("user", "", expires=datetime.now() - timedelta(days=1) )
+				self.response.set_cookie("token", "", expires=datetime.now() - timedelta(days=1) )
+				self.redirect('/')
 		else:
 			self._current_user = None
 	return self._current_user
@@ -601,13 +624,14 @@ class LoginGoogle(webapp2.RequestHandler):
 
 class LogoutHandler(webapp2.RequestHandler):
 	def get(self):
-		if users.get_current_user:
-			url = users.create_logout_url(self.request.host_url)
-			self.redirect(url)
-		else:
+		if self.request.cookies.get("token") or self.request.cookies.get("user"):
 			user=current_user(self)
 			self.response.set_cookie("user", "", expires=datetime.now() - timedelta(days=1) )
+			self.response.set_cookie("token", "", expires=datetime.now() - timedelta(days=1) )
 			self.redirect('/')
+		else:
+			url = users.create_logout_url(self.request.host_url)
+			self.redirect(url)
 
 #App
 app = webapp2.WSGIApplication([('/', MainHandler),

@@ -7,13 +7,30 @@
 	<script src="../scripts/jquery-1.11.1.min.js" type="text/javascript"></script>
 	<script src="../bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
 	<link type="text/css" rel="stylesheet" href="../stylesheets/mainpage.css">
+	<script>
+	if (document.images) {
+		google_active = new Image();
+		google_active.src = '/images/google_active.png';
+		google_over = new Image();
+		google_over.src = '/images/google_over.png';
+		google_pressed = new Image();
+		google_pressed.src = '/images/google_pressed.png';
+
+		fb_active = new Image();
+		fb_active.src = '/images/fb_active.png';
+		fb_over = new Image();
+		fb_over.src = '/images/fb_over.png';
+		fb_pressed = new Image();
+		fb_pressed.src = '/images/fb_pressed.png';
+	}
+	</script>
 </head>
 <body>
 	<div class="jumbotron" align="center">
 		<h2 class="title">PinnerSpace</h2>
-		<p><a href="/login/Google"><img src="../images/google_active.png" onmouseover="this.src='../images/google_over.png'" onmouseout="this.src='../images/google_active.png'" onmousedown="this.src='../images/google_pressed.png'"/></a></p>
-		<p><a href="/login/FaceBook"><img src="../images/fb_active.png" onmouseover="this.src='../images/fb_over.png'" onmouseout="this.src='../images/fb_active.png'" onmousedown="this.src='../images/fb_pressed.png'"/></a></p>
-				<p><a class="btn" href="/login">Localhost Login</a></p>
+		<p><a href="/login/Google"><img src="../images/google_active.png" onmouseover="this.src=google_over.src" onmouseout="this.src=google_active.src" onmousedown="this.src=google_pressed.src"/></a></p>
+		<p><a href="/login/FaceBook"><img src="../images/fb_active.png" onmouseover="this.src=fb_over.src" onmouseout="this.src=fb_active.src" onmousedown="this.src=fb_pressed.src"/></a></p>
+		<p><a class="btn" href="/login">Localhost Login</a></p>
 	</div>
 
 	<!--BODY-->
