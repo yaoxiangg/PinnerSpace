@@ -322,6 +322,7 @@
 		}
 	}
 
+	/*** Upload Image ***/
 	function imageBox(e) {
 		$("#imagebox").overlay().load();
 	}
@@ -336,7 +337,27 @@
     		$("#noPreview").show();
     	});
 	}
-
+	function addImage(){
+		var url = document.getElementById("imageHolder").src;
+		fabric.Image.fromURL(url, function(oImg){
+			if(oImg.getHeight()>oImg.getWidth()){
+				oImg.scale((canvas.getHeight()/oImg.getHeight())/2);
+				oImg.set({minScaleLimit: 20/oImg.getHeight()});
+			}else{
+				oImg.scale((canvas.getWidth()/oImg.getWidth())/2);
+				oImg.set({minScaleLimit: 20/oImg.getWidth()});
+			}
+			oImg.set({ 															// CONSIDER MODULARISING MINSCALE AND STUFF
+  				editingBorderColor: 'rgba(67,46,79,0.75)',
+  				cornerColor: 'rgba(58,174,175,0.85)',
+  				cornerSize: 9,
+				transparentCorners: false,
+			})
+			canvas.add(oImg);
+			oImg.center();
+			oImg.setCoords();
+		})
+	}
 
 	</script>
 	<style>
