@@ -92,18 +92,23 @@ def current_user(self):
 			
 			#Facebook User
 			if self._current_user.login_type == "facebook":
-				profile = json.load(urllib.urlopen("https://graph.facebook.com/me?" + urllib.urlencode(dict(access_token=access_token))))
-				if profile["email"]:
-					profilename = str(profile["email"])
-				else:
+				try:
+					profile = json.load(urllib.urlopen("https://graph.facebook.com/me?" + urllib.urlencode(dict(access_token=access_token))))
+					if profile["email"]:
+						profilename = str(profile["email"])
+					else:
+						return None
+				except:
 					return None
 			#Google User
 			else:
-				profile = json.load(urllib.urlopen("https://www.googleapis.com/plus/v1/people/me?" + urllib.urlencode(dict(access_token=access_token))))
-				for email in profile["emails"]:
-					if (email["type"] == "account"):
-						profilename = email["value"]
-
+				try:
+					profile = json.load(urllib.urlopen("https://www.googleapis.com/plus/v1/people/me?" + urllib.urlencode(dict(access_token=access_token))))
+					for email in profile["emails"]:
+						if (email["type"] == "account"):
+							profilename = email["value"]
+				except:
+					return None
 			if profilename != user_id:
 				self._current_user = None
 				self.response.set_cookie("user", "", expires=datetime.now() - timedelta(days=1) )
