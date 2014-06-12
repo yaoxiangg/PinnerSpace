@@ -23,7 +23,7 @@
 	var bgcolor = '#FFFFFF';	// Colour setter for background
 	var blkcolor = '#000000',	// Colour setter for new block
 		blkcolor2 = '#000000';	// Colour setter for current block
-	var orig;					// Holds last selected object (for clone)
+	var orig;					// Holds last selected/modified object (for clone)
 	var atLimit;				// Holds last acceptable position
 	var lastSave;				// Holds last save state (for revert)
 	var isSaved;				// Counter for whether changes have been made
@@ -34,6 +34,7 @@
 				'object:modified': checkOOB,
 				'object:selected': saveOrig,
 				'object:scaling': setLimit,
+				'object:rotating': setLimit,
 			});
 			lastSave = board;
 		}
@@ -75,7 +76,7 @@
   		var resp=confirm("Are you sure? This will clear everything!");
   		if (resp){
   			canvas.clear();
-  			isSaved = true;
+  			isSaved = false;
   		}
   	}
   	function addBlock(){
@@ -99,11 +100,32 @@
   	}
   	function cloneActive(){
   		var curr = canvas.getActiveObject();
-  		if(!curr) return;
-  		var clone = fabric.util.object.clone(curr);
-  		clone.center();
-  		canvas.add(clone);
-  		canvas.setActiveObject(clone);
+  		var currGrp = canvas.getActiveGroup();
+  		if(curr){
+  			var clone = fabric.util.object.clone(curr);
+  			canvas.add(clone);
+  			clone.center();
+  			clone.setCoords();
+  			canvas.setActiveObject(clone);
+  		}else if(currGrp){
+  			/*var newGroup = new fabric.Group();
+  			for(var i=0; i<currGrp.objects.length; i++){
+  				console.log(currGrp.objects[i]);
+  				var clone = fabric.util.object.clone(currGrp.objects[i]);
+  				newGroup.addWithUpdate(clone);
+  			}
+  			canvas.add(newGroup);
+  			newGroup.destroy();*/
+  			/*console.log(currGrp.objects);
+  			var clone = fabric.util.object.clone(currGrp);
+  			canvas.add(clone);
+  			clone.saveState();
+  			clone.destroy();
+  			canvas.discardActiveGroup();
+  			canvas.setActiveGroup(clone);*/
+  		}else{
+  			return;
+  		}
   		isSaved = false;
   	}
   	function delActive() {
@@ -150,7 +172,7 @@
 		isSaved = false;
   	}
 
-	//-- Code to set limit to boundaries --//
+	/*** Code to set limit to boundaries ***/
 	// Save original state on selection (for clone)
 	function saveOrig(e) { 
 		/*if(e.target.get('type')=="i-text") {
@@ -158,7 +180,7 @@
   		}*/
   		orig = fabric.util.object.clone(e.target);
   	}
-  	// Save last acceptable state (on scale)
+  	// Save last acceptable state (on scale/rotate)
 	function setLimit(e){
 		var curr=e.target;
 		curr.setCoords();
@@ -180,6 +202,7 @@
 				left: curr.getLeft(),
 				scaleX: curr.getScaleX(),
 				scaleY: curr.getScaleY(),
+				angle: curr.getAngle(),
 			};
 		}
 	}
@@ -187,9 +210,9 @@
 	function checkOOB(e){
 		var curr = e.target;
 		if(!curr) return;
-		// if scale has been modified, checkScale for OOB
-		if((orig.getScaleX() != curr.getScaleX()) || (orig.getScaleY() != curr.getScaleY()))
-			checkScale(curr);
+		// if scale/angle has been modified, checkScaleAngle for OOB
+		if(((orig.getScaleX() != curr.getScaleX()) || (orig.getScaleY() != curr.getScaleY())) || (orig.getAngle() != curr.getAngle()))
+			checkScaleAngle(curr);
 		// otherwise check position
 		else
 			checkPos(curr);
@@ -197,12 +220,10 @@
 		orig = fabric.util.object.clone(curr);
 		isSaved = false;
 	}
-	function checkScale(curr){
-		var updateCoords = false,
-			bounds = curr.getBoundingRect(),
+	function checkScaleAngle(curr){
+		var bounds = curr.getBoundingRect(),
 			maxWidth = canvas.getWidth(),
-			maxHeight = canvas.getHeight(),
-			currAngle = curr.angle%360;
+			maxHeight = canvas.getHeight();
 		var outOf = {
 			top: bounds.top<0,
 			left: bounds.left<0,
