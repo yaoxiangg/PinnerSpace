@@ -211,6 +211,7 @@
 			canvas.getActiveObject().tooltip({ effect: 'slide'});
   		}*/
   		orig = fabric.util.object.clone(e.target);
+  		switchTab();
   	}
   	// Save last acceptable state (on scale/rotate)
 	function setLimit(e){
@@ -338,6 +339,11 @@
 		if(updateCoords){
 			curr.setCoords();
 		}
+	}
+
+	// Code for changing to info tab on select
+	function switchTab(){
+		console.log("You have reached switchTab");
 	}
 
 	/*** Upload Image ***/
