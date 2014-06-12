@@ -179,7 +179,29 @@
   	}
 
   	function addPostIt(){
+  		var colour = blkcolor;
   		var input = document.getElementById("newtext");
+  		var text = input.value;
+  		if(text == null || text.trim() == ""){
+  			alert('Please enter something!');
+			input.focus(); // focuses on the blank to fill
+			return;
+		}
+		var textObj = new fabric.Text(text);
+		var rect = new fabric.Rect({
+			fill: blkcolor,
+  			width: textObj.width,
+  			height: textObj.height,
+  			scaleX: textObj.scaleX + 0.1,
+  			scaleY: textObj.scaleY + 0.1,
+		})
+		var postIt = new fabric.Group([rect,textObj]);
+		canvas.add(postIt);
+		setDefSettings(postIt);
+		postIt.center();
+		postIt.setCoords();
+		canvas.setActiveObject(postIt);
+		isSaved=false;
   	}
 
 	/*** Code to set limit to boundaries ***/
@@ -461,13 +483,16 @@
 					<div class="tab-pane fade in active" id="new">
 						<p>
 						Add a Block:
-						<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="blkcolor='#'+this.color.toString().toUpperCase()" id="addblock">
+						<input class="color {pickerFaceColor:'#DBDBDB'}" value="000000" onchange="blkcolor='#'+this.color.toString().toUpperCase()" id="addblock">
 						<input type="submit" value="New Block" onclick="addBlock()">
 						</p>
 						<p>
 						Add Text:
 						<input type="text" id="newtext" placeholder="<insert text>">
 						<button onclick="addText()">Add it!</button>
+						</p>
+						<p class="postitbutton">
+							<button onclick="addPostIt()">New Post-It</button>
 						</p>
 						<p class="imagebutton">
 							<button onclick="imageBox()">Add Image</button>
@@ -487,7 +512,7 @@
 					<div class="tab-pane fade" id="modifycurrent">
 						<p>
 						Change block colour:
-						<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
+						<input class="color {pickerFaceColor:'#DBDBDB'}" value="000000" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
 						<input type="submit" value="Apply" onclick="setBlkColor()">
 						</p>
 						<p>
