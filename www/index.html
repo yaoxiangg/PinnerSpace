@@ -29,7 +29,7 @@
 	var lastSave;				// Holds last save state (for revert)
 	var isSaved;				// Counter for whether changes have been made
 	function loadCanvas(board, init){
-		$("#imagebox").overlay({
+		$("#imagebox").overlay({ // may be better to remake a new init function that calls loadcanvas
 			mask: {
 				color: '#fff',
 				loadSpeed: 200,
@@ -54,16 +54,20 @@
 			alert("It appears your board is empty.\nPerhaps you would like to start by adding a block?");
 			input.focus();
 		}
-		canvas.forEachObject(function(o){
-			o.set({
-				minScaleLimit: 1,
-				borderColor: 'rgba(67,46,79,0.75)',		// may conflict with text
-				cornerColor: 'rgba(58,174,175,0.85)',
-				cornerSize: 9,
-				transparentCorners: false,
-			});
-		});
+		canvas.forEachObject(function(o){ setDefSettings(o); });
 		isSaved = true;
+	}
+	function setDefSettings(curr){
+		curr.set({
+			borderColor: 'rgba(67,46,79,0.75)',
+			cornerColor: 'rgba(58,174,175,0.85)',
+			cornerSize: 9,
+			transparentCorners: false,
+		});
+		if(curr.height>curr.width)
+			curr.set({minScaleLimit: 20.0/curr.height});
+		else
+			curr.set({minScaleLimit: 20.0/curr.width});
 	}
 	function saveCanvas(){
 		$.post("/saveBoard", {
@@ -98,14 +102,11 @@
   			height: 10,
   			scaleX: 3,
   			scaleY: 3,
-  			minScaleLimit: 1,
-  			borderColor: 'rgba(67,46,79,0.75)',
-  			cornerColor: 'rgba(58,174,175,0.85)',
-  			cornerSize: 9,
-			transparentCorners: false, // border/corner info not saved
 			fill: blkcolor,
-		})
+		});
+		setDefSettings(rect);
   		canvas.add(rect);
+  		canvas.setActiveObject(rect);
   		isSaved = false;
   	}
   	function cloneActive(){
@@ -170,15 +171,10 @@
 		}
 		var newText = new fabric.IText(text);
 		canvas.add(newText);
+		setDefSettings(newText);
 		newText.center();
-		newText.set({
-			minScaleLimit: 1, // may not be a good idea. currently staying because of loadCanvas()
-  			editingBorderColor: 'rgba(67,46,79,0.75)',
-  			cornerColor: 'rgba(58,174,175,0.85)',
-  			cornerSize: 9,
-			transparentCorners: false,
-		});
 		newText.setCoords();
+		canvas.setActiveObject(newText);
 		isSaved = false;
   	}
 
@@ -342,21 +338,16 @@
 		fabric.Image.fromURL(url, function(oImg){
 			if(oImg.getHeight()>oImg.getWidth()){
 				oImg.scale((canvas.getHeight()/oImg.getHeight())/2);
-				oImg.set({minScaleLimit: 20/oImg.getHeight()});
 			}else{
 				oImg.scale((canvas.getWidth()/oImg.getWidth())/2);
-				oImg.set({minScaleLimit: 20/oImg.getWidth()});
 			}
-			oImg.set({ 															// CONSIDER MODULARISING MINSCALE AND STUFF
-  				editingBorderColor: 'rgba(67,46,79,0.75)',
-  				cornerColor: 'rgba(58,174,175,0.85)',
-  				cornerSize: 9,
-				transparentCorners: false,
-			})
+			setDefSettings(oImg);
 			canvas.add(oImg);
 			oImg.center();
 			oImg.setCoords();
+			canvas.setActiveObject(oImg);
 		})
+		$("#imagebox").overlay().close();
 	}
 
 	</script>
