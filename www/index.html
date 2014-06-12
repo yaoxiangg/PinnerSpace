@@ -11,6 +11,7 @@
 	<script src="../scripts/jquery.tools.min.js"></script>
 	<!--Canvas Script--> <!--Maybe should move to another file? When it's more or less done?-->
 	<script type = "text/javascript">
+	
 	if (window.location.href.indexOf('#_=_') > 0) {
     	window.location = window.location.href.replace(/#.*/, '');
 	}
@@ -28,6 +29,15 @@
 	var lastSave;				// Holds last save state (for revert)
 	var isSaved;				// Counter for whether changes have been made
 	function loadCanvas(board, init){
+		$("#imagebox").overlay({
+			mask: {
+				color: '#fff',
+				loadSpeed: 200,
+   				opacity: 0.5
+    		},
+    		closeOnClick: false,
+   		});
+
 		if(init){
 			canvas = new fabric.Canvas('canvas');
 			canvas.on({
@@ -308,11 +318,49 @@
 		}
 	}
 
+	function imageBox(e) {
+		$("#imagebox").overlay().load();
+	}
+	function preloadImage() {
+		var url = document.getElementById("imageurl").value;
+		var image = document.getElementById("imageHolder");
+       	image.src = url;
+       	$("#noPreview").hide();
+       	$("#imageHolder").show();
+       	$("img").error(function(){
+    		$(this).hide();
+    		$("#noPreview").show();
+    	});
+	}
+
+
 	</script>
 	<style>
 	table.center {
     	margin-left:auto; 
     	margin-right:auto;
+  	}
+  	table td { 
+  		display: table-cell;
+  		vertical-align: top; 
+	}
+	#imagebox {
+    	display:none;
+    	width:800px;
+    	border:8px solid #666;
+    	/* for modern browsers use semi-transparent color on the border. nice! */
+    	border:8px solid rgba(82, 82, 82, 0.698);
+    	/* hot CSS3 features for mozilla and webkit-based browsers (rounded borders) */
+    	-moz-border-radius:5px;
+   		-webkit-border-radius:5px;
+	}
+
+  	#imagebox div {
+    	border:1px solid #3B5998;
+    	background-color:#fff;
+  	}
+  	#noPreview {
+  		display:none;
   	}
 	</style>
 	<!--End of Canvas Script-->
@@ -345,9 +393,6 @@
 					<canvas id="canvas" width="900" height="600" style="border: 1px solid black;">
 						This text is displayed if your browser does not support HTML5 Canvas.
 					</canvas>
-				</div>
-				<div class="tooltip">
-					<a href="/release-notes">What's new in 3.2</a>
 				</div>
 			</td>
 
@@ -389,47 +434,64 @@
 				<!--Show set of buttons exclusive to board viewers-->
 				{% endif %}
 
-				<!--Modifiers-->
-				<div align="left" style="padding: 5px">
-					<h4>>General Tools</h4>
-					<p>
-						<button class="btn" onclick="delActive()">Delete</button>
-						<button class="btn" onclick="cloneActive()">Clone</button>
-					</p>
-					<p>
-						<button class="btn btn-success" onclick="saveCanvas()">Save Changes</button>
-						<button class="btn btn-warning" onclick="revert()">Reset Changes</button>
-						<button class="btn btn-danger" onclick="clearCanvas()">Clear Board</button>
-					</p>
-					<p>
-						Change background colour:
-						<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="bgcolor='#'+this.color.toString().toUpperCase()">
-						<input type="submit" value="Apply" onclick="setBG()">
-					</p>
-					<p>
-						Change current block colour:
-						<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
-						<input type="submit" value="Apply" onclick="setBlkColor()">
-					</p>
-				</div>
-
-				<!--BREAK--><hr>
-
-				<!--Text Options-->
-				<div align="left" style="padding: 5px">
-					<h4>>Add Stuff</h4>
-					<p>
+				<!--TABSS-->
+				<ul id="myTab" class="nav nav-pills">
+					<li class="active"><a href="#new" data-toggle="tab">New Object</a></li>
+					<li><a href="#modifycurrent" data-toggle="tab">Current Object</a></li>
+					<li><a href="#modifycanvas" data-toggle="tab">Modify Canvas</a></li>
+				</ul>
+				<hr>
+				<div id="myTabContent" class="tab-content">
+					<div class="tab-pane fade in active" id="new">
+						<p>
 						Add a Block:
 						<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="blkcolor='#'+this.color.toString().toUpperCase()" id="addblock">
 						<input type="submit" value="New Block" onclick="addBlock()">
-					</p>
-					<p>
+						</p>
+						<p>
 						Add Text:
 						<input type="text" id="newtext" placeholder="<insert text>">
 						<button onclick="addText()">Add it!</button>
+						</p>
+						<p class="imagebutton">
+							<button onclick="imageBox()">Add Image</button>
+						</p>
+						<div id="imagebox" style="position: fixed;">
+							<div>
+								<p class="close">x</p>
+								<h2>Insert Picture</h2>
+								<input type="text" id="imageurl" onblur="preloadImage()" placeholder="<Image Url>">
+								<button onclick="addImage()">Add it!</button>
+								<hr>
+								<center><p id="noPreview">No preview available</p>
+								<img id="imageHolder" src=""></img></center>
+							</div>
+						</div>
+					</div>
+					<div class="tab-pane fade" id="modifycurrent">
+						<p>
+						Change block colour:
+						<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
+						<input type="submit" value="Apply" onclick="setBlkColor()">
+						</p>
+						<p>
+						<button class="btn" onclick="delActive()">Delete</button>
+						<button class="btn" onclick="cloneActive()">Clone</button>
+						</p>
+					</div>
+					<div class="tab-pane fade" id="modifycanvas">
+					<p>
+						Background colour:
+						<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="bgcolor='#'+this.color.toString().toUpperCase()">
+						<input type="submit" value="Apply" onclick="setBG()">
 					</p>
+					</div>
 				</div>
-				
+				<p>
+					<button class="btn btn-success" onclick="saveCanvas()">Save Changes</button>
+					<button class="btn btn-warning" onclick="revert()">Reset Changes</button>
+					<button class="btn btn-danger" onclick="clearCanvas()">Clear Board</button>
+				</p>
 			</td>
 			<!--END OF RIGHT COLUMN-->
 		</tr>
