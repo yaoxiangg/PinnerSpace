@@ -15,7 +15,6 @@
     	window.location = window.location.href.replace(/#.*/, '');
 	}
 
-
 	window.onbeforeunload = function(e){
 		if(!isSaved){
 			return "Warning! Your board does NOT auto-save.\nAny unsaved changes will be lost (forever)!";
@@ -28,35 +27,40 @@
 		blkcolor2 = '#000000';	// Colour setter for current block
 	var orig;					// Holds last selected/modified object (for clone)
 	var atLimit;				// Holds last acceptable position
-	var lastSave;				// Holds last save state (for revert)
+	var lastSave;				// Holds last save state (for load/revert)
 	var isSaved;				// Counter for whether changes have been made
-	function loadCanvas(board, init){
-		$("#imagebox").overlay({ // may be better to remake a new init function that calls loadcanvas
+	function init(boardData){
+		// Initialise imagebox for addImage()
+		$("#imagebox").overlay({
 			mask: {
 				color: '#fff',
 				loadSpeed: 200,
-   				opacity: 0.5
-    		},
-    		closeOnClick: false,
-   		});
-
-		if(init){
-			canvas = new fabric.Canvas('canvas');
-			canvas.on({
-				'object:modified': checkOOB,
-				'object:selected': saveOrig,
-				'object:scaling': setLimit,
-				'object:rotating': setLimit,
-			});
-			lastSave = board;
-		}
-		canvas.loadFromJSON(board);
-		if(init && canvas._objects.length==0){
+				opacity: 0.5
+			},
+			closeOnClick: false,
+		});
+		// Initialise Canvas
+		canvas = new fabric.Canvas('canvas');
+		canvas.on({
+			'object:modified': checkOOB,
+			'object:selected': saveOrig,
+			'object:scaling': setLimit,
+			'object:rotating': setLimit,
+		});
+		// Store and Load canvas data
+		lastSave = JSON.stringify(boardData); // console.log(boardData); // boardData is an object (boardData.object); loadFromJSON works with string
+		loadCanvas();
+		// If empty give some advice
+		if(boardData.objects.length==0){
 			var input = document.getElementById("addblock");
 			alert("It appears your board is empty.\nPerhaps you would like to start by adding a block?");
 			input.focus();
 		}
-		canvas.forEachObject(function(o){ setDefSettings(o); });
+	}
+
+	function loadCanvas(){
+		// Load from lastSave, rerender canvas ('callback'), re-set default settings on all objects e.g. border (optional 'reviver')
+		canvas.loadFromJSON(lastSave,canvas.renderAll.bind(canvas),function(o,object){ setDefSettings(object); });
 		isSaved = true;
 	}
 	function setDefSettings(curr){
@@ -83,9 +87,8 @@
 	}
 	function revert(){
 		var resp=confirm("You sure? All your unsaved work will be lost...");
-		if (resp==true){
-  			loadCanvas(lastSave, false);
-  			// console.log(canvas); // debugging
+		if(resp==true){
+  			loadCanvas();
   		}
   	}
   	function clearCanvas(){
@@ -98,16 +101,16 @@
   	function addBlock(){
   		var center = canvas.getCenter();
   		var rect = new fabric.Rect({
-  			left: center.left,
-  			top: center.top,
   			width: 10,
   			height: 10,
   			scaleX: 3,
   			scaleY: 3,
 			fill: blkcolor,
 		});
-		setDefSettings(rect);
+		setDefSettings(rect);		// Consider add(rect) to do setDef, .add(), center()/setCoords, setActive, isSaved
   		canvas.add(rect);
+  		rect.center();
+  		rect.setCoords();
   		canvas.setActiveObject(rect);
   		isSaved = false;
   	}
@@ -120,7 +123,7 @@
   			clone.center();
   			clone.setCoords();
   			canvas.setActiveObject(clone);
-  		}else if(currGrp){
+  		}else if(currGrp){ // CONSIDER trying createGroup and breakGroup to allow control over groups
   			/*var newGroup = new fabric.Group();
   			for(var i=0; i<currGrp.objects.length; i++){
   				console.log(currGrp.objects[i]);
@@ -360,6 +363,7 @@
 	function preloadImage() {
 		var url = document.getElementById("imageurl").value;
 		var image = document.getElementById("imageHolder");
+		// image.crossOrigin = 'anonymous';
        	image.src = url;
        	$("#noPreview").hide();
        	$("#imageHolder").show();
@@ -415,7 +419,7 @@
 	</style>
 	<!--End of Canvas Script-->
 </head>
-<body onload="loadCanvas({{boardData}}, true)">
+<body onload="init({{boardData}})">
 	<!--HEADER-->
 	<div id="header">
 		<div class="jumbotron">
