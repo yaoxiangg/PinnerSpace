@@ -36,36 +36,6 @@
 			mask: {
 				color: '#fff',
 				loadSpeed: 200,
-<<<<<<< HEAD
-   				opacity: 0.5
-    		},
-    		closeOnClick: false,
-   		});
-
-   		
-   		$("#bgimgbox").overlay({ // may be better to remake a new init function that calls loadcanvas
-			mask: {
-				color: '#fff',
-				loadSpeed: 200,
-   				opacity: 0.5
-    		},
-    		closeOnClick: false,
-   		});
-   		$( "#selectableBG").selectable();
-
-		if(init){
-			canvas = new fabric.Canvas('canvas');
-			canvas.on({
-				'object:modified': checkOOB,
-				'object:selected': saveOrig,
-				'object:scaling': setLimit,
-				'object:rotating': setLimit,
-			});
-			lastSave = board;
-		}
-		canvas.loadFromJSON(board);
-		if(init && canvas._objects.length==0){
-=======
 				opacity: 0.5
 			},
 			closeOnClick: false,
@@ -83,11 +53,20 @@
 		loadCanvas();
 		// If empty give some advice
 		if(boardData.objects.length==0){
->>>>>>> 784f4eee8ddd0087fdba895878f01ab5e35f1c1c
 			var input = document.getElementById("addblock");
 			alert("It appears your board is empty.\nPerhaps you would like to start by adding a block?");
 			input.focus();
 		}
+
+   		$("#bgimgbox").overlay({ // may be better to remake a new init function that calls loadcanvas
+			mask: {
+				color: '#fff',
+				loadSpeed: 200,
+   				opacity: 0.5
+    		},
+    		closeOnClick: false,
+   		});
+   		$( "#selectableBG").selectable();
 	}
 
 	function loadCanvas(){
