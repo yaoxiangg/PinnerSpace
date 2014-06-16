@@ -10,6 +10,7 @@
 	<script src="../scripts/jscolor/jscolor.js" type="text/javascript"></script>
 	<script src="../scripts/jquery.tools.min.js" type="text/javascript"></script>
 	<script src="../scripts/jquery-ui-1.10.4.custom.min.js" type="text/javascript"></script>
+	<script src="../scripts/tinycolor.js" type="text/javascript"></script>
 	<!--Canvas Script--> <!--Maybe should move to another file? When it's more or less done?-->
 	<script type = "text/javascript">
 	if (window.location.href.indexOf('#_=_') > 0) {
@@ -24,8 +25,8 @@
 
 	var canvas;
 	var bgcolor = '#FFFFFF';	// Colour setter for background
-	var blkcolor = '#000000',	// Colour setter for new block
-		blkcolor2 = '#000000';	// Colour setter for current block
+	var blkcolor = '#ffffff',	// Colour setter for new block
+		blkcolor2 = '#ffffff';	// Colour setter for current block
 	var orig;					// Holds last selected/modified object (for clone)
 	var atLimit;				// Holds last acceptable position
 	var lastSave;				// Holds last save state (for load/revert)
@@ -220,6 +221,45 @@
 		isSaved=false;
   	}
 
+  	function addPostIt2(){
+  		//Creates 2 rect, 1 for the top and 1 for the mainbody
+  		//Should the height for the top be fixed??? i think so.. even when scaling.. but whatever.
+  		//The top will have a darker color, use tinycolor to pick the darker shade? (possible)
+  		//Insert both rect and group together to produce the postit.
+  		var colour = blkcolor;
+  		var color = tinycolor(colour);
+  		
+  		var input = document.getElementById("newtext");
+  		var text = input.value;
+  		/*if(text == null || text.trim() == ""){
+  			alert('Please enter something!');
+			input.focus(); // focuses on the blank to fill
+			return;
+		}*/
+		var textObj = new fabric.Text(text);
+		var rectBody = new fabric.Rect({
+			fill: colour, //lighter
+  			width: 150,
+  			height: 100,
+		})
+		var rectTop = new fabric.Rect({
+			fill: tinycolor.darken(color, 20).toHexString(), //Darker
+  			width: 150,
+  			height: 20,
+		})
+
+		var postIt = new fabric.Group([rectBody,rectTop]);
+		postIt.postIt = true;
+		canvas.add(postIt);
+		setDefSettings(postIt);
+		postIt.center();
+		postIt.setCoords();
+		postIt.item(1).setScaleY(1);
+		postIt.item(1).height = 10;
+		canvas.setActiveObject(postIt);
+		isSaved=false;
+  	}
+
   	// Code for changing to info tab on select
 	function switchTab(){
 		$("#myTab > .active").removeClass("active");
@@ -243,6 +283,10 @@
 	function setLimit(e){
 		var curr=e.target;
 		curr.setCoords();
+		if (curr.postIt) {
+			curr.item(1).setScaleY(1);
+			curr.item(1).height = 10;
+		}
 		var bounds = curr.getBoundingRect(),
 			maxWidth = canvas.getWidth(),
 			maxHeight = canvas.getHeight();
@@ -557,7 +601,7 @@
 					<div class="tab-pane fade in active" id="new">
 						<p>
 						Add a Block:
-						<input class="color {pickerFaceColor:'#DBDBDB'}" value="000000" onchange="blkcolor='#'+this.color.toString().toUpperCase()" id="addblock">
+						<input class="color {pickerFaceColor:'#DBDBDB'}" value="ffffff" onchange="blkcolor='#'+this.color.toString().toUpperCase()" id="addblock">
 						<input type="submit" value="New Block" onclick="addBlock()">
 						</p>
 						<p>
@@ -567,6 +611,9 @@
 						</p>
 						<p class="postitbutton">
 							<button onclick="addPostIt()">New Post-It</button>
+						</p>
+						<p class="postitbutton2">
+							<button onclick="addPostIt2()">New Post-It2</button>
 						</p>
 						<p class="imagebutton">
 							<button onclick="imageBox()">Add Image</button>
@@ -586,7 +633,7 @@
 					<div class="tab-pane fade" id="modifycurrent">
 						<p>
 						Change block colour:
-						<input class="color {pickerFaceColor:'#DBDBDB'}" value="000000" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
+						<input class="color {pickerFaceColor:'#DBDBDB'}" value="ffffff" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
 						<input type="submit" value="Apply" onclick="setBlkColor()">
 						</p>
 						<p>
