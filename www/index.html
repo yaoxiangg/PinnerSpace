@@ -45,7 +45,7 @@
 		canvas = new fabric.Canvas('canvas');
 		canvas.on({
 			'object:modified': checkOOB,
-			'object:selected': saveOrig,
+			'object:selected': objSelected,
 			'object:scaling': setLimit,
 			'object:rotating': setLimit,
 		});
@@ -165,6 +165,7 @@
 		} else if(curr){
 			canvas.remove(canvas.getActiveObject());
 		}
+		resetInfoWin();
 		isSaved = false;
   	}
 	function setBG() {
@@ -267,16 +268,36 @@
 		$("#currObjTab").addClass("active");
 		$("#modifycurrent").addClass("in active");
 	}
+	function updateInfoWin(curr){
+		var infoX = document.getElementById("infoX");
+		var infoY = document.getElementById("infoY");
+		var infoW = document.getElementById("infoW");
+		var infoH = document.getElementById("infoH");
+		var infoAng = document.getElementById("infoAng");
+		infoX.value = curr.getLeft();
+		infoY.value = curr.getTop();
+		infoW.value = curr.getWidth();
+		infoH.value = curr.getHeight();
+		infoAng.value = curr.getAngle() % 360;
+	}
+	function resetInfoWin(){
+		document.getElementById("infoX").value="";
+		document.getElementById("infoY").value="";
+		document.getElementById("infoW").value="";
+		document.getElementById("infoH").value="";
+		document.getElementById("infoAng").value="";
+	}
 
 	/*** Code to set limit to boundaries ***/
 	// Save original state for clone (on selection)
-	// Triggers switchTab()
-	function saveOrig(e) { 
+	// Triggers switchTab(), updates InfoWindow
+	function objSelected(e) { 
 		/*if(e.target.get('type')=="i-text") {
 			canvas.getActiveObject().tooltip({ effect: 'slide'});
   		}*/
   		orig = fabric.util.object.clone(e.target);
   		switchTab();
+  		updateInfoWin(orig);
   	}
 
   	// Save last acceptable state (on scale/rotate)
@@ -321,6 +342,7 @@
 			checkPos(curr);
 		// save new state into orig
 		orig = fabric.util.object.clone(curr);
+		updateInfoWin(orig);
 		isSaved = false;
 	}
 	function checkScaleAngle(curr){
@@ -436,9 +458,9 @@
 	function bgpreloadImage() {
 		var url = document.getElementById("bgimageurl").value;
 		var image = document.getElementById("bgimageHolder");
+       	$("#bgimageHolder").show();
        	image.src = url;
        	$("#bgnoPreview").hide();
-       	$("#bgimageHolder").show();
        	$("img").error(function(){
     		$(this).hide();
     		$("#bgnoPreview").show();
@@ -458,7 +480,7 @@
 			oImg.center();
 			oImg.setCoords();
 			canvas.setActiveObject(oImg);
-		})
+		}, {crossOrigin: 'anonymous'});
 		$("#imagebox").overlay().close();
 	}
 
@@ -518,6 +540,11 @@
  	#selectableBG .ui-selected { background: #F39814; color: white; }
  	#selectableBG { padding-left: 80px; width: 800px; list-style-type: none;}
   	#selectableBG li { padding: 1px; width: 200px; height: 140px; line-height: 135px; text-align: center; display: inline-block; vertical-align: middle;}
+
+  	#infotable td {
+  		padding:2px;
+  		border-spacing:5px;
+  	}
 	</style>
 	<!--End of Canvas Script-->
 </head>
@@ -630,9 +657,23 @@
 							</div>
 						</div>
 					</div>
+
 					<div class="tab-pane fade" id="modifycurrent">
+						<table id="infotable">
+							<tr>
+								<td> Height: </td><td> <input type="text" id="infoH" style="width:50px;" maxlength="4"> </td>
+								<td> Width: </td><td> <input type="text" id="infoW" style="width:50px;" maxlength="4"> </td>
+							</tr>
+							<tr>
+								<td> X: </td><td> <input type="text" id="infoX" style="width:50px;" maxlength="4"> </td>
+								<td> Y: </td><td> <input type="text" id="infoY" style="width:50px;" maxlength="4"> </td>
+							</tr>
+							<tr>
+								<td> Angle: </td><td> <input type="text" id="infoAng" style="width:50px;" maxlength="3"> </td>
+							</tr>
+						</table>
 						<p>
-						Change block colour:
+						Fill:
 						<input class="color {pickerFaceColor:'#DBDBDB'}" value="ffffff" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
 						<input type="submit" value="Apply" onclick="setBlkColor()">
 						</p>
@@ -641,6 +682,7 @@
 						<button class="btn" onclick="cloneActive()">Clone</button>
 						</p>
 					</div>
+
 					<div class="tab-pane fade" id="modifycanvas">
 					<p>
 						Background colour:
