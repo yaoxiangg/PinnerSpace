@@ -25,8 +25,8 @@
 
 	var canvas;
 	var bgcolor = '#FFFFFF';	// Colour setter for background
-	var blkcolor = '#ffffff',	// Colour setter for new block
-		blkcolor2 = '#ffffff';	// Colour setter for current block
+	var blkcolor = '#FFFFFF',	// Colour setter for new block
+		blkcolor2 = '#FFFFFF';	// Colour setter for current block
 	var orig;					// Holds last selected/modified object (for clone)
 	var atLimit;				// Holds last acceptable position
 	var lastSave;				// Holds last save state (for load/revert)
@@ -48,6 +48,7 @@
 			'object:selected': objSelected,
 			'object:scaling': setLimit,
 			'object:rotating': setLimit,
+			'selection:cleared': resetInfoWin,
 		});
 		// Store and Load canvas data
 		lastSave = JSON.stringify(boardData); // console.log(boardData); // boardData is an object (boardData.object); loadFromJSON works with string
@@ -274,11 +275,14 @@
 		var infoW = document.getElementById("infoW");
 		var infoH = document.getElementById("infoH");
 		var infoAng = document.getElementById("infoAng");
-		infoX.value = curr.getLeft();
-		infoY.value = curr.getTop();
-		infoW.value = curr.getWidth();
-		infoH.value = curr.getHeight();
-		infoAng.value = curr.getAngle() % 360;
+		infoX.value = toTwoDP(curr.getLeft());
+		infoY.value = toTwoDP(curr.getTop());
+		infoW.value = toTwoDP(curr.getWidth());
+		infoH.value = toTwoDP(curr.getHeight());
+		infoAng.value = toTwoDP(curr.getAngle() % 360);
+	}
+	function toTwoDP(num){
+		return Math.round(num*100)/100;
 	}
 	function resetInfoWin(){
 		document.getElementById("infoX").value="";
@@ -286,6 +290,36 @@
 		document.getElementById("infoW").value="";
 		document.getElementById("infoH").value="";
 		document.getElementById("infoAng").value="";
+	}
+	function updateFromWin(box){
+		var curr = canvas.getActiveObject();
+		if(!curr) return;
+		var boxVal = parseInt(box.value);
+		if(boxVal!=0 && !boxVal) return;
+		switch(box.id){
+			case "infoX":
+				curr.set({left: boxVal});
+				break;
+			case "infoY":
+				curr.set({top: boxVal});
+				break;
+			case "infoW":
+				if(Math.abs(boxVal)<=900)
+					curr.set({scaleX: boxVal/curr.width});
+				break;
+			case "infoH":
+				if(Math.abs(boxVal)<=600)
+					curr.set({scaleY: boxVal/curr.height});
+				break;
+			case "infoAng":
+				curr.set({angle: boxVal%360}); // currently allows obj to go OOB if the width is longer than our canvas height
+				break;
+		}
+		curr.setCoords();
+		checkPos(curr);
+		canvas.renderAll();				// Issues with listeners
+		orig = fabric.util.object.clone(curr);
+		isSaved = false;
 	}
 
 	/*** Code to set limit to boundaries ***/
@@ -625,10 +659,11 @@
 				</ul>
 				<hr>
 				<div id="myTabContent" class="tab-content">
+					<!--New Objects-->
 					<div class="tab-pane fade in active" id="new">
 						<p>
 						Add a Block:
-						<input class="color {pickerFaceColor:'#DBDBDB'}" value="ffffff" onchange="blkcolor='#'+this.color.toString().toUpperCase()" id="addblock">
+						<input class="color {pickerFaceColor:'#DBDBDB'}" value="FFFFFF" onchange="blkcolor='#'+this.color.toString().toUpperCase()" id="addblock">
 						<input type="submit" value="New Block" onclick="addBlock()">
 						</p>
 						<p>
@@ -657,32 +692,36 @@
 							</div>
 						</div>
 					</div>
-
+					<!--Current Object-->
 					<div class="tab-pane fade" id="modifycurrent">
 						<table id="infotable">
 							<tr>
-								<td> Height: </td><td> <input type="text" id="infoH" style="width:50px;" maxlength="4"> </td>
-								<td> Width: </td><td> <input type="text" id="infoW" style="width:50px;" maxlength="4"> </td>
+								<td> Height: </td><td> <input type="text" id="infoH" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
+								<td> Width: </td><td> <input type="text" id="infoW" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
 							</tr>
 							<tr>
-								<td> X: </td><td> <input type="text" id="infoX" style="width:50px;" maxlength="4"> </td>
-								<td> Y: </td><td> <input type="text" id="infoY" style="width:50px;" maxlength="4"> </td>
+								<td> X: </td><td> <input type="text" id="infoX" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
+								<td> Y: </td><td> <input type="text" id="infoY" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
 							</tr>
 							<tr>
-								<td> Angle: </td><td> <input type="text" id="infoAng" style="width:50px;" maxlength="3"> </td>
+								<td> Angle: </td><td> <input type="text" id="infoAng" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
 							</tr>
 						</table>
 						<p>
 						Fill:
-						<input class="color {pickerFaceColor:'#DBDBDB'}" value="ffffff" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
+						<input class="color {pickerFaceColor:'#DBDBDB'}" value="FFFFFF" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
 						<input type="submit" value="Apply" onclick="setBlkColor()">
+						</p>
+						Text:
+						<textarea id="infoTxt" maxlength="200" rows="3">This is a stub</textarea>
+						<input type="submit" value="Apply" onclick="">
 						</p>
 						<p>
 						<button class="btn" onclick="delActive()">Delete</button>
 						<button class="btn" onclick="cloneActive()">Clone</button>
 						</p>
 					</div>
-
+					<!--Modify Canvas-->
 					<div class="tab-pane fade" id="modifycanvas">
 					<p>
 						Background colour:
