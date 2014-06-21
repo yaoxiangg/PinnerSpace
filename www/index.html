@@ -41,6 +41,18 @@
 			},
 			closeOnClick: false,
 		});
+		// Initialise imagebox for backgrounds
+   		$("#bgimgbox").overlay({
+			mask: {
+				color: '#fff',
+				loadSpeed: 200,
+   				opacity: 0.5
+    		},
+    		closeOnClick: false,
+   		});
+   		// Initialise...this thing.
+   		$( "#selectableBG").selectable();
+
 		// Initialise Canvas
 		canvas = new fabric.Canvas('canvas');
 		canvas.on({
@@ -59,21 +71,14 @@
 			alert("It appears your board is empty.\nPerhaps you would like to start by adding a block?");
 			input.focus();
 		}
-
-   		$("#bgimgbox").overlay({ // may be better to remake a new init function that calls loadcanvas
-			mask: {
-				color: '#fff',
-				loadSpeed: 200,
-   				opacity: 0.5
-    		},
-    		closeOnClick: false,
-   		});
-   		$( "#selectableBG").selectable();
 	}
 
 	function loadCanvas(){
-		// Load from lastSave, rerender canvas ('callback'), re-set default settings on all objects e.g. border (optional 'reviver')
-		canvas.loadFromJSON(lastSave,canvas.renderAll.bind(canvas),function(o,object){ setDefSettings(object); });
+		canvas.loadFromJSON(
+			lastSave,										// Input data: load from lastSave
+			canvas.renderAll.bind(canvas),					// 'Callback'(optional): rerender canvas
+			function(o,object){ setDefSettings(object); }	// 'Reviver' (optional): re-set default settings on all objects
+		);
 		isSaved = true;
 	}
 	function setDefSettings(curr){
@@ -82,11 +87,13 @@
 			cornerColor: 'rgba(58,174,175,0.85)',
 			cornerSize: 9,
 			transparentCorners: false,
+			originX: "center",
+			originY: "center",
 		});
 		if(curr.height>curr.width)
-			curr.set({minScaleLimit: 20.0/curr.height});
+			curr.set({minScaleLimit: 10.0/curr.height});
 		else
-			curr.set({minScaleLimit: 20.0/curr.width});
+			curr.set({minScaleLimit: 10.0/curr.width});
 	}
 	function saveCanvas(){
 		$.post("/saveBoard", {
@@ -102,6 +109,8 @@
 		var resp=confirm("You sure? All your unsaved work will be lost...");
 		if(resp==true){
   			loadCanvas();
+  			atLimit=null; // may not be necessary
+  			orig=null;
   		}
   	}
   	function clearCanvas(){
@@ -126,6 +135,7 @@
   		rect.setCoords();
   		canvas.setActiveObject(rect);
   		isSaved = false;
+  		console.log(rect);
   	}
   	function cloneActive(){
   		var curr = canvas.getActiveObject();
@@ -177,6 +187,12 @@
 		canvas.getActiveObject().setFill(blkcolor2);
 		canvas.renderAll();
 		isSaved = false;
+	}
+	function straightenActive(){
+		var curr = canvas.getActiveObject();
+		curr.straighten();
+		curr.setCoords();
+		canvas.renderAll();
 	}
 
   	// text [ WIP ]
@@ -262,7 +278,7 @@
 		isSaved=false;
   	}
 
-  	// Code for changing to info tab on select
+  	/*** Tab-related functions ***/
 	function switchTab(){
 		$("#myTab > .active").removeClass("active");
 		$("#myTabContent > .active").removeClass("active");
@@ -290,6 +306,9 @@
 		document.getElementById("infoW").value="";
 		document.getElementById("infoH").value="";
 		document.getElementById("infoAng").value="";
+		// Deselect effects
+		atLimit=null;
+		orig=null;
 	}
 	function updateFromWin(box){
 		var curr = canvas.getActiveObject();
@@ -317,7 +336,18 @@
 		}
 		curr.setCoords();
 		checkPos(curr);
-		canvas.renderAll();				// Issues with listeners
+		canvas.renderAll();
+		if(box.id!="infoAng"){
+			atLimit = {
+				top: curr.getTop(),
+				left: curr.getLeft(),
+				scaleX: curr.getScaleX(),
+				scaleY: curr.getScaleY(),
+				angle: curr.getAngle(),
+			};
+		}
+		// need additional checks for angle / scale with angle
+		console.log("after updFrWin: " + JSON.stringify(atLimit));
 		orig = fabric.util.object.clone(curr);
 		isSaved = false;
 	}
@@ -326,10 +356,14 @@
 	// Save original state for clone (on selection)
 	// Triggers switchTab(), updates InfoWindow
 	function objSelected(e) { 
-		/*if(e.target.get('type')=="i-text") {
-			canvas.getActiveObject().tooltip({ effect: 'slide'});
-  		}*/
   		orig = fabric.util.object.clone(e.target);
+  		atLimit = {
+			top: orig.getTop(),
+			left: orig.getLeft(),
+			scaleX: orig.getScaleX(),
+			scaleY: orig.getScaleY(),
+			angle: orig.getAngle(),
+		};
   		switchTab();
   		updateInfoWin(orig);
   	}
@@ -342,19 +376,10 @@
 			curr.item(1).setScaleY(1);
 			curr.item(1).height = 10;
 		}
-		var bounds = curr.getBoundingRect(),
-			maxWidth = canvas.getWidth(),
-			maxHeight = canvas.getHeight();
-		var outOf = {
-			top: bounds.top<0,
-			left: bounds.left<0,
-			bottom: bounds.top+bounds.height>maxHeight,
-			right: bounds.left+bounds.width>maxWidth,
-		};
 
 		// if not out of bounds, save state
 		// (the interval is not very fast, so this method is not so precise if you move fast)
-		if(!((outOf.top || outOf.left) || (outOf.bottom || outOf.right))){
+		if(!isOOB(curr)){
 			atLimit = {
 				top: curr.getTop(),
 				left: curr.getLeft(),
@@ -376,94 +401,75 @@
 			checkPos(curr);
 		// save new state into orig
 		orig = fabric.util.object.clone(curr);
+		atLimit = {
+			top: curr.getTop(),
+			left: curr.getLeft(),
+			scaleX: curr.getScaleX(),
+			scaleY: curr.getScaleY(),
+			angle: curr.getAngle(),
+		};
+		console.log("After checkOOB: " + JSON.stringify(atLimit));
 		updateInfoWin(orig);
 		isSaved = false;
 	}
-	function checkScaleAngle(curr){
+	// Returns object holding whether curr is OOB in the four canvas edges
+	function getOOBObj(curr){
 		var bounds = curr.getBoundingRect(),
 			maxWidth = canvas.getWidth(),
 			maxHeight = canvas.getHeight();
+		// Additional 1px accounts for bounding rect.
+		// Without this checkPos will always trigger, even after correction
 		var outOf = {
-			top: bounds.top<0,
-			left: bounds.left<0,
-			bottom: bounds.top+bounds.height>maxHeight,
-			right: bounds.left+bounds.width>maxWidth,
+			top: bounds.top < -1,
+			left: bounds.left < -1,
+			bottom: bounds.top+bounds.height > maxHeight+1,
+			right: bounds.left+bounds.width > maxWidth+1,
 		};
-		// if out of bounds, reset to last "atLimit" state
-		if((outOf.top || outOf.left) || (outOf.bottom || outOf.right)){
+		return outOf;
+	}
+	// Returns boolean true if object is out of bounds in any edge(s)
+	function isOOB(curr){
+		var outOf = getOOBObj(curr);
+		return (outOf.right || outOf.left) || (outOf.bottom || outOf.top);
+	}
+	// If object is out of bounds reset to last atLimit state
+	function checkScaleAngle(curr){
+		console.log("InsideCheckAngle: " + JSON.stringify(atLimit));
+		if(isOOB(curr)){
 			curr.set(atLimit);
 			curr.setCoords();
 			// console.log("New curr: " + JSON.stringify(curr));
 		}
 	}
+	// If object is out of bounds push it back in (requires object originX/Y to be "center")
 	function checkPos(curr){
 		var updateCoords = false,
-		bounds = curr.getBoundingRect(),
-		maxWidth = canvas.getWidth(),
-		maxHeight = canvas.getHeight(),
-		currAngle = curr.angle%360;
-		var outOf = {
-			top: bounds.top<0,
-			left: bounds.left<0,
-			bottom: bounds.top+bounds.height>maxHeight,
-			right: bounds.left+bounds.width>maxWidth,
-		};
-		// Exceed Right
+			bounds = curr.getBoundingRect(),
+			maxWidth = canvas.getWidth(),
+			maxHeight = canvas.getHeight();
+		var outOf = getOOBObj(curr);
+
 		if(outOf.right){
 			updateCoords = true;
-			if(currAngle>0 && currAngle<90){
-				curr.set({left: maxWidth-Math.ceil(Math.cos(currAngle*Math.PI/180)*curr.width*curr.scaleX)});
-			}else if(currAngle>=90 && currAngle<=180){
-				curr.set({left: maxWidth});
-			}else if(currAngle>180 && currAngle<270){
-				curr.set({left: maxWidth-Math.ceil(Math.cos((270-currAngle)*Math.PI/180)*curr.height*curr.scaleY)});
-			}else{
-				curr.set({left: maxWidth-bounds.width});
-			}
+			curr.set({left: maxWidth-bounds.width/2});
 		}
-		// Exceed Bottom
 		if(outOf.bottom){
 			updateCoords = true;
-			if(currAngle>=0 && currAngle<=90){
-				curr.set({top: maxHeight-bounds.height});
-			}else if(currAngle>90 && currAngle<180){
-				curr.set({top: maxHeight-Math.ceil(Math.cos((currAngle-90)*Math.PI/180)*curr.width*curr.scaleX)});
-			}else if(currAngle>=180 && currAngle<=270){
-				curr.set({top: maxHeight});
-			}else{
-				curr.set({top: maxHeight-Math.ceil(Math.cos((360-currAngle)*Math.PI/180)*curr.height*curr.scaleY)});
-			}
+			curr.set({top: maxHeight-bounds.height/2});
 		}
-		// Exceed Left
 		if(outOf.left){
 			updateCoords = true;
-			if(currAngle>0 && currAngle<90){
-				curr.set({left: Math.ceil(Math.cos((90-currAngle)*Math.PI/180)*curr.height*curr.scaleY)});
-			}else if(currAngle>=90 && currAngle<=180){
-				curr.set({left: bounds.width});
-			}else if(currAngle>180 && currAngle<270){
-				curr.set({left: Math.ceil(Math.cos((currAngle-180)*Math.PI/180)*curr.width*curr.scaleX)});
-			}else{
-				curr.set({left: 0});
-			}
+			curr.set({left: bounds.width/2});
 		}
-		// Exceed Top
 		if(outOf.top){
 			updateCoords = true;
-			if(currAngle>=0 && currAngle<90){
-				curr.set({top: 0});
-			}else if(currAngle>=90 && currAngle<180){
-				curr.set({top: Math.ceil(Math.cos((180-currAngle)*Math.PI/180)*curr.height*curr.scaleY)});
-			}else if(currAngle>=180 && currAngle<270){
-				curr.set({top: bounds.height});
-			}else{
-				curr.set({top: Math.ceil( Math.cos( (currAngle-270) * Math.PI/180) * curr.width * curr.scaleX )});
-			}
+			curr.set({top: bounds.height/2});
 		}
 
 		// Implement new coordinates
 		if(updateCoords){
 			curr.setCoords();
+			console.log("Hit: checkPos");
 		}
 	}
 
@@ -707,6 +713,11 @@
 								<td> Angle: </td><td> <input type="text" id="infoAng" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
 							</tr>
 						</table>
+						<p>
+						<button class="btn" onclick="straightenActive()">Straighten</button>
+						<button class="btn" onclick="canvas.getActiveObject().bringForward()">Bring Forward</button>
+						<button class="btn" onclick="canvas.getActiveObject().sendBackwards()">Send Backwards</button>
+						</p>
 						<p>
 						Fill:
 						<input class="color {pickerFaceColor:'#DBDBDB'}" value="FFFFFF" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
