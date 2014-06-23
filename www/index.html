@@ -188,11 +188,44 @@
 		canvas.renderAll();
 		isSaved = false;
 	}
+	function setText(){
+		var curr = canvas.getActiveObject();
+		if(!curr) return; 	// not necessary, but kept as a precaution
+		var txt = document.getElementById("infoTxt").value;
+		if(curr.type=="i-text"){
+			curr.setText(txt);
+			canvas.renderAll();
+		}else if(curr.type=="group" && curr._objects[1].type=="text"){
+			var currBox = curr._objects[0];
+			var currTxt = curr._objects[1];
+			currTxt.setText(txt);
+			currBox.set({
+				width: currTxt.width,
+				height: currTxt.height,
+				scaleX: currTxt.scaleX * 1.1,
+				scaleY: currTxt.scaleY * 1.1,
+			});
+			curr.setCoords(); // SOME BUG WITH BOUNDING BOX
+			canvas.renderAll();
+		}
+		isSaved = false;
+	}
 	function straightenActive(){
 		var curr = canvas.getActiveObject();
 		curr.straighten();
 		curr.setCoords();
+		checkPos(curr);
+		checkScaleAngle(curr);
+		atLimit = {
+			top: curr.getTop(),
+			left: curr.getLeft(),
+			scaleX: curr.getScaleX(),
+			scaleY: curr.getScaleY(),
+			angle: curr.getAngle(),
+		};
+		orig = fabric.util.object.clone(curr);
 		canvas.renderAll();
+		isSaved = false;
 	}
 
   	// text [ WIP ]
@@ -227,12 +260,13 @@
 			fill: blkcolor,
   			width: textObj.width,
   			height: textObj.height,
-  			scaleX: textObj.scaleX + 0.1,
-  			scaleY: textObj.scaleY + 0.1,
+  			scaleX: textObj.scaleX * 1.1,
+  			scaleY: textObj.scaleY * 1.1,
 		})
 		var postIt = new fabric.Group([rect,textObj]);
 		canvas.add(postIt);
 		setDefSettings(postIt);
+		console.log(postIt);
 		postIt.center();
 		postIt.setCoords();
 		canvas.setActiveObject(postIt);
@@ -259,12 +293,12 @@
 			fill: colour, //lighter
   			width: 150,
   			height: 100,
-		})
+		});
 		var rectTop = new fabric.Rect({
 			fill: tinycolor.darken(color, 20).toHexString(), //Darker
   			width: 150,
   			height: 20,
-		})
+		});
 
 		var postIt = new fabric.Group([rectBody,rectTop]);
 		postIt.postIt = true;
@@ -291,11 +325,29 @@
 		var infoW = document.getElementById("infoW");
 		var infoH = document.getElementById("infoH");
 		var infoAng = document.getElementById("infoAng");
+		var infoColor = document.getElementById("infoColor");
+		var infoTxt = document.getElementById("infoTxt");
+		var infoTxtBtn = document.getElementById("infoTxtBtn");
 		infoX.value = toTwoDP(curr.getLeft());
 		infoY.value = toTwoDP(curr.getTop());
 		infoW.value = toTwoDP(curr.getWidth());
 		infoH.value = toTwoDP(curr.getHeight());
 		infoAng.value = toTwoDP(curr.getAngle() % 360);
+		// console.log(curr.getFill().substring(1));
+		// CURRENTLY I-TEXT is buggy because it uses rgb(a, b, c)
+		// Should be solved by setting colour when creating text
+		infoColor.color.fromString(curr.getFill().substring(1));
+		// I-text/text requirements
+		infoTxt.disabled = false;
+		infoTxtBtn.disabled = false;
+		if(curr.type=="i-text"){
+			infoTxt.value = curr.getText();
+		}else if(curr.type=="group" && curr._objects[1].type=="text"){ // Not final: probably need a new class
+			infoTxt.value = curr._objects[1].getText();
+		}else{
+			infoTxt.disabled = true;
+			infoTxtBtn.disabled = true;
+		}
 	}
 	function toTwoDP(num){
 		return Math.round(num*100)/100;
@@ -306,6 +358,8 @@
 		document.getElementById("infoW").value="";
 		document.getElementById("infoH").value="";
 		document.getElementById("infoAng").value="";
+		document.getElementById("infoColor").color.fromString('FFFFFF');
+		document.getElementById("infoTxt").value="";
 		// Deselect effects
 		atLimit=null;
 		orig=null;
@@ -323,31 +377,31 @@
 				curr.set({top: boxVal});
 				break;
 			case "infoW":
-				if(Math.abs(boxVal)<=900)
-					curr.set({scaleX: boxVal/curr.width});
+				curr.set({scaleX: boxVal/curr.width});
 				break;
 			case "infoH":
-				if(Math.abs(boxVal)<=600)
-					curr.set({scaleY: boxVal/curr.height});
+				curr.set({scaleY: boxVal/curr.height});		// if(Math.abs(boxVal)<=800)
 				break;
 			case "infoAng":
-				curr.set({angle: boxVal%360}); // currently allows obj to go OOB if the width is longer than our canvas height
+				curr.set({angle: boxVal%360});
 				break;
 		}
 		curr.setCoords();
-		checkPos(curr);
+		// Check if OOB:
+		// (1) checkPos will push obj back in
+		// (2) checkScaleAngle will reset obj if still OOB
+		if(checkPos(curr) && checkScaleAngle(curr))
+			alert("That's an invalid value!\nPlease try again.");
+
+		// After all changes are done
 		canvas.renderAll();
-		if(box.id!="infoAng"){
-			atLimit = {
-				top: curr.getTop(),
-				left: curr.getLeft(),
-				scaleX: curr.getScaleX(),
-				scaleY: curr.getScaleY(),
-				angle: curr.getAngle(),
-			};
-		}
-		// need additional checks for angle / scale with angle
-		console.log("after updFrWin: " + JSON.stringify(atLimit));
+		atLimit = {
+			top: curr.getTop(),
+			left: curr.getLeft(),
+			scaleX: curr.getScaleX(),
+			scaleY: curr.getScaleY(),
+			angle: curr.getAngle(),
+		};
 		orig = fabric.util.object.clone(curr);
 		isSaved = false;
 	}
@@ -355,7 +409,7 @@
 	/*** Code to set limit to boundaries ***/
 	// Save original state for clone (on selection)
 	// Triggers switchTab(), updates InfoWindow
-	function objSelected(e) { 
+	function objSelected(e) {
   		orig = fabric.util.object.clone(e.target);
   		atLimit = {
 			top: orig.getTop(),
@@ -373,10 +427,9 @@
 		var curr=e.target;
 		curr.setCoords();
 		if (curr.postIt) {
-			curr.item(1).setScaleY(1);
+			curr.item(1).setScaleY(1); // can just lock scaleY
 			curr.item(1).height = 10;
 		}
-
 		// if not out of bounds, save state
 		// (the interval is not very fast, so this method is not so precise if you move fast)
 		if(!isOOB(curr)){
@@ -399,7 +452,7 @@
 		// otherwise check position
 		else
 			checkPos(curr);
-		// save new state into orig
+		// save new state
 		orig = fabric.util.object.clone(curr);
 		atLimit = {
 			top: curr.getTop(),
@@ -408,7 +461,7 @@
 			scaleY: curr.getScaleY(),
 			angle: curr.getAngle(),
 		};
-		console.log("After checkOOB: " + JSON.stringify(atLimit));
+		// console.log("After checkOOB: " + JSON.stringify(atLimit));
 		updateInfoWin(orig);
 		isSaved = false;
 	}
@@ -434,12 +487,14 @@
 	}
 	// If object is out of bounds reset to last atLimit state
 	function checkScaleAngle(curr){
-		console.log("InsideCheckAngle: " + JSON.stringify(atLimit));
+		// console.log("InsideCheckAngle: " + JSON.stringify(atLimit));
 		if(isOOB(curr)){
 			curr.set(atLimit);
 			curr.setCoords();
+			return true;
 			// console.log("New curr: " + JSON.stringify(curr));
 		}
+		return false;
 	}
 	// If object is out of bounds push it back in (requires object originX/Y to be "center")
 	function checkPos(curr){
@@ -470,7 +525,9 @@
 		if(updateCoords){
 			curr.setCoords();
 			console.log("Hit: checkPos");
+			return true;
 		}
+		return false;
 	}
 
 	/*** Upload Image ***/
@@ -720,12 +777,12 @@
 						</p>
 						<p>
 						Fill:
-						<input class="color {pickerFaceColor:'#DBDBDB'}" value="FFFFFF" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
+						<input id="infoColor" class="color {pickerFaceColor:'#DBDBDB'}" value="FFFFFF" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
 						<input type="submit" value="Apply" onclick="setBlkColor()">
 						</p>
 						Text:
-						<textarea id="infoTxt" maxlength="200" rows="3">This is a stub</textarea>
-						<input type="submit" value="Apply" onclick="">
+						<textarea id="infoTxt" maxlength="200" rows="3"></textarea>
+						<input id="infoTxtBtn" type="submit" value="Apply" onclick="setText()">
 						</p>
 						<p>
 						<button class="btn" onclick="delActive()">Delete</button>
