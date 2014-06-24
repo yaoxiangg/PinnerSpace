@@ -22,6 +22,11 @@
 			return "Warning! Your board does NOT auto-save.\nAny unsaved changes will be lost (forever)!";
 		}
 	};
+	window.onunload = function(e){
+		timedOut();
+		//addBlock();
+		//saveCanvas();
+	};
 
 	var canvas;
 	var bgcolor = '#FFFFFF';	// Colour setter for background
@@ -31,6 +36,8 @@
 	var atLimit;				// Holds last acceptable position
 	var lastSave;				// Holds last save state (for load/revert)
 	var isSaved;				// Counter for whether changes have been made
+	var idleTime = 0;			// Counter for number of minutes user is idle
+	var idleInterval;			// Holds ID for setInterval() idle timer (for reset)
 	function init(boardData){
 		// Initialise imagebox for addImage()
 		$("#imagebox").overlay({
@@ -615,7 +622,7 @@
     				document.getElementById("myTabContent").style.display = "block";
     				document.getElementById("boardButtons").style.display = "block";
     				
-    				var idleInterval = setInterval(timerIncrement, 60000); // 1 minute
+    				idleInterval = setInterval(timerIncrement, 60000); // 1 minute
  					//Zero the idle timer on mouse movement.
     				$(this).mousemove(function (e) {
         				idleTime = 0;
@@ -631,7 +638,9 @@
     function timerIncrement() {
     	idleTime = idleTime + 1;
 		if (idleTime > 14) { // 15 minutes
+       		idleTime = 0;
        		timedOut();
+       		clearInterval(idleInterval);
 		}
 	}
 
@@ -645,7 +654,7 @@
   			document.getElementById("myTabContent").style.display = "none";
     		document.getElementById("boardButtons").style.display = "none";
    			document.getElementById("editinglocked").style.display = "none";
-   			alert("You have been kicked out. AFKER!");
+   			alert("You have been kicked out of edit mode, you AFK-er!");
    		});
     }
 
@@ -806,7 +815,7 @@
 								<button onclick="addImage()">Add it!</button>
 								<hr>
 								<center><p id="noPreview">No preview available</p>
-								<img id="imageHolder" src=""></img></center>
+								<img id="imageHolder" src="" width="780px"></img></center>
 							</div>
 						</div>
 					</div>
