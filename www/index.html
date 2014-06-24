@@ -603,9 +603,7 @@
     }
 
     function showToolBox() {
-		//Check all, return if fail.
-		var result = ""
-		$.get("/getEditor", { 
+		$.post("/getEditor", { 
 			user: "{{ currBoard.boardUser }}",
 			boardID: {{ currBoard.boardID }},
 			boardEditor: "{{ user.email }}"
@@ -615,13 +613,42 @@
     				document.getElementById("toolBoxButton").style.display = "none";
     				document.getElementById("myTab").style.display = "block";
     				document.getElementById("myTabContent").style.display = "block";
-    				return;
-    			}
-    			document.getElementById("editinglocked").style.display = "block";
+    				document.getElementById("boardButtons").style.display = "block";
+    				
+    				var idleInterval = setInterval(timerIncrement, 60000); // 1 minute
+ 					//Zero the idle timer on mouse movement.
+    				$(this).mousemove(function (e) {
+        				idleTime = 0;
+    				});
+    				$(this).keypress(function (e) {
+						idleTime = 0;
+					});
+					return;
+				}
+				document.getElementById("editinglocked").style.display = "block";
 		});
-
-    	
     }
+    function timerIncrement() {
+    	idleTime = idleTime + 1;
+		if (idleTime > 14) { // 15 minutes
+       		timedOut();
+		}
+	}
+
+    function timedOut() {
+    	$.post("/resetEditor", { 
+			user: "{{ currBoard.boardUser }}",
+			boardID: {{ currBoard.boardID }}
+		}).done(function( data ) {
+    		document.getElementById("toolBoxButton").style.display = "block";
+    		document.getElementById("myTab").style.display = "none";
+  			document.getElementById("myTabContent").style.display = "none";
+    		document.getElementById("boardButtons").style.display = "none";
+   			document.getElementById("editinglocked").style.display = "none";
+   			alert("You have been kicked out. AFKER!");
+   		});
+    }
+
 	</script>
 	<style>
 	table.center {
@@ -663,7 +690,7 @@
   		padding:2px;
   		border-spacing:5px;
   	}
-  	#myTab, #myTabContent , #editinglocked {
+  	#myTab, #myTabContent , #editinglocked, #boardButtons {
   		display: none;
   	}
 	</style>
@@ -848,11 +875,13 @@
 					</p>
 					</div>
 				</div>
+				<div id="boardButtons">
 				<p>
 					<button class="btn btn-success" onclick="saveCanvas()">Save Changes</button>
 					<button class="btn btn-warning" onclick="revert()">Reset Changes</button>
 					<button class="btn btn-danger" onclick="clearCanvas()">Clear Board</button>
 				</p>
+				</div>
 			</td>
 			<!--END OF RIGHT COLUMN-->
 		</tr>

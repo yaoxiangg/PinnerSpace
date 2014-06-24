@@ -640,7 +640,7 @@ class LogoutHandler(webapp2.RequestHandler):
 			self.redirect(url)
 
 class GetEditor(webapp2.RequestHandler):
-	def get(self):
+	def post(self):
 		user = self.request.get('user')
 		boardID = self.request.get('boardID')
 		boardEditor = self.request.get('boardEditor')
@@ -654,6 +654,14 @@ class GetEditor(webapp2.RequestHandler):
 				return
 		self.response.out.write(editor)
 
+class ResetEditor(webapp2.RequestHandler):
+	def post(self):
+		user = self.request.get('user')
+		boardID = self.request.get('boardID')
+		currBoard = ndb.Key('Account', user, 'Board', int(boardID)).get()
+		if (currBoard):
+			currBoard.editing = ""
+			currBoard.put()
 
 #App
 app = webapp2.WSGIApplication([('/', MainHandler),
@@ -675,4 +683,5 @@ app = webapp2.WSGIApplication([('/', MainHandler),
 	('/logout', LogoutHandler),
 	('/login/FaceBook', LoginFB),
 	('/login/Google', LoginGoogle),
-	('/getEditor', GetEditor)], debug=True)
+	('/getEditor', GetEditor),
+	('/resetEditor', ResetEditor)], debug=True)
