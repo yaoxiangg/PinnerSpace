@@ -46,6 +46,7 @@ class Board(ndb.Model):
 	boardPoster = ndb.StringProperty(repeated=True)
 	#TESTING
 	boardJSON = ndb.TextProperty()
+	editing = ndb.StringProperty(default="") # Empty if no user is editing, else is the user email
 
 #Account Datastore - Parent of Board
 class Account(ndb.Model):
@@ -638,6 +639,22 @@ class LogoutHandler(webapp2.RequestHandler):
 			url = users.create_logout_url(self.request.host_url)
 			self.redirect(url)
 
+class GetEditor(webapp2.RequestHandler):
+	def get(self):
+		user = self.request.get('user')
+		boardID = self.request.get('boardID')
+		boardEditor = self.request.get('boardEditor')
+		currBoard = ndb.Key('Account', user, 'Board', int(boardID)).get()
+		if (currBoard):
+			editor = currBoard.editing
+			if (editor == boardEditor or editor == ""):
+				currBoard.editing = boardEditor
+				currBoard.put()
+				self.response.out.write("")
+				return
+		self.response.out.write(editor)
+
+
 #App
 app = webapp2.WSGIApplication([('/', MainHandler),
 	('/board', ShowBoard),
@@ -657,4 +674,5 @@ app = webapp2.WSGIApplication([('/', MainHandler),
 	('/oauth2callback', LoginGoogleHandler),
 	('/logout', LogoutHandler),
 	('/login/FaceBook', LoginFB),
-	('/login/Google', LoginGoogle)], debug=True)
+	('/login/Google', LoginGoogle),
+	('/getEditor', GetEditor)], debug=True)
