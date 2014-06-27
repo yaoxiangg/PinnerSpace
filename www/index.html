@@ -18,15 +18,16 @@
 	}
 
 	window.onbeforeunload = function(e){
+		timedOut(false);
 		if(!isSaved){
 			return "Warning! Your board does NOT auto-save.\nAny unsaved changes will be lost (forever)!";
 		}
 	};
-	window.onunload = function(e){
+	/*window.onunload = function(e){
 		timedOut();
 		//addBlock();
 		//saveCanvas();
-	};
+	};*/
 
 	var canvas;
 	var bgcolor = '#FFFFFF';	// Colour setter for background
@@ -639,23 +640,36 @@
     	idleTime = idleTime + 1;
 		if (idleTime > 14) { // 15 minutes
        		idleTime = 0;
-       		timedOut();
+       		timedOut(true);
        		clearInterval(idleInterval);
 		}
 	}
 
-    function timedOut() {
-    	$.post("/resetEditor", { 
-			user: "{{ currBoard.boardUser }}",
-			boardID: {{ currBoard.boardID }}
-		}).done(function( data ) {
-    		document.getElementById("toolBoxButton").style.display = "block";
-    		document.getElementById("myTab").style.display = "none";
-  			document.getElementById("myTabContent").style.display = "none";
-    		document.getElementById("boardButtons").style.display = "none";
-   			document.getElementById("editinglocked").style.display = "none";
-   			alert("You have been kicked out of edit mode, you AFK-er!");
-   		});
+	function timedOut(afk) {
+		if(afk){
+			$.post("/resetEditor", { 
+				user: "{{ currBoard.boardUser }}",
+				boardID: {{ currBoard.boardID }}
+			}).done(function( data ) {
+				document.getElementById("toolBoxButton").style.display = "block";
+				document.getElementById("myTab").style.display = "none";
+				document.getElementById("myTabContent").style.display = "none";
+				document.getElementById("boardButtons").style.display = "none";
+				document.getElementById("editinglocked").style.display = "none";
+				alert("You have been kicked out of edit mode, you AFK-er!");
+			});
+		} else {
+    		$.post("/resetEditor", { 
+				user: "{{ currBoard.boardUser }}",
+				boardID: {{ currBoard.boardID }}
+			}).done(function( data ) {
+    			document.getElementById("toolBoxButton").style.display = "block";
+    			document.getElementById("myTab").style.display = "none";
+  				document.getElementById("myTabContent").style.display = "none";
+    			document.getElementById("boardButtons").style.display = "none";
+   				document.getElementById("editinglocked").style.display = "none";
+	   		});
+		}
     }
 
 	</script>
