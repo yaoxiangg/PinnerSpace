@@ -62,6 +62,15 @@
    		$( "#selectableBG").selectable();
 
 		// Initialise Canvas
+		canvas = new fabric.StaticCanvas('canvas');
+
+		// Store and Load canvas data
+		lastSave = JSON.stringify(boardData); // console.log(boardData); // boardData is an object (boardData.object); loadFromJSON works with string
+		loadCanvas();
+	}
+
+	function initEdit(){
+		canvas.dispose();
 		canvas = new fabric.Canvas('canvas');
 		canvas.on({
 			'object:modified': checkOOB,
@@ -70,11 +79,9 @@
 			'object:rotating': setLimit,
 			'selection:cleared': resetInfoWin,
 		});
-		// Store and Load canvas data
-		lastSave = JSON.stringify(boardData); // console.log(boardData); // boardData is an object (boardData.object); loadFromJSON works with string
 		loadCanvas();
 		// If empty give some advice
-		if(boardData.objects.length==0){
+		if(canvas._objects.length==0){
 			var input = document.getElementById("addblock");
 			alert("It appears your board is empty.\nPerhaps you would like to start by adding a block?");
 			input.focus();
@@ -631,10 +638,12 @@
     				$(this).keypress(function (e) {
 						idleTime = 0;
 					});
+					initEdit();
 					return;
 				}
 				document.getElementById("editinglocked").style.display = "block";
 		});
+		
     }
     function timerIncrement() {
     	idleTime = idleTime + 1;
