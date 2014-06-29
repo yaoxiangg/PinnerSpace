@@ -568,6 +568,17 @@ class UpdateBoard(webapp2.RequestHandler):
 		currBoard.put()
 		show(self, boardID)
 
+#Update Board Name
+class UpdateBoardName(webapp2.RequestHandler):
+	def post(self):
+		user=current_user(self)
+		boardID = self.request.get('boardID')
+		boardName = self.request.get('newboardName')
+		currBoard = ndb.Key('Account', user.email, 'Board', int(boardID)).get()
+		currBoard.boardName = boardName
+		currBoard.put()
+		show(self, boardID)
+
 class LoginFBHandler(webapp2.RequestHandler):
 	def get(self):
 		args = dict(client_id='1430441490551788', redirect_uri="http://pinnerspace.appspot.com/login/FB", scope="email")
@@ -684,4 +695,5 @@ app = webapp2.WSGIApplication([('/', MainHandler),
 	('/login/FaceBook', LoginFB),
 	('/login/Google', LoginGoogle),
 	('/getEditor', GetEditor),
-	('/resetEditor', ResetEditor)], debug=True)
+	('/resetEditor', ResetEditor),
+	('/updateBoardName', UpdateBoardName)], debug=True)
