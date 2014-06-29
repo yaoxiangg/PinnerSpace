@@ -38,6 +38,10 @@
 	<center>
 	<b>Settings Page for Board{{ board.boardID }} : {{ board.boardName }}</b>
 	<table align="center">
+	<hr>
+	{% if board.followers|length < 1 %}
+	<tr><td> There is no one following this board. </td></tr>
+	{% endif %}
 	{% for follower in board.followers %}
 	<tr>
 		<td>{{ follower }}</td>
