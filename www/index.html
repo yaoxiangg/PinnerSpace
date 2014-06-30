@@ -81,7 +81,12 @@
 		});
 		loadCanvas();
 		// If empty give some advice
-		if(canvas._objects.length==0){
+		
+	}
+
+	function promptBoardEmpty(lastSave) {
+		var data = jQuery.parseJSON(lastSave);
+		if(data.objects == ""){
 			var input = document.getElementById("addblock");
 			alert("It appears your board is empty.\nPerhaps you would like to start by adding a block?");
 			input.focus();
@@ -91,11 +96,14 @@
 	function loadCanvas(){
 		canvas.loadFromJSON(
 			lastSave,										// Input data: load from lastSave
-			canvas.renderAll.bind(canvas),					// 'Callback'(optional): rerender canvas
-			function(o,object){ setDefSettings(object); }	// 'Reviver' (optional): re-set default settings on all objects
+			promptBoardEmpty(lastSave),						// 'Callback'(optional): rerender canvas
+			function(o,object){ 
+				setDefSettings(object);
+			}	// 'Reviver' (optional): re-set default settings on all objects
 		);
 		isSaved = true;
 	}
+	
 	function setDefSettings(curr){
 		curr.set({
 			borderColor: 'rgba(67,46,79,0.75)',
