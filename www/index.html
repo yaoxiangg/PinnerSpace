@@ -80,8 +80,6 @@
 			'selection:cleared': resetInfoWin,
 		});
 		loadCanvas();
-		// If empty give some advice
-		
 	}
 
 	function promptBoardEmpty(lastSave) {
@@ -103,7 +101,7 @@
 		);
 		isSaved = true;
 	}
-	
+
 	function setDefSettings(curr){
 		curr.set({
 			borderColor: 'rgba(67,46,79,0.75)',
@@ -676,16 +674,17 @@
 				alert("You have been kicked out of edit mode, you AFK-er!");
 			});
 		} else {
-    		$.post("/resetEditor", { 
-				user: "{{ currBoard.boardUser }}",
-				boardID: {{ currBoard.boardID }}
-			}).done(function( data ) {
-    			document.getElementById("toolBoxButton").style.display = "block";
-    			document.getElementById("myTab").style.display = "none";
-  				document.getElementById("myTabContent").style.display = "none";
-    			document.getElementById("boardButtons").style.display = "none";
-   				document.getElementById("editinglocked").style.display = "none";
-	   		});
+			if (document.getElementById("toolBoxButton").style.display == "none") {
+	    		jQuery.ajax({
+       		  		url:    'http://pinnerspace.appspot.com/resetEditor',
+                  	data: {
+                  		user: "{{ currBoard.boardUser }}",
+                  		boardID: {{ currBoard.boardID }}
+                  	},
+                	type: "POST",
+         			async:   false
+    			});
+	    	}
 		}
     }
 
