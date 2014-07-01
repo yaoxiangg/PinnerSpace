@@ -83,6 +83,12 @@
 		promptBoardEmpty();
 	}
 
+	function initStatic(){
+		canvas.dispose();
+		canvas = new fabric.StaticCanvas('canvas');
+		loadCanvas();
+	}
+
 	function promptBoardEmpty() {
 		var data = jQuery.parseJSON(lastSave);
 		if(data.objects == ""){
@@ -628,6 +634,7 @@
 				if (data == "") {
 					document.getElementById("editinglocked").style.display = "none";
     				document.getElementById("toolBoxButton").style.display = "none";
+    				document.getElementById("exitButton").style.display = "block";
     				document.getElementById("myTab").style.display = "block";
     				document.getElementById("myTabContent").style.display = "block";
     				document.getElementById("boardButtons").style.display = "block";
@@ -647,6 +654,25 @@
 		});
 		
     }
+
+    function hideToolBox() {
+    	//Fireup the "check if saved" and execute the below:
+    	if (isSaved == false) {
+    		if (window.confirm('Are you sure you want to exit? You will lose all changes made.')) {
+			} else {
+				return;
+			}
+		}
+		initStatic();
+    	timedOut(false);
+    	document.getElementById("toolBoxButton").style.display = "block";
+    	document.getElementById("editinglocked").style.display = "none";
+    	document.getElementById("exitButton").style.display = "none";
+    	document.getElementById("myTab").style.display = "none";
+    	document.getElementById("myTabContent").style.display = "none";
+   		document.getElementById("boardButtons").style.display = "none";
+    }
+
     function timerIncrement() {
     	idleTime = idleTime + 1;
 		if (idleTime > 14) { // 15 minutes
@@ -725,7 +751,7 @@
   		padding:2px;
   		border-spacing:5px;
   	}
-  	#myTab, #myTabContent , #editinglocked, #boardButtons {
+  	#myTab, #myTabContent , #editinglocked, #boardButtons, #exitButton {
   		display: none;
   	}
 	</style>
@@ -803,12 +829,16 @@
 				<!--EDIT BUTTON-->
 				<div id="toolBoxButton"><button onclick="showToolBox()">Edit</button></div>
 				<div id="editinglocked">Someone else is editing. Please try again later.</div>
+				
 
 				{% else %}
 				<!--Show set of buttons exclusive to board viewers-->
 				{% endif %}
 
-
+				<div id="exitButton">
+					<div id="toolBoxExitButton"><button onclick="hideToolBox()">Exit</button></div>
+					<hr>
+				</div>
 				
 				<!--TABSS-->
 				<ul id="myTab" class="nav nav-pills">
