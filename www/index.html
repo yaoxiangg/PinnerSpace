@@ -606,9 +606,11 @@
 	var bgselected;
 	$(function () {
 		$("#selectableBG").selectable({
-               selected: function() {
+               stop: function() {
                   $(".ui-selected", this).each(function() {
-                     bgselected = $("#selectableBG li").index(this) + 1;
+                  	if ($("#selectableBG li").index(this) > -1) {
+                    	bgselected = $("#selectableBG li").index(this) + 1;
+                 	}
                   });
                }
    		});
