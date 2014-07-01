@@ -19794,6 +19794,15 @@ fabric.Image.filters.BaseFilter = fabric.util.createClass(/** @lends fabric.Imag
         this.width,
         this.height
       );
+	  
+	  ctx.fillStyle = this.darkerShade;
+	  
+	  ctx.fillRect(
+        this._getLeftOffset(),
+        this._getTopOffset() - 20+ (this.fontSize / this._fontSizeFraction),
+        this.width,
+        20
+      );
 
       ctx.restore();
     },

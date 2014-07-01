@@ -269,7 +269,7 @@
   	}
 
   	function addPostIt(){
-  		var colour = blkcolor;
+  		var color = blkcolor;
   		var input = document.getElementById("newtext");
   		var text = input.value;
   		if(text == null || text.trim() == ""){
@@ -277,22 +277,15 @@
 			input.focus(); // focuses on the blank to fill
 			return;
 		}
-		var textObj = new fabric.Text(text);
-		var rect = new fabric.Rect({
-			fill: blkcolor,
-  			width: textObj.width,
-  			height: textObj.height,
-  			scaleX: textObj.scaleX * 1.1,
-  			scaleY: textObj.scaleY * 1.1,
-		})
-		var postIt = new fabric.Group([rect,textObj]);
-		canvas.add(postIt);
-		setDefSettings(postIt);
-		console.log(postIt);
-		postIt.center();
-		postIt.setCoords();
-		canvas.setActiveObject(postIt);
-		isSaved=false;
+		var newText = new fabric.IText(text);
+		newText.backgroundColor = color;
+		newText.darkerShade = tinycolor.darken(color, 20).toHexString();
+		canvas.add(newText);
+		setDefSettings(newText);
+		newText.center();
+		newText.setCoords();
+		canvas.setActiveObject(newText);
+		isSaved = false;
   	}
 
   	function addPostIt2(){
