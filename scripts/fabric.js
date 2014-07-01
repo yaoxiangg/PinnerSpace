@@ -10265,6 +10265,7 @@ fabric.util.object.extend(fabric.StaticCanvas.prototype, /** @lends fabric.Stati
      * @default
      */
     backgroundColor:          '',
+	darkerShade:			  '',
 
     /**
      * When defined, an object is rendered via stroke and this property specifies its color
@@ -10572,7 +10573,8 @@ fabric.util.object.extend(fabric.StaticCanvas.prototype, /** @lends fabric.Stati
             shadow:             (this.shadow && this.shadow.toObject) ? this.shadow.toObject() : this.shadow,
             visible:            this.visible,
             clipTo:             this.clipTo && String(this.clipTo),
-            backgroundColor:    this.backgroundColor
+            backgroundColor:    this.backgroundColor,
+			darkerShade:		this.darkerShade
           };
 
       if (!this.includeDefaultValues) {
