@@ -656,21 +656,12 @@
     }
 
     function hideToolBox() {
-    	//Fireup the "check if saved" and execute the below:
-    	if (isSaved == false) {
-    		if (window.confirm('Are you sure you want to exit? You will lose all changes made.')) {
-			} else {
-				return;
-			}
-		}
-		initStatic();
-    	timedOut(false);
-    	document.getElementById("toolBoxButton").style.display = "block";
-    	document.getElementById("editinglocked").style.display = "none";
-    	document.getElementById("exitButton").style.display = "none";
-    	document.getElementById("myTab").style.display = "none";
-    	document.getElementById("myTabContent").style.display = "none";
-   		document.getElementById("boardButtons").style.display = "none";
+    	// If not saved and user does not want to exit, do nothing
+    	if (!isSaved && !window.confirm('Are you sure you want to exit? You will lose all changes made.'))
+			return;
+		// If user has saved or still wants to exit, discard changes and reload
+    	isSaved = true;
+    	location.reload();
     }
 
     function timerIncrement() {
