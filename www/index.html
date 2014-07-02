@@ -448,6 +448,11 @@
 		};
   		switchTab();
   		updateInfoWin(orig);
+  		if (canvas.getActiveObject().type=="i-text") {
+  			e.target.lockScalingX = true;
+			e.target.lockScalingY = true;
+			e.target.lockUniScaling = true;
+  		}
   	}
 
   	// Save last acceptable state (on scale/rotate)
