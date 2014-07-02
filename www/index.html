@@ -18,8 +18,8 @@
 	}
 
 	window.onbeforeunload = function(e){
+		saveCanvas(false); // Got to see if the async is affected by number of objects on canvas
 		timedOut(false);
-		saveCanvas(false);
 	};
 
 	/*window.onunload = function(e){
@@ -665,15 +665,6 @@
 		
     }
 
-    function hideToolBox() {
-    	// If not saved and user does not want to exit, do nothing
-    	if (!isSaved && !window.confirm('Are you sure you want to exit? You will lose all changes made.'))
-			return;
-		// If user has saved or still wants to exit, discard changes and reload
-    	isSaved = true;
-    	location.reload();
-    }
-
     function timerIncrement() {
     	idleTime = idleTime + 1;
 		if (idleTime > 14) { // 15 minutes
@@ -848,7 +839,7 @@
 				{% endif %}
 
 				<div id="exitButton">
-					<div id="toolBoxExitButton"><button onclick="hideToolBox()">Save and Exit</button></div>
+					<div id="toolBoxExitButton"><button onclick="location.reload()">Save and Exit</button></div>
 					<hr>
 				</div>
 				
