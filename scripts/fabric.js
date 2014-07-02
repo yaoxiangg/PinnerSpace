@@ -7904,24 +7904,24 @@ fabric.PatternBrush = fabric.util.createClass(fabric.PencilBrush, /** @lends fab
       }
 
       // adjust the mouse coordinates when dealing with padding
-      if (abs(localMouse.x) > target.padding) {
+      if (abs(localMouse.x) > target.paddingX) {
         if (localMouse.x < 0) {
-          localMouse.x += target.padding;
+          localMouse.x += target.paddingX;
         }
         else {
-          localMouse.x -= target.padding;
+          localMouse.x -= target.paddingX;
         }
       }
       else { // mouse is within the padding, set to 0
         localMouse.x = 0;
       }
 
-      if (abs(localMouse.y) > target.padding) {
+      if (abs(localMouse.y) > target.paddingY) {
         if (localMouse.y < 0) {
-          localMouse.y += target.padding;
+          localMouse.y += target.paddingY;
         }
         else {
-          localMouse.y -= target.padding;
+          localMouse.y -= target.paddingY;
         }
       }
       else {
@@ -10210,7 +10210,8 @@ fabric.util.object.extend(fabric.StaticCanvas.prototype, /** @lends fabric.Stati
      * @default
      */
     padding:                  0,
-
+	paddingX: 0,
+	paddingY: 0,
     /**
      * Color of controlling borders of an object (when it's active)
      * @type String
@@ -10574,7 +10575,9 @@ fabric.util.object.extend(fabric.StaticCanvas.prototype, /** @lends fabric.Stati
             visible:            this.visible,
             clipTo:             this.clipTo && String(this.clipTo),
             backgroundColor:    this.backgroundColor,
-			darkerShade:		this.darkerShade
+			darkerShade:		this.darkerShade,
+			paddingX:			this.paddingX,
+			paddingY:			this.paddingY
           };
 
       if (!this.includeDefaultValues) {
@@ -11741,11 +11744,11 @@ fabric.util.object.extend(fabric.StaticCanvas.prototype, /** @lends fabric.Stati
     setCoords: function() {
 
       var strokeWidth = this.strokeWidth > 1 ? this.strokeWidth : 0,
-          padding = this.padding,
+          padding = this.paddingX,
           theta = degreesToRadians(this.angle);
 
-      this.currentWidth = (this.width + strokeWidth) * this.scaleX + padding * 2;
-      this.currentHeight = (this.height + strokeWidth) * this.scaleY + padding * 2;
+      this.currentWidth = (this.width + strokeWidth) * this.scaleX + this.paddingX * 2;
+      this.currentHeight = (this.height + strokeWidth) * this.scaleY + this.paddingY * 2;
 
       // If width is negative, make postive. Fixes path selection issue
       if (this.currentWidth < 0) {
@@ -12328,10 +12331,14 @@ fabric.util.object.extend(fabric.Object.prototype, /** @lends fabric.Object.prot
     drawBorders: function(ctx) {
       if (!this.hasBorders) return this;
 
-      var padding = this.padding,
-          padding2 = padding * 2,
+      var paddingX = this.paddingX,
+          padding2X = paddingX * 2,
           strokeWidth = ~~(this.strokeWidth / 2) * 2; // Round down to even number
-
+		  
+	  var paddingY = this.paddingY,
+          padding2Y = paddingY * 2,
+          strokeWidth = ~~(this.strokeWidth / 2) * 2; // Round down to even number
+		  
       ctx.save();
 
       ctx.globalAlpha = this.isMoving ? this.borderOpacityWhenMoving : 1;
@@ -12348,18 +12355,18 @@ fabric.util.object.extend(fabric.Object.prototype, /** @lends fabric.Object.prot
           h = this.getHeight();
 
       ctx.strokeRect(
-        ~~(-(w / 2) - padding - strokeWidth / 2 * this.scaleX) - 0.5, // offset needed to make lines look sharper
-        ~~(-(h / 2) - padding - strokeWidth / 2 * this.scaleY) - 0.5,
-        ~~(w + padding2 + strokeWidth * this.scaleX) + 1, // double offset needed to make lines look sharper
-        ~~(h + padding2 + strokeWidth * this.scaleY) + 1
+        ~~(-(w / 2) - paddingX - strokeWidth / 2 * this.scaleX) - 0.5, // offset needed to make lines look sharper
+        ~~(-(h / 2) - paddingY - strokeWidth / 2 * this.scaleY) - 0.5,
+        ~~(w + padding2X + strokeWidth * this.scaleX) + 1, // double offset needed to make lines look sharper
+        ~~(h + padding2Y + strokeWidth * this.scaleY) + 1
       );
 
       if (this.hasRotatingPoint && this.isControlVisible('mtr') && !this.get('lockRotation') && this.hasControls) {
 
         var rotateHeight = (
           this.flipY
-            ? h + (strokeWidth * this.scaleY) + (padding * 2)
-            : -h - (strokeWidth * this.scaleY) - (padding * 2)
+            ? h + (strokeWidth * this.scaleY) + (paddingY * 2)
+            : -h - (strokeWidth * this.scaleY) - (paddingY * 2)
         ) / 2;
 
         ctx.beginPath();
@@ -12389,8 +12396,8 @@ fabric.util.object.extend(fabric.Object.prototype, /** @lends fabric.Object.prot
           strokeWidth2 = ~~(this.strokeWidth / 2), // half strokeWidth rounded down
           left = -(this.width / 2),
           top = -(this.height / 2),
-          paddingX = this.padding / this.scaleX,
-          paddingY = this.padding / this.scaleY,
+          paddingX = this.paddingX / this.scaleX,
+          paddingY = this.paddingY / this.scaleY,
           scaleOffsetY = size2 / this.scaleY,
           scaleOffsetX = size2 / this.scaleX,
           scaleOffsetSizeX = (size2 - size) / this.scaleX,
@@ -19791,18 +19798,18 @@ fabric.Image.filters.BaseFilter = fabric.util.createClass(/** @lends fabric.Imag
       ctx.fillStyle = this.backgroundColor;
 
       ctx.fillRect(
-        this._getLeftOffset(),
+        this._getLeftOffset() - 10,
         this._getTopOffset() + (this.fontSize / this._fontSizeFraction),
-        this.width,
-        this.height
+        this.width + 20,
+        this.height + 20
       );
 	  
 	  ctx.fillStyle = this.darkerShade;
 	  
 	  ctx.fillRect(
-        this._getLeftOffset(),
+        this._getLeftOffset() - 10,
         this._getTopOffset() - 20+ (this.fontSize / this._fontSizeFraction),
-        this.width,
+        this.width + 20,
         20
       );
 

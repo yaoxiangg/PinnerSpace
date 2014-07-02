@@ -266,10 +266,12 @@
 			return;
 		}
 		var newText = new fabric.IText(text);
+
 		canvas.add(newText);
 		setDefSettings(newText);
 		newText.center();
 		newText.setCoords();
+
 		canvas.setActiveObject(newText);
 		isSaved = false;
   	}
@@ -290,6 +292,11 @@
 		setDefSettings(newText);
 		newText.center();
 		newText.setCoords();
+		newText.lockScalingX = true;
+		newText.lockScalingY = true;
+		newText.lockUniScaling = true;
+		newText.paddingX = 10;
+		newText.paddingY = 20;
 		canvas.setActiveObject(newText);
 		isSaved = false;
   	}
