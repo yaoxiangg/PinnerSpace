@@ -675,31 +675,42 @@
 
 	function timedOut(afk) {
 		if(afk){
-			$.post("/resetEditor", { 
+			// Auto-save changes
+			$.post("/saveBoard", {
+				boardUser: "{{ currBoard.boardUser }}",
+				boardID: {{ currBoard.boardID }},
+				data: JSON.stringify(canvas)
+			});
+			isSaved = true;
+			// Reset editor in NDB
+			$.post("/resetEditor", {
 				user: "{{ currBoard.boardUser }}",
 				boardID: {{ currBoard.boardID }}
-			}).done(function( data ) {
-				document.getElementById("toolBoxButton").style.display = "block";
+			}).done(function( data ) { // unnecessary data?
+				// document.getElementById("toolBoxButton").style.display = "block";
+				// Remove functions -> alert -> reload
+				document.getElementById("exitButton").style.display = "none";
 				document.getElementById("myTab").style.display = "none";
 				document.getElementById("myTabContent").style.display = "none";
 				document.getElementById("boardButtons").style.display = "none";
 				document.getElementById("editinglocked").style.display = "none";
-				alert("You have been kicked out of edit mode, you AFK-er!");
+				alert("You have been kicked out of edit mode, you AFK-er! \n(P.S. your work has been auto-saved)");
+				location.reload();
 			});
 		} else {
 			if (document.getElementById("toolBoxButton").style.display == "none") {
 	    		jQuery.ajax({
-       		  		url:    'http://pinnerspace.appspot.com/resetEditor',
+       		  		url: 'http://pinnerspace.appspot.com/resetEditor',
                   	data: {
                   		user: "{{ currBoard.boardUser }}",
                   		boardID: {{ currBoard.boardID }}
                   	},
                 	type: "POST",
-         			async:   false
+         			async: false
     			});
 	    	}
 		}
-    }
+	}
 
 	</script>
 	<style>
