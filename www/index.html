@@ -19,10 +19,9 @@
 
 	window.onbeforeunload = function(e){
 		timedOut(false);
-		if(!isSaved){
-			return "Warning! Your board does NOT auto-save.\nAny unsaved changes will be lost (forever)!";
-		}
+		saveCanvas(false);
 	};
+
 	/*window.onunload = function(e){
 		timedOut();
 		//addBlock();
@@ -83,12 +82,6 @@
 		promptBoardEmpty();
 	}
 
-	function initStatic(){
-		canvas.dispose();
-		canvas = new fabric.StaticCanvas('canvas');
-		loadCanvas();
-	}
-
 	function promptBoardEmpty() {
 		var data = jQuery.parseJSON(lastSave);
 		if(data.objects == ""){
@@ -100,11 +93,11 @@
 
 	function loadCanvas(){
 		canvas.loadFromJSON(
-			lastSave,										// Input data: load from lastSave
-			canvas.renderAll.bind(canvas),						// 'Callback'(optional): rerender canvas
-			function(o,object){ 
+			lastSave,							// Input data: load from lastSave
+			canvas.renderAll.bind(canvas),		// 'Callback'(optional): rerender canvas
+			function(o,object){ 				// 'Reviver' (optional): re-set default settings on all objects
 				setDefSettings(object);
-			}	// 'Reviver' (optional): re-set default settings on all objects
+			}
 		);
 		isSaved = true;
 	}
@@ -123,14 +116,16 @@
 		else
 			curr.set({minScaleLimit: 10.0/curr.width});
 	}
-	function saveCanvas(){
+	function saveCanvas(wAlert){
 		$.post("/saveBoard", {
 			boardUser: "{{ currBoard.boardUser }}",
 			boardID: {{ currBoard.boardID }},
 			data: JSON.stringify(canvas)
 		});
 		lastSave = JSON.stringify(canvas);
-		alert("Successfully saved!");
+		if(wAlert){
+			alert("Successfully saved!");
+		}
 		isSaved = true;
 	}
 	function revert(){
@@ -149,7 +144,6 @@
   		}
   	}
   	function addBlock(){
-  		var center = canvas.getCenter();
   		var rect = new fabric.Rect({
   			width: 10,
   			height: 10,
@@ -163,7 +157,6 @@
   		rect.setCoords();
   		canvas.setActiveObject(rect);
   		isSaved = false;
-  		console.log(rect);
   	}
   	function cloneActive(){
   		var curr = canvas.getActiveObject();
@@ -216,6 +209,23 @@
 		canvas.renderAll();
 		isSaved = false;
 	}
+	function straightenActive(){
+		var curr = canvas.getActiveObject();
+		curr.straighten();
+		curr.setCoords();
+		checkPos(curr);
+		checkScaleAngle(curr);
+		atLimit = {
+			top: curr.getTop(),
+			left: curr.getLeft(),
+			scaleX: curr.getScaleX(),
+			scaleY: curr.getScaleY(),
+			angle: curr.getAngle(),
+		};
+		orig = fabric.util.object.clone(curr);
+		canvas.renderAll();
+		isSaved = false;
+	}
 	function setText(){
 		var curr = canvas.getActiveObject();
 		if(!curr) return; 	// not necessary, but kept as a precaution
@@ -238,22 +248,10 @@
 		}
 		isSaved = false;
 	}
-	function straightenActive(){
+	function textFont(){
 		var curr = canvas.getActiveObject();
-		curr.straighten();
-		curr.setCoords();
-		checkPos(curr);
-		checkScaleAngle(curr);
-		atLimit = {
-			top: curr.getTop(),
-			left: curr.getLeft(),
-			scaleX: curr.getScaleX(),
-			scaleY: curr.getScaleY(),
-			angle: curr.getAngle(),
-		};
-		orig = fabric.util.object.clone(curr);
-		canvas.renderAll();
-		isSaved = false;
+		if(!curr) return;
+		var txt = document.getElementById("infoFont").value;
 	}
 
   	// text [ WIP ]
@@ -850,7 +848,7 @@
 				{% endif %}
 
 				<div id="exitButton">
-					<div id="toolBoxExitButton"><button onclick="hideToolBox()">Exit</button></div>
+					<div id="toolBoxExitButton"><button onclick="hideToolBox()">Save and Exit</button></div>
 					<hr>
 				</div>
 				
@@ -908,22 +906,93 @@
 							</tr>
 						</table>
 						<p>
-						<button class="btn" onclick="straightenActive()">Straighten</button>
-						<button class="btn" onclick="canvas.getActiveObject().bringForward()">Bring Forward</button>
-						<button class="btn" onclick="canvas.getActiveObject().sendBackwards()">Send Backwards</button>
+							<button class="btn" onclick="straightenActive()">Straighten</button>
+							<button class="btn" onclick="canvas.getActiveObject().bringForward()">Bring Forward</button>
+							<button class="btn" onclick="canvas.getActiveObject().sendBackwards()">Send Backwards</button>
 						</p>
 						<p>
-						Fill:
-						<input id="infoColor" class="color {pickerFaceColor:'#DBDBDB'}" value="FFFFFF" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
-						<input type="submit" value="Apply" onclick="setBlkColor()">
-						</p>
-						Text:
-						<textarea id="infoTxt" maxlength="200" rows="3"></textarea>
-						<input id="infoTxtBtn" type="submit" value="Apply" onclick="setText()">
+							Fill:
+							<input id="infoColor" class="color {pickerFaceColor:'#DBDBDB'}" value="FFFFFF" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
+							<input type="submit" value="Apply" onclick="setBlkColor()">
 						</p>
 						<p>
-						<button class="btn" onclick="delActive()">Delete</button>
-						<button class="btn" onclick="cloneActive()">Clone</button>
+							Text:
+							<textarea id="infoTxt" maxlength="200" rows="3"></textarea>
+							<input id="infoTxtBtn" type="submit" value="Apply" onclick="setText()">
+						</p>
+						<p>
+							<div id="text-controls">
+								<label for="font-family" style="display:inline-block">Font family:</label>
+								<select id="font-family" class="btn-object-action" bind-value-to="fontFamily">
+									<option value="arial">Arial</option>
+									<option value="helvetica" selected="">Helvetica</option>
+									<option value="myriad pro">Myriad Pro</option>
+									<option value="delicious">Delicious</option>
+									<option value="verdana">Verdana</option>
+									<option value="georgia">Georgia</option>
+									<option value="courier">Courier</option>
+									<option value="comic sans ms">Comic Sans MS</option>
+									<option value="impact">Impact</option>
+									<option value="monaco">Monaco</option>
+									<option value="optima">Optima</option>
+									<option value="hoefler text">Hoefler Text</option>
+									<option value="plaster">Plaster</option>
+									<option value="engagement">Engagement</option>
+								</select>
+								<br>
+								<label for="text-align" style="display:inline-block">Text align:</label>
+								<select id="text-align" class="btn-object-action" bind-value-to="textAlign">
+									<option value="Left">Left</option>
+									<option value="Center">Center</option>
+									<option value="Right">Right</option>
+									<option value="Justify">Justify</option>
+								</select>
+								<div>
+								<label for="text-bg-color">Background color:</label>
+								<input type="color" value="" id="text-bg-color" size="10" class="btn-object-action" bind-value-to="bgColor">
+								</div>
+								<div>
+								<label for="text-lines-bg-color">Background text color:</label>
+								<input type="color" value="" id="text-lines-bg-color" size="10" class="btn-object-action" bind-value-to="textBgColor">
+								</div>
+								<div>
+								<label for="text-stroke-color">Stroke color:</label>
+								<input type="color" value="" id="text-stroke-color" class="btn-object-action" bind-value-to="strokeColor">
+								</div>
+								<div>
+								<label for="text-stroke-width">Stroke width:</label>
+								<input type="range" value="1" min="1" max="5" id="text-stroke-width" class="btn-object-action" bind-value-to="strokeWidth">
+								</div>
+								<div>
+								<label for="text-font-size">Font size:</label>
+								<input type="range" value="" min="1" max="120" step="1" id="text-font-size" class="btn-object-action" bind-value-to="fontSize">
+								</div>
+								<div>
+								<label for="text-line-height">Line height:</label>
+								<input type="range" value="" min="0" max="10" step="0.1" id="text-line-height" class="btn-object-action" bind-value-to="lineHeight">
+								</div>
+								</div>
+								<div id="text-controls-additional">
+								<button type="button" class="btn btn-object-action" ng-click="toggleBold()" ng-class="{'btn-inverse': isBold()}">
+								Bold
+								</button>
+								<button type="button" class="btn btn-object-action" id="text-cmd-italic" ng-click="toggleItalic()" ng-class="{'btn-inverse': isItalic()}">
+								Italic
+								</button>
+								<button type="button" class="btn btn-object-action" id="text-cmd-underline" ng-click="toggleUnderline()" ng-class="{'btn-inverse': isUnderline()}">
+								Underline
+								</button>
+								<button type="button" class="btn btn-object-action" id="text-cmd-linethrough" ng-click="toggleLinethrough()" ng-class="{'btn-inverse': isLinethrough()}">
+								Linethrough
+								</button>
+								<button type="button" class="btn btn-object-action" id="text-cmd-overline" ng-click="toggleOverline()" ng-class="{'btn-inverse': isOverline()}">
+								Overline
+								</button>
+							</div>
+						</p>
+						<p>
+							<button class="btn" onclick="delActive()">Delete</button>
+							<button class="btn" onclick="cloneActive()">Clone</button>
 						</p>
 					</div>
 					<!--Modify Canvas-->
@@ -959,7 +1028,7 @@
 				</div>
 				<div id="boardButtons">
 				<p>
-					<button class="btn btn-success" onclick="saveCanvas()">Save Changes</button>
+					<button class="btn btn-success" onclick="saveCanvas(true)">Save Changes</button>
 					<button class="btn btn-warning" onclick="revert()">Reset Changes</button>
 					<button class="btn btn-danger" onclick="clearCanvas()">Clear Board</button>
 				</p>
