@@ -16,10 +16,11 @@
 
 	$(function(){
 		window.addEventListener('paste', function(event){
-			event.preventDefault();
+			
 			var data = event.clipboardData.getData('text');
 			var curr = canvas.getActiveObject();
 			if (curr) {
+				event.preventDefault();
 				if(curr.type=="i-text"){
 					curr.copiedText = "";
 					curr.insertChars(data);
