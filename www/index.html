@@ -742,6 +742,9 @@
 		var object = canvas.getActiveObject();
 		if (!object) return;
 
+		if (name == "backgroundColor") {
+			setActiveProp("darkerShade", tinycolor.darken(value, 20).toHexString());
+		}
 		object.set(name, value).setCoords();
 		canvas.renderAll();
 	}
