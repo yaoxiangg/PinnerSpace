@@ -20878,7 +20878,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
       return;
     }
 
-    e.preventDefault();
+    //e.preventDefault();
     e.stopPropagation();
 
     this.canvas && this.canvas.renderAll();
