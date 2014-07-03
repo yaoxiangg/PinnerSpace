@@ -13,6 +13,13 @@
 	<script src="../scripts/tinycolor.js" type="text/javascript"></script>
 	<!--Canvas Script--> <!--Maybe should move to another file? When it's more or less done?-->
 	<script type = "text/javascript">
+
+	$(function(){
+    		$("#fontFamily").change(function() {
+    			setActiveProp("fontFamily", $("#fontFamily").val());
+    		});
+    });
+
 	if (window.location.href.indexOf('#_=_') > 0) {
     	window.location = window.location.href.replace(/#.*/, '');
 	}
@@ -713,6 +720,76 @@
 		}
 	}
 
+	function setActiveStyle(styleName, value, object) {
+		object = object || canvas.getActiveObject();
+		if (!object) return;
+
+		if (object.setSelectionStyles && object.isEditing) {
+			var style = { };
+			style[styleName] = value;
+			object.setSelectionStyles(style);
+			object.setCoords();
+		}
+		else {
+			object[styleName] = value;
+		}
+
+		object.setCoords();
+		canvas.renderAll();
+	}
+
+	function setActiveProp(name, value) {
+		var object = canvas.getActiveObject();
+		if (!object) return;
+
+		object.set(name, value).setCoords();
+		canvas.renderAll();
+	}
+
+	function getActiveStyle(styleName, object) {
+		object = object || canvas.getActiveObject();
+		if (!object) return '';
+
+		return (object.getSelectionStyles && object.isEditing)
+		? (object.getSelectionStyles()[styleName] || '')
+		: (object[styleName] || '');
+	}
+
+	function isUnderline() {
+		return getActiveStyle('textDecoration').indexOf('underline') > -1;
+	}
+
+	function toggleUnderline() {
+		var value = isUnderline()
+		? getActiveStyle('textDecoration').replace('underline', '')
+		: (getActiveStyle('textDecoration') + ' underline');
+
+		setActiveStyle('textDecoration', value);
+	}
+
+	function isLinethrough() {
+		return getActiveStyle('textDecoration').indexOf('line-through') > -1;
+	}
+
+	function toggleLinethrough() {
+		var value = isLinethrough()
+		? getActiveStyle('textDecoration').replace('line-through', '')
+		: (getActiveStyle('textDecoration') + ' line-through');
+
+		setActiveStyle('textDecoration', value);
+	}
+
+	function isOverline() {
+		return getActiveStyle('textDecoration').indexOf('overline') > -1;
+	}
+
+	function toggleOverline() {
+		var value = isOverline()
+		? getActiveStyle('textDecoration').replace('overline', '')
+		: (getActiveStyle('textDecoration') + ' overline');
+
+		setActiveStyle('textDecoration', value);
+	}
 	</script>
 	<style>
 	table.center {
@@ -914,7 +991,7 @@
 						<p>
 							<div id="text-controls">
 								<label for="font-family" style="display:inline-block">Font family:</label>
-								<select id="font-family" class="btn-object-action" bind-value-to="fontFamily">
+								<select id="fontFamily" name="fontFamily">
 									<option value="arial">Arial</option>
 									<option value="helvetica" selected="">Helvetica</option>
 									<option value="myriad pro">Myriad Pro</option>
@@ -940,40 +1017,42 @@
 								</select>
 								<div>
 								<label for="text-bg-color">Background color:</label>
-								<input type="color" value="" id="text-bg-color" size="10" class="btn-object-action" bind-value-to="bgColor">
+								<input type="color" value="" id="backgroundColor" size="10" onchange="setActiveProp(id, this.value)">
 								</div>
 								<div>
 								<label for="text-lines-bg-color">Background text color:</label>
-								<input type="color" value="" id="text-lines-bg-color" size="10" class="btn-object-action" bind-value-to="textBgColor">
+								<input type="color" value="" id="textBackgroundColor" size="10" onchange="setActiveProp(id, this.value)">
 								</div>
 								<div>
 								<label for="text-stroke-color">Stroke color:</label>
-								<input type="color" value="" id="text-stroke-color" class="btn-object-action" bind-value-to="strokeColor">
+								<input type="color" value="" id="stroke" onchange="setActiveStyle(id, this.value)">
 								</div>
 								<div>
 								<label for="text-stroke-width">Stroke width:</label>
-								<input type="range" value="1" min="1" max="5" id="text-stroke-width" class="btn-object-action" bind-value-to="strokeWidth">
+								<input type="range" value="1" min="1" max="5" id="strokeWidth" onchange="setActiveStyle(id, parseInt(this.value,10))">
 								</div>
 								<div>
 								<label for="text-font-size">Font size:</label>
-								<input type="range" value="" min="1" max="120" step="1" id="text-font-size" class="btn-object-action" bind-value-to="fontSize">
+								<input type="range" value="" min="20" max="120" step="1" id="fontSize"  onchange="setActiveStyle(id, this.value)">
 								</div>
 								<div>
 								<label for="text-line-height">Line height:</label>
-								<input type="range" value="" min="0" max="10" step="0.1" id="text-line-height" class="btn-object-action" bind-value-to="lineHeight">
+								<input type="range" value="" min="0" max="10" step="0.1" id="lineHeight" onchange="setActiveStyle(id, parseFloat(this.value))">
 								</div>
 								</div>
 								<div id="text-controls-additional">
-								<button type="button" class="btn btn-object-action" ng-click="toggleBold()" ng-class="{'btn-inverse': isBold()}">
+								<button type="button" class="btn btn-object-action" onclick="setActiveStyle('fontWeight',
+      getActiveStyle('fontWeight') === 'bold' ? '' : 'bold');" ng-class="{'btn-inverse': isBold()}">
 								Bold
 								</button>
-								<button type="button" class="btn btn-object-action" id="text-cmd-italic" ng-click="toggleItalic()" ng-class="{'btn-inverse': isItalic()}">
+								<button type="button" class="btn btn-object-action" id="text-cmd-italic" onclick="setActiveStyle('fontStyle',
+      getActiveStyle('fontStyle') === 'italic' ? '' : 'italic');" ng-class="{'btn-inverse': isItalic()}">
 								Italic
 								</button>
-								<button type="button" class="btn btn-object-action" id="text-cmd-underline" ng-click="toggleUnderline()" ng-class="{'btn-inverse': isUnderline()}">
+								<button type="button" class="btn btn-object-action" id="text-cmd-underline" onclick="toggleUnderline()" ng-class="{'btn-inverse': isUnderline()}">
 								Underline
 								</button>
-								<button type="button" class="btn btn-object-action" id="text-cmd-linethrough" ng-click="toggleLinethrough()" ng-class="{'btn-inverse': isLinethrough()}">
+								<button type="button" class="btn btn-object-action" id="text-cmd-linethrough" onclick="toggleLinethrough()" ng-class="{'btn-inverse': isLinethrough()}">
 								Linethrough
 								</button>
 							</div>
