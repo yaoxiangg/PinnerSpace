@@ -1004,61 +1004,60 @@
 						</div>
 						<!--ITEXT CONTROLS-->
 						<div id="itext-controls">
-							Font Type:
-							<select id="fontFamily" name="fontFamily">
-								<option value="arial">Arial</option>
-								<option value="helvetica" selected="">Helvetica</option>
-								<option value="myriad pro">Myriad Pro</option>
-								<option value="delicious">Delicious</option>
-								<option value="verdana">Verdana</option>
-								<option value="georgia">Georgia</option>
-								<option value="courier">Courier</option>
-								<option value="comic sans ms">Comic Sans MS</option>
-								<option value="impact">Impact</option>
-								<option value="monaco">Monaco</option>
-								<option value="optima">Optima</option>
-								<option value="hoefler text">Hoefler Text</option>
-								<option value="plaster">Plaster</option>
-								<option value="engagement">Engagement</option>
-							</select>
-							Align:
-							<select id="textAlign" name="textAlign">
-								<option value="left">Left</option>
-								<option value="center">Center</option>
-								<option value="right">Right</option>
-								<option value="justify">Justify</option>
-							</select>
-							<p>
+							<div>
+								Font Type:
+								<select id="fontFamily" name="fontFamily">
+									<option value="arial" selected="">Arial</option>
+									<option value="comic sans ms">Comic Sans MS</option>
+									<option value="consolas">Consolas</option>
+									<option value="courier">Courier</option>
+									<option value="georgia">Georgia</option>
+									<option value="helvetica">Helvetica</option>
+									<option value="impact">Impact</option>
+									<option value="lucida console">Lucida Console</option>
+									<option value="myriad pro">Myriad Pro</option>
+									<option value="segoe ui">Segoe UI</option>
+									<option value="tahoma">Tahoma</option>
+									<option value="times new roman">Times New Roman</option>
+									<option value="verdana">Verdana</option>	
+								</select>
+								Font Size:
+								<input type="range" value="" min="20" max="120" step="1" id="fontSize"  onchange="setActiveStyle(id, this.value)">
+							</div>
+							<p></p>
 							<div>
 								PostIt Color:
 								<input type="color" value="" id="backgroundColor" size="10" onchange="setActiveProp(id, this.value)">
 								Text Highlight:
 								<input type="color" value="" id="textBackgroundColor" size="10" onchange="setActiveProp(id, this.value)">
 							</div>
-							<p>
+							<p></p>
 							<div>
 								Stroke (Width/Color):
 								<input type="range" value="1" min="1" max="5" id="strokeWidth" onchange="setActiveStyle(id, parseInt(this.value,10))">
 								<input type="color" value="" id="stroke" onchange="setActiveStyle(id, this.value)">
 							</div>
-							<p>
-							<div>
-								Font Size:
-								<input type="range" value="" min="20" max="120" step="1" id="fontSize"  onchange="setActiveStyle(id, this.value)">
-							</div>
-							<p>
+							<p></p>
+							Text Align:
+							<select id="textAlign" name="textAlign">
+								<option value="left">Left</option>
+								<option value="center">Center</option>
+								<option value="right">Right</option>
+								<option value="justify">Justify</option>
+							</select>
+							<p></p>
 							<button type="button" class="btn btn-object-action" onclick="setActiveStyle('fontWeight', getActiveStyle('fontWeight') === 'bold' ? '' : 'bold');" ng-class="{'btn-inverse': isBold()}">Bold</button>
 							<button type="button" class="btn btn-object-action" id="text-cmd-italic" onclick="setActiveStyle('fontStyle', getActiveStyle('fontStyle') === 'italic' ? '' : 'italic');" ng-class="{'btn-inverse': isItalic()}">Italic</button>
 							<button type="button" class="btn btn-object-action" id="text-cmd-underline" onclick="toggleUnderline()" ng-class="{'btn-inverse': isUnderline()}">Underline</button>
 							<button type="button" class="btn btn-object-action" id="text-cmd-linethrough" onclick="toggleLinethrough()" ng-class="{'btn-inverse': isLinethrough()}">Linethrough</button>
 						</div>
-						<p>
+						<p></p>
 						<!--END ITEXT CONTROLS-->
 						<div>
 							<button class="btn" onclick="delActive()">Delete</button>
 							<button class="btn" onclick="cloneActive()">Clone</button>
 						</div>
-						<p>
+						<p></p>
 					</div>
 					<!--Modify Canvas-->
 					<div class="tab-pane fade" id="modifycanvas">
