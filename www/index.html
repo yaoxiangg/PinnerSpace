@@ -488,10 +488,6 @@
 	function setLimit(e){
 		var curr=e.target;
 		curr.setCoords();
-		if (curr.postIt) {
-			curr.item(1).setScaleY(1); // can just lock scaleY
-			curr.item(1).height = 10;
-		}
 		// if not out of bounds, save state
 		// (the interval is not very fast, so this method is not so precise if you move fast)
 		if(!isOOB(curr)){
