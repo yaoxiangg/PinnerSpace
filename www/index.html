@@ -297,8 +297,6 @@
 		setDefSettings(newText);
 		newText.center();
 		newText.setCoords();
-		newText.lockScalingX = true;
-		newText.lockScalingY = true;
 		newText.lockUniScaling = true;
 		newText.paddingX = 10;
 		newText.paddingY = 20;
@@ -454,8 +452,6 @@
   		switchTab();
   		updateInfoWin(orig);
   		if (canvas.getActiveObject().type=="i-text") {
-  			e.target.lockScalingX = true;
-			e.target.lockScalingY = true;
 			e.target.lockUniScaling = true;
   		}
   	}

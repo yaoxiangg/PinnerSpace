@@ -11747,8 +11747,8 @@ fabric.util.object.extend(fabric.StaticCanvas.prototype, /** @lends fabric.Stati
           padding = this.paddingX,
           theta = degreesToRadians(this.angle);
 
-      this.currentWidth = (this.width + strokeWidth) * this.scaleX + this.paddingX * 2;
-      this.currentHeight = (this.height + strokeWidth) * this.scaleY + this.paddingY * 2;
+      this.currentWidth = (this.width + strokeWidth) * this.scaleX + this.paddingX  * this.scaleX * 2;
+      this.currentHeight = (this.height + strokeWidth) * this.scaleY + this.paddingY  * this.scaleY * 2;
 
       // If width is negative, make postive. Fixes path selection issue
       if (this.currentWidth < 0) {
@@ -12355,18 +12355,18 @@ fabric.util.object.extend(fabric.Object.prototype, /** @lends fabric.Object.prot
           h = this.getHeight();
 
       ctx.strokeRect(
-        ~~(-(w / 2) - paddingX - strokeWidth / 2 * this.scaleX) - 0.5, // offset needed to make lines look sharper
-        ~~(-(h / 2) - paddingY - strokeWidth / 2 * this.scaleY) - 0.5,
-        ~~(w + padding2X + strokeWidth * this.scaleX) + 1, // double offset needed to make lines look sharper
-        ~~(h + padding2Y + strokeWidth * this.scaleY) + 1
+        ~~(-(w / 2) - (paddingX - strokeWidth / 2) * this.scaleX) - 0.5, // offset needed to make lines look sharper
+        ~~(-(h / 2) - (paddingY - strokeWidth / 2) * this.scaleY) - 0.5,
+        ~~(w + (padding2X + strokeWidth) * this.scaleX) + 1, // double offset needed to make lines look sharper
+        ~~(h + (padding2Y + strokeWidth) * this.scaleY) + 1
       );
 
       if (this.hasRotatingPoint && this.isControlVisible('mtr') && !this.get('lockRotation') && this.hasControls) {
 
         var rotateHeight = (
           this.flipY
-            ? h + (strokeWidth * this.scaleY) + (paddingY * 2)
-            : -h - (strokeWidth * this.scaleY) - (paddingY * 2)
+            ? h + (strokeWidth * this.scaleY) + (paddingY  * this.scaleY * 2)
+            : -h - (strokeWidth * this.scaleY) - (paddingY  * this.scaleY * 2)
         ) / 2;
 
         ctx.beginPath();
@@ -12415,44 +12415,44 @@ fabric.util.object.extend(fabric.Object.prototype, /** @lends fabric.Object.prot
 
       // top-left
       this._drawControl('tl', ctx, methodName,
-        left - scaleOffsetX - strokeWidth2 - paddingX,
-        top - scaleOffsetY - strokeWidth2 - paddingY);
+        left - scaleOffsetX - strokeWidth2 - paddingX * this.scaleX,
+        top - scaleOffsetY - strokeWidth2 - paddingY * this.scaleY);
 
       // top-right
       this._drawControl('tr', ctx, methodName,
-        left + width - scaleOffsetX + strokeWidth2 + paddingX,
-        top - scaleOffsetY - strokeWidth2 - paddingY);
+        left + width - scaleOffsetX + strokeWidth2 + paddingX * this.scaleX,
+        top - scaleOffsetY - strokeWidth2 - paddingY * this.scaleY);
 
       // bottom-left
       this._drawControl('bl', ctx, methodName,
-        left - scaleOffsetX - strokeWidth2 - paddingX,
-        top + height + scaleOffsetSizeY + strokeWidth2 + paddingY);
+        left - scaleOffsetX - strokeWidth2 - paddingX * this.scaleX,
+        top + height + scaleOffsetSizeY + strokeWidth2 + paddingY * this.scaleY);
 
       // bottom-right
       this._drawControl('br', ctx, methodName,
-        left + width + scaleOffsetSizeX + strokeWidth2 + paddingX,
-        top + height + scaleOffsetSizeY + strokeWidth2 + paddingY);
+        left + width + scaleOffsetSizeX + strokeWidth2 + paddingX * this.scaleX,
+        top + height + scaleOffsetSizeY + strokeWidth2 + paddingY * this.scaleY);
 
       if (!this.get('lockUniScaling')) {
 
         // middle-top
         this._drawControl('mt', ctx, methodName,
           left + width/2 - scaleOffsetX,
-          top - scaleOffsetY - strokeWidth2 - paddingY);
+          top - scaleOffsetY - strokeWidth2 - paddingY * this.scaleY);
 
         // middle-bottom
         this._drawControl('mb', ctx, methodName,
           left + width/2 - scaleOffsetX,
-          top + height + scaleOffsetSizeY + strokeWidth2 + paddingY);
+          top + height + scaleOffsetSizeY + strokeWidth2 + paddingY * this.scaleY);
 
         // middle-right
         this._drawControl('mr', ctx, methodName,
-          left + width + scaleOffsetSizeX + strokeWidth2 + paddingX,
+          left + width + scaleOffsetSizeX + strokeWidth2 + paddingX * this.scaleX,
           top + height/2 - scaleOffsetY);
 
         // middle-left
         this._drawControl('ml', ctx, methodName,
-          left - scaleOffsetX - strokeWidth2 - paddingX,
+          left - scaleOffsetX - strokeWidth2 - paddingX * this.scaleX,
           top + height/2 - scaleOffsetY);
       }
 
@@ -12461,8 +12461,8 @@ fabric.util.object.extend(fabric.Object.prototype, /** @lends fabric.Object.prot
         this._drawControl('mtr', ctx, methodName,
           left + width/2 - scaleOffsetX,
           this.flipY
-            ? (top + height + (this.rotatingPointOffset / this.scaleY) - this.cornerSize/this.scaleX/2 + strokeWidth2 + paddingY)
-            : (top - (this.rotatingPointOffset / this.scaleY) - this.cornerSize/this.scaleY/2 - strokeWidth2 - paddingY));
+            ? (top + height + (this.rotatingPointOffset / this.scaleY) - this.cornerSize/this.scaleX/2 + strokeWidth2 + paddingY * this.scaleY)
+            : (top - (this.rotatingPointOffset / this.scaleY) - this.cornerSize/this.scaleY/2 - strokeWidth2 - paddingY * this.scaleY));
       }
 
       ctx.restore();
