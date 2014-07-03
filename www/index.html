@@ -18,6 +18,9 @@
     		$("#fontFamily").change(function() {
     			setActiveProp("fontFamily", $("#fontFamily").val());
     		});
+    		$("#textAlign").change(function() {
+    			setActiveProp('textAlign', $("#textAlign").val());
+    		});
     });
 
 	if (window.location.href.indexOf('#_=_') > 0) {
@@ -236,7 +239,7 @@
 	function setText(){
 		var curr = canvas.getActiveObject();
 		if(!curr) return; 	// not necessary, but kept as a precaution
-		var txt = document.getElementById("infoTxt").value;
+			var txt = document.getElementById("infoTxt").value;
 		if(curr.type=="i-text"){
 			curr.setText(txt);
 			canvas.renderAll();
@@ -453,6 +456,11 @@
   		updateInfoWin(orig);
   		if (canvas.getActiveObject().type=="i-text") {
 			e.target.lockUniScaling = true;
+			document.getElementById("infotable2").style.display = "none";
+			document.getElementById("itext-controls").style.display = "block";
+  		} else {
+  			document.getElementById("infotable2").style.display = "block";
+			document.getElementById("itext-controls").style.display = "none";
   		}
   	}
 
@@ -830,10 +838,16 @@
   		padding:2px;
   		border-spacing:5px;
   	}
-  	#myTab, #myTabContent , #editinglocked, #boardButtons, #exitButton {
+  	#myTab, #myTabContent , #editinglocked, #boardButtons, #exitButton, #itext-controls{
   		display: none;
   	}
-	</style>
+
+  	input[type=range] {
+  		width: 50px;
+  		display: inline-table;
+  		vertical-align: middle;
+  	}
+  	</style>
 	<!--End of Canvas Script-->
 </head>
 <body onload="init({{boardData}})">
@@ -967,104 +981,89 @@
 							<tr>
 								<td> X: </td><td> <input type="text" id="infoX" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
 								<td> Y: </td><td> <input type="text" id="infoY" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
-							</tr>
-							<tr>
-								<td> Angle: </td><td> <input type="text" id="infoAng" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
+								<td> Angle: </td><td> <input type="text" id="infoAng" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"></td>
 							</tr>
 						</table>
-						<p>
+						<p><p>
 							<button class="btn" onclick="straightenActive()">Straighten</button>
 							<button class="btn" onclick="canvas.getActiveObject().bringForward()">Bring Forward</button>
 							<button class="btn" onclick="canvas.getActiveObject().sendBackwards()">Send Backwards</button>
 						</p>
-						<p>
-							Fill:
-							<input id="infoColor" class="color {pickerFaceColor:'#DBDBDB'}" value="FFFFFF" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
-							<input type="submit" value="Apply" onclick="setBlkColor()">
-						</p>
-						<p>
-							Text:
-							<textarea id="infoTxt" maxlength="200" rows="3"></textarea>
-							<input id="infoTxtBtn" type="submit" value="Apply" onclick="setText()">
-						</p>
-						<p>
-							<div id="text-controls">
-								<label for="font-family" style="display:inline-block">Font family:</label>
-								<select id="fontFamily" name="fontFamily">
-									<option value="arial">Arial</option>
-									<option value="helvetica" selected="">Helvetica</option>
-									<option value="myriad pro">Myriad Pro</option>
-									<option value="delicious">Delicious</option>
-									<option value="verdana">Verdana</option>
-									<option value="georgia">Georgia</option>
-									<option value="courier">Courier</option>
-									<option value="comic sans ms">Comic Sans MS</option>
-									<option value="impact">Impact</option>
-									<option value="monaco">Monaco</option>
-									<option value="optima">Optima</option>
-									<option value="hoefler text">Hoefler Text</option>
-									<option value="plaster">Plaster</option>
-									<option value="engagement">Engagement</option>
-								</select>
-								<br>
-								<label for="text-align" style="display:inline-block">Text align:</label>
-								<select id="text-align" class="btn-object-action" bind-value-to="textAlign">
-									<option value="Left">Left</option>
-									<option value="Center">Center</option>
-									<option value="Right">Right</option>
-									<option value="Justify">Justify</option>
-								</select>
-								<div>
-								<label for="text-bg-color">Background color:</label>
+						<!--NOT FOR ITEXT-->
+						<div id="infotable2">
+							<p>
+								Fill:
+								<input id="infoColor" class="color {pickerFaceColor:'#DBDBDB'}" value="FFFFFF" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
+								<input type="submit" value="Apply" onclick="setBlkColor()">
+							</p>
+							<p>
+								Text:
+								<textarea id="infoTxt" maxlength="200" rows="3"></textarea>
+								<input id="infoTxtBtn" type="submit" value="Apply" onclick="setText()">
+							</p>
+						</div>
+						<!--ITEXT CONTROLS-->
+						<div id="itext-controls">
+							Font Type:
+							<select id="fontFamily" name="fontFamily">
+								<option value="arial">Arial</option>
+								<option value="helvetica" selected="">Helvetica</option>
+								<option value="myriad pro">Myriad Pro</option>
+								<option value="delicious">Delicious</option>
+								<option value="verdana">Verdana</option>
+								<option value="georgia">Georgia</option>
+								<option value="courier">Courier</option>
+								<option value="comic sans ms">Comic Sans MS</option>
+								<option value="impact">Impact</option>
+								<option value="monaco">Monaco</option>
+								<option value="optima">Optima</option>
+								<option value="hoefler text">Hoefler Text</option>
+								<option value="plaster">Plaster</option>
+								<option value="engagement">Engagement</option>
+							</select>
+							Align:
+							<select id="textAlign" name="textAlign">
+								<option value="left">Left</option>
+								<option value="center">Center</option>
+								<option value="right">Right</option>
+								<option value="justify">Justify</option>
+							</select>
+							<p>
+							<div>
+								PostIt Color:
 								<input type="color" value="" id="backgroundColor" size="10" onchange="setActiveProp(id, this.value)">
-								</div>
-								<div>
-								<label for="text-lines-bg-color">Background text color:</label>
+								Text Highlight:
 								<input type="color" value="" id="textBackgroundColor" size="10" onchange="setActiveProp(id, this.value)">
-								</div>
-								<div>
-								<label for="text-stroke-color">Stroke color:</label>
-								<input type="color" value="" id="stroke" onchange="setActiveStyle(id, this.value)">
-								</div>
-								<div>
-								<label for="text-stroke-width">Stroke width:</label>
-								<input type="range" value="1" min="1" max="5" id="strokeWidth" onchange="setActiveStyle(id, parseInt(this.value,10))">
-								</div>
-								<div>
-								<label for="text-font-size">Font size:</label>
-								<input type="range" value="" min="20" max="120" step="1" id="fontSize"  onchange="setActiveStyle(id, this.value)">
-								</div>
-								<div>
-								<label for="text-line-height">Line height:</label>
-								<input type="range" value="" min="0" max="10" step="0.1" id="lineHeight" onchange="setActiveStyle(id, parseFloat(this.value))">
-								</div>
-								</div>
-								<div id="text-controls-additional">
-								<button type="button" class="btn btn-object-action" onclick="setActiveStyle('fontWeight',
-      getActiveStyle('fontWeight') === 'bold' ? '' : 'bold');" ng-class="{'btn-inverse': isBold()}">
-								Bold
-								</button>
-								<button type="button" class="btn btn-object-action" id="text-cmd-italic" onclick="setActiveStyle('fontStyle',
-      getActiveStyle('fontStyle') === 'italic' ? '' : 'italic');" ng-class="{'btn-inverse': isItalic()}">
-								Italic
-								</button>
-								<button type="button" class="btn btn-object-action" id="text-cmd-underline" onclick="toggleUnderline()" ng-class="{'btn-inverse': isUnderline()}">
-								Underline
-								</button>
-								<button type="button" class="btn btn-object-action" id="text-cmd-linethrough" onclick="toggleLinethrough()" ng-class="{'btn-inverse': isLinethrough()}">
-								Linethrough
-								</button>
 							</div>
-						</p>
+							<p>
+							<div>
+								Stroke (Width/Color):
+								<input type="range" value="1" min="1" max="5" id="strokeWidth" onchange="setActiveStyle(id, parseInt(this.value,10))">
+								<input type="color" value="" id="stroke" onchange="setActiveStyle(id, this.value)">
+							</div>
+							<p>
+							<div>
+								Font Size:
+								<input type="range" value="" min="20" max="120" step="1" id="fontSize"  onchange="setActiveStyle(id, this.value)">
+							</div>
+							<p>
+							<button type="button" class="btn btn-object-action" onclick="setActiveStyle('fontWeight', getActiveStyle('fontWeight') === 'bold' ? '' : 'bold');" ng-class="{'btn-inverse': isBold()}">Bold</button>
+							<button type="button" class="btn btn-object-action" id="text-cmd-italic" onclick="setActiveStyle('fontStyle', getActiveStyle('fontStyle') === 'italic' ? '' : 'italic');" ng-class="{'btn-inverse': isItalic()}">Italic</button>
+							<button type="button" class="btn btn-object-action" id="text-cmd-underline" onclick="toggleUnderline()" ng-class="{'btn-inverse': isUnderline()}">Underline</button>
+							<button type="button" class="btn btn-object-action" id="text-cmd-linethrough" onclick="toggleLinethrough()" ng-class="{'btn-inverse': isLinethrough()}">Linethrough</button>
+						</div>
 						<p>
+						<!--END ITEXT CONTROLS-->
+						<div>
 							<button class="btn" onclick="delActive()">Delete</button>
 							<button class="btn" onclick="cloneActive()">Clone</button>
-						</p>
+						</div>
+						<p>
 					</div>
 					<!--Modify Canvas-->
 					<div class="tab-pane fade" id="modifycanvas">
 					<p>
-						Background colour:
+						Background Colour:
 						<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="bgcolor='#'+this.color.toString().toUpperCase()">
 						<input type="submit" value="Apply" onclick="setBG()">
 						<p class="bgimgbutton">
