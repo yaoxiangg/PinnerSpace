@@ -15,28 +15,6 @@
 	<script type = "text/javascript">
 
 	$(function(){
-		window.addEventListener('paste', function(event){
-			
-			var data = event.clipboardData.getData('text');
-			var curr = canvas.getActiveObject();
-			if (curr) {
-				event.preventDefault();
-				if(curr.type=="i-text"){
-					curr.copiedText = "";
-					curr.insertChars(data);
-				}
-			}
-		});
-		window.addEventListener('copy', function (e) {
-			event.preventDefault();
-			var curr = canvas.getActiveObject();
-			if (curr) {
-				if(curr.type=="i-text"){
-					e.clipboardData.setData('text', curr.getSelectedText());
-					curr.copiedText = "";
-				}
-			}
-		});
 		$("#fontFamily").change(function() {
 			setActiveProp("fontFamily", $("#fontFamily").val());
 		});
@@ -316,6 +294,7 @@
 			return;
 		}
 		var newText = new fabric.IText(text);
+		newText.fontSize = 20;
 		newText.backgroundColor = color;
 		newText.darkerShade = tinycolor.darken(color, 20).toHexString();
 		canvas.add(newText);
@@ -1044,7 +1023,7 @@
 									<option value="verdana">Verdana</option>	
 								</select>
 								Font Size:
-								<input type="range" value="" min="20" max="120" step="1" id="fontSize"  onchange="setActiveStyle(id, this.value)">
+								<input type="range" value="20" min="20" max="120" step="1" id="fontSize"  onchange="setActiveStyle(id, this.value)">
 							</div>
 							<p></p>
 							<div>
