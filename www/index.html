@@ -398,6 +398,11 @@
 		// Deselect effects
 		atLimit=null;
 		orig=null;
+		document.getElementById("toolBox1").style.display = "none";
+		document.getElementById("toolBox2").style.display = "none";
+		document.getElementById("infotable").style.display = "none";
+		document.getElementById("infotable2").style.display = "none";
+		document.getElementById("itext-controls").style.display = "none";
 	}
 	function updateFromWin(box){
 		var curr = canvas.getActiveObject();
@@ -455,13 +460,27 @@
 		};
   		switchTab();
   		updateInfoWin(orig);
-  		if (canvas.getActiveObject().type=="i-text") {
-			e.target.lockUniScaling = true;
-			document.getElementById("infotable2").style.display = "none";
-			document.getElementById("itext-controls").style.display = "block";
+
+  		
+
+		if (canvas.getActiveObject()) {
+
+			document.getElementById("infotable").style.display = "block";
+  			document.getElementById("toolBox1").style.display = "block";
+			document.getElementById("toolBox2").style.display = "block";
+
+  			if (canvas.getActiveObject().type=="i-text") {
+				e.target.lockUniScaling = true;
+				document.getElementById("infotable2").style.display = "none";
+				document.getElementById("itext-controls").style.display = "block";
+  			} else {
+  				document.getElementById("infotable2").style.display = "block";
+				document.getElementById("itext-controls").style.display = "none";
+  			}
   		} else {
-  			document.getElementById("infotable2").style.display = "block";
-			document.getElementById("itext-controls").style.display = "none";
+  			document.getElementById("infotable").style.display = "none";
+  			document.getElementById("toolBox1").style.display = "none";
+			document.getElementById("toolBox2").style.display = "block";
   		}
   	}
 
@@ -985,11 +1004,13 @@
 								<td> Angle: </td><td> <input type="text" id="infoAng" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"></td>
 							</tr>
 						</table>
-						<p><p>
+						<p></p>
+						<div id="toolBox1">
 							<button class="btn" onclick="straightenActive()">Straighten</button>
 							<button class="btn" onclick="canvas.getActiveObject().bringForward()">Bring Forward</button>
 							<button class="btn" onclick="canvas.getActiveObject().sendBackwards()">Send Backwards</button>
-						</p>
+						</div>
+						<p></p>
 						<!--NOT FOR ITEXT-->
 						<div id="infotable2">
 							<p>
@@ -1054,7 +1075,7 @@
 						</div>
 						<p></p>
 						<!--END ITEXT CONTROLS-->
-						<div>
+						<div id="toolBox2">
 							<button class="btn" onclick="delActive()">Delete</button>
 							<button class="btn" onclick="cloneActive()">Clone</button>
 						</div>
