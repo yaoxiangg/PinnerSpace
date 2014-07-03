@@ -15,13 +15,34 @@
 	<script type = "text/javascript">
 
 	$(function(){
-    		$("#fontFamily").change(function() {
-    			setActiveProp("fontFamily", $("#fontFamily").val());
-    		});
-    		$("#textAlign").change(function() {
-    			setActiveProp('textAlign', $("#textAlign").val());
-    		});
-    });
+		window.addEventListener('paste', function(event){
+			event.preventDefault();
+			var data = event.clipboardData.getData('text');
+			var curr = canvas.getActiveObject();
+			if (curr) {
+				if(curr.type=="i-text"){
+					curr.copiedText = "";
+					curr.insertChars(data);
+				}
+			}
+		});
+		window.addEventListener('copy', function (e) {
+			event.preventDefault();
+			var curr = canvas.getActiveObject();
+			if (curr) {
+				if(curr.type=="i-text"){
+					e.clipboardData.setData('text', curr.getSelectedText());
+					curr.copiedText = "";
+				}
+			}
+		});
+		$("#fontFamily").change(function() {
+			setActiveProp("fontFamily", $("#fontFamily").val());
+		});
+		$("#textAlign").change(function() {
+			setActiveProp('textAlign', $("#textAlign").val());
+		});
+	});
 
 	if (window.location.href.indexOf('#_=_') > 0) {
     	window.location = window.location.href.replace(/#.*/, '');
