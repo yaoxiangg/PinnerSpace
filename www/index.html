@@ -234,7 +234,7 @@
   		var newGrp = new fabric.Group(grpItems);
   		canvas.discardActiveGroup();
 
-		// add group onto canvas
+		// Add group onto canvas
 		canvas.add(newGrp);
 		setDefSettings(newGrp);
 		newGrp.set(coords);
@@ -282,35 +282,13 @@
 		canvas.renderAll();
 		isSaved = false;
 	}
-	function setText(){
-		var curr = canvas.getActiveObject();
-		if(!curr) return; 	// not necessary, but kept as a precaution
-			var txt = document.getElementById("infoTxt").value;
-		if(curr.type=="i-text"){
-			curr.setText(txt);
-			canvas.renderAll();
-		}else if(curr.type=="group" && curr._objects[1].type=="text"){
-			var currBox = curr._objects[0];
-			var currTxt = curr._objects[1];
-			currTxt.setText(txt);
-			currBox.set({
-				width: currTxt.width,
-				height: currTxt.height,
-				scaleX: currTxt.scaleX * 1.1,
-				scaleY: currTxt.scaleY * 1.1,
-			});
-			curr.setCoords(); // SOME BUG WITH BOUNDING BOX
-			canvas.renderAll();
-		}
-		isSaved = false;
-	}
+
 	function textFont(){
 		var curr = canvas.getActiveObject();
 		if(!curr) return;
 		var txt = document.getElementById("infoFont").value;
 	}
 
-  	// text [ WIP ]
   	function addText() {
   		var input = document.getElementById("newtext");
   		var text = input.value;
@@ -407,8 +385,6 @@
 		var infoH = document.getElementById("infoH");
 		var infoAng = document.getElementById("infoAng");
 		var infoColor = document.getElementById("infoColor");
-		var infoTxt = document.getElementById("infoTxt");
-		var infoTxtBtn = document.getElementById("infoTxtBtn");
 		infoX.value = toTwoDP(curr.getLeft());
 		infoY.value = toTwoDP(curr.getTop());
 		infoW.value = toTwoDP(curr.getWidth());
@@ -418,17 +394,6 @@
 		// CURRENTLY I-TEXT is buggy because it uses rgb(a, b, c)
 		// Should be solved by setting colour when creating text
 		infoColor.color.fromString(curr.getFill().substring(1));
-		// I-text/text requirements
-		infoTxt.disabled = false;
-		infoTxtBtn.disabled = false;
-		if(curr.type=="i-text"){
-			infoTxt.value = curr.getText();
-		}else if(curr.type=="group" && curr._objects[1].type=="text"){ // Not final: probably need a new class
-			infoTxt.value = curr._objects[1].getText();
-		}else{
-			infoTxt.disabled = true;
-			infoTxtBtn.disabled = true;
-		}
 	}
 	function toTwoDP(num){
 		return Math.round(num*100)/100;
@@ -440,7 +405,6 @@
 		document.getElementById("infoH").value="";
 		document.getElementById("infoAng").value="";
 		document.getElementById("infoColor").color.fromString('FFFFFF');
-		document.getElementById("infoTxt").value="";
 		// Deselect effects
 		atLimit=null;
 		orig=null;
@@ -1059,11 +1023,6 @@
 								Fill:
 								<input id="infoColor" class="color {pickerFaceColor:'#DBDBDB'}" value="FFFFFF" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
 								<input type="submit" value="Apply" onclick="setBlkColor()">
-							</p>
-							<p>
-								Text:
-								<textarea id="infoTxt" maxlength="200" rows="3"></textarea>
-								<input id="infoTxtBtn" type="submit" value="Apply" onclick="setText()">
 							</p>
 						</div>
 						<!--ITEXT CONTROLS-->
