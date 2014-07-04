@@ -27,17 +27,6 @@
     	window.location = window.location.href.replace(/#.*/, '');
 	}
 
-	window.onbeforeunload = function(e){
-		saveCanvas(false); // Got to see if the async is affected by number of objects on canvas
-		timedOut(false);
-	};
-
-	/*window.onunload = function(e){
-		timedOut();
-		//addBlock();
-		//saveCanvas();
-	};*/
-
 	var canvas;
 	var bgcolor = '#FFFFFF';	// Colour setter for background
 	var blkcolor = '#FFFFFF',	// Colour setter for new block
@@ -79,8 +68,11 @@
 	}
 
 	function initEdit(){
+		// Clear static canvas and load interactive canvas
 		canvas.dispose();
 		canvas = new fabric.Canvas('canvas');
+		loadCanvas();
+		// Add edit-mode functionalities
 		canvas.on({
 			'object:modified': checkOOB,
 			'object:selected': objSelected,
@@ -88,7 +80,17 @@
 			'object:rotating': setLimit,
 			'selection:cleared': resetInfoWin,
 		});
-		loadCanvas();
+		$(document).on('keydown', function(e){	// Ctrl+S functionality
+			if(e.ctrlKey && e.which === 83){	// Check for the Ctrl key being pressed, and if the key = [S] (83)
+				saveCanvas(true);
+				e.preventDefault();
+			}
+		});
+		window.onbeforeunload = function(e){	// Page-leave functionality
+			saveCanvas(false); 					// ***Got to see if the async is affected by number of objects on canvas
+			timedOut(false);
+		};
+		// Initial load auxiliary function(s)
 		promptBoardEmpty();
 	}
 
@@ -112,7 +114,7 @@
 		isSaved = true;
 	}
 
-	function setDefSettings(curr){
+	function setDefSettings(curr){	// *** consider adding these features to toJSON(options)
 		curr.set({
 			borderColor: 'rgba(67,46,79,0.75)',
 			cornerColor: 'rgba(58,174,175,0.85)',
@@ -133,16 +135,14 @@
 			data: JSON.stringify(canvas)
 		});
 		lastSave = JSON.stringify(canvas);
-		if(wAlert){
+		if(wAlert)
 			alert("Successfully saved!");
-		}
 		isSaved = true;
 	}
 	function revert(){
 		var resp=confirm("You sure? All your unsaved work will be lost...");
 		if(resp==true){
   			loadCanvas();
-  			atLimit=null; // may not be necessary
   			orig=null;
   		}
   	}
@@ -169,30 +169,28 @@
   		isSaved = false;
   	}
   	function cloneActive(){
-  		var curr = canvas.getActiveObject();
-  		var currGrp = canvas.getActiveGroup();
-  		if(curr){
+  		var curr = canvas.getActiveGroup() || canvas.getActiveObject();
+  		var items = curr._objects;
+  		if(items){
+  			var newItems = [];
+  			curr.forEachObject( function(o) {
+  				newItems.push(o.clone());
+  			});
+  			var clone = new fabric.Group(newItems);
+  			canvas.add(clone);
+  			setDefSettings(clone);
+  			clone.center();
+  			clone.setCoords();
+  			canvas.discardActiveObject();
+  			canvas.discardActiveGroup();
+  			canvas.setActiveObject(clone);
+  		}else if(curr){
   			var clone = fabric.util.object.clone(curr);
   			canvas.add(clone);
   			clone.center();
   			clone.setCoords();
+  			canvas.discardActiveObject();
   			canvas.setActiveObject(clone);
-  		}else if(currGrp){ // CONSIDER trying createGroup and breakGroup to allow control over groups
-  			/*var newGroup = new fabric.Group();
-  			for(var i=0; i<currGrp.objects.length; i++){
-  				console.log(currGrp.objects[i]);
-  				var clone = fabric.util.object.clone(currGrp.objects[i]);
-  				newGroup.addWithUpdate(clone);
-  			}
-  			canvas.add(newGroup);
-  			newGroup.destroy();*/
-  			/*console.log(currGrp.objects);
-  			var clone = fabric.util.object.clone(currGrp);
-  			canvas.add(clone);
-  			clone.saveState();
-  			clone.destroy();
-  			canvas.discardActiveGroup();
-  			canvas.setActiveGroup(clone);*/
   		}else{
   			return;
   		}
@@ -209,6 +207,54 @@
 		}
 		resetInfoWin();
 		isSaved = false;
+  	}
+  	function groupActive() {
+  		var currGrp = canvas.getActiveGroup();
+  		if(!currGrp) return;
+  		// Does not support group-ception
+		var items = currGrp._objects;
+		for(var i = 0; i < items.length; i++) {
+			if(items[i]._objects!=null){
+				alert("Sorry, but we can't do group-ception! \n(i.e. no groups within groups allowed)");
+				return;
+			}
+		}
+  		// Save current location
+  		var coords = {
+  			left: currGrp.left,
+  			top: currGrp.top,
+  			angle: currGrp.angle,
+  		};
+  		// Create new group while destroying old one
+  		var grpItems = [];
+  		currGrp.forEachObject( function(o) {
+  			grpItems.push(o.clone());
+  			canvas.remove(o);
+  		});
+  		var newGrp = new fabric.Group(grpItems);
+  		canvas.discardActiveGroup();
+
+		// add group onto canvas
+		canvas.add(newGrp);
+		setDefSettings(newGrp);
+		newGrp.set(coords);
+		newGrp.setCoords();
+		canvas.setActiveObject(newGrp);
+		isSaved = false;
+  	}
+  	function breakActiveGrp() {
+  		var curr = canvas.getActiveObject();
+  		if(!curr || curr._objects==null) return;
+		var items = curr._objects;
+		curr._restoreObjectsState();
+		canvas.remove(curr);
+		for(var i = 0; i < items.length; i++) {
+			canvas.add(items[i]);
+			setDefSettings(items[i]);
+			items[i].setCoords();
+		}
+  		canvas.discardActiveObject();
+  		isSaved = false;
   	}
 	function setBG() {
 		canvas.setBackgroundColor(bgcolor, canvas.renderAll.bind(canvas));
@@ -1074,6 +1120,8 @@
 						<div id="toolBox2">
 							<button class="btn" onclick="delActive()">Delete</button>
 							<button class="btn" onclick="cloneActive()">Clone</button>
+							<button class="btn" onclick="groupActive()">Group</button>
+							<button class="btn" onclick="breakActiveGrp()">Break Group</button>
 						</div>
 						<p></p>
 					</div>
