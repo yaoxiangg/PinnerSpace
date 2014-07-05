@@ -14,6 +14,7 @@
 	<!--Canvas Script--> <!--Maybe should move to another file? When it's more or less done?-->
 	<script type = "text/javascript">
 
+	/************************ PAGE INITIALISATION *************************/
 	$(function(){
 		$("#fontFamily").change(function() {
 			setActiveProp("fontFamily", $("#fontFamily").val());
@@ -27,8 +28,10 @@
     	window.location = window.location.href.replace(/#.*/, '');
 	}
 
+	/************************ GLOBAL VARIABLES *************************/
 	var canvas;
 	var bgcolor = '#FFFFFF';	// Colour setter for background
+	var bgselected;				// Image ID setter for background
 	var blkcolor = '#FFFFFF',	// Colour setter for new block
 		blkcolor2 = '#FFFFFF';	// Colour setter for current block
 	var orig;					// Holds last selected/modified object (for clone)
@@ -37,6 +40,8 @@
 	var isSaved;				// Counter for whether changes have been made
 	var idleTime = 0;			// Counter for number of minutes user is idle
 	var idleInterval;			// Holds ID for setInterval() idle timer (for reset)
+	
+	/************************ BOARD INITIALISATION *************************/
 	function init(boardData){
 		// Initialise imagebox for addImage()
 		$("#imagebox").overlay({
@@ -66,7 +71,6 @@
 		lastSave = JSON.stringify(boardData); // console.log(boardData); // boardData is an object (boardData.object); loadFromJSON works with string
 		loadCanvas();
 	}
-
 	function initEdit(){
 		// Clear static canvas and load interactive canvas
 		canvas.dispose();
@@ -93,7 +97,6 @@
 		// Initial load auxiliary function(s)
 		promptBoardEmpty();
 	}
-
 	function promptBoardEmpty() {
 		var data = jQuery.parseJSON(lastSave);
 		if(data.objects == ""){
@@ -102,7 +105,83 @@
 			input.focus();
 		}
 	}
+	function showToolBox() {
+		$.post("/getEditor", { 
+			user: "{{ currBoard.boardUser }}",
+			boardID: {{ currBoard.boardID }},
+			boardEditor: "{{ user.email }}"
+		}).done(function( data ) {
+				if (data == "") {
+					document.getElementById("editinglocked").style.display = "none";
+    				document.getElementById("toolBoxButton").style.display = "none";
+    				document.getElementById("exitButton").style.display = "block";
+    				document.getElementById("myTab").style.display = "block";
+    				document.getElementById("myTabContent").style.display = "block";
+    				document.getElementById("boardButtons").style.display = "block";
+    				startIdleListener();
+    				initEdit();
+					return;
+				}
+				document.getElementById("editinglocked").style.display = "block";
+		});
+	}
 
+	/************************ BOARD EDITOR CONTROLLERS *************************/
+	function startIdleListener(){
+		// Increase idle time every minute
+		idleInterval = setInterval(timerIncrement, 60000);
+		// Zero the idle timer on mouse or keyboard movement
+    	$(this).mousemove(function (e) {
+        	idleTime = 0;
+    	});
+    	$(this).keypress(function (e) {
+			idleTime = 0;
+		});
+    }
+    function timerIncrement() {
+		if(++idleTime > 14) // 15 minutes
+       		timedOut(true);
+	}
+	function timedOut(afk) {
+		if(afk){
+			// Auto-save changes (unneccessary?)
+			$.post("/saveBoard", {
+				boardUser: "{{ currBoard.boardUser }}",
+				boardID: {{ currBoard.boardID }},
+				data: JSON.stringify(canvas)
+			});
+			isSaved = true;
+			// Reset editor in NDB
+			$.post("/resetEditor", {
+				user: "{{ currBoard.boardUser }}",
+				boardID: {{ currBoard.boardID }}
+			}).done(function( data ) { // unnecessary data?
+				// document.getElementById("toolBoxButton").style.display = "block";
+				// Remove functions -> alert -> reload
+				document.getElementById("exitButton").style.display = "none";
+				document.getElementById("myTab").style.display = "none";
+				document.getElementById("myTabContent").style.display = "none";
+				document.getElementById("boardButtons").style.display = "none";
+				document.getElementById("editinglocked").style.display = "none";
+				alert("You have been kicked out of edit mode, you AFK-er! \n(P.S. your work has been auto-saved)");
+				location.reload(); // not sure if we need the optional force-load-from-server
+			});
+		} else {
+			if (document.getElementById("toolBoxButton").style.display == "none") {
+	    		jQuery.ajax({
+       		  		url: 'http://pinnerspace.appspot.com/resetEditor',
+                  	data: {
+                  		user: "{{ currBoard.boardUser }}",
+                  		boardID: {{ currBoard.boardID }}
+                  	},
+                	type: "POST",
+         			async: false
+    			});
+	    	}
+		}
+	}
+
+	/************************ BOARD FUNCTIONS *************************/
 	function loadCanvas(){
 		canvas.loadFromJSON(
 			lastSave,							// Input data: load from lastSave
@@ -112,21 +191,6 @@
 			}
 		);
 		isSaved = true;
-	}
-
-	function setDefSettings(curr){	// *** consider adding these features to toJSON(options)
-		curr.set({
-			borderColor: 'rgba(67,46,79,0.75)',
-			cornerColor: 'rgba(58,174,175,0.85)',
-			cornerSize: 9,
-			transparentCorners: false,
-			originX: "center",
-			originY: "center",
-		});
-		if(curr.height>curr.width)
-			curr.set({minScaleLimit: 10.0/curr.height});
-		else
-			curr.set({minScaleLimit: 10.0/curr.width});
 	}
 	function saveCanvas(wAlert){
 		$.post("/saveBoard", {
@@ -153,6 +217,22 @@
   			isSaved = false;
   		}
   	}
+
+  	/************************ NEW OBJECTS FUNCTIONS *************************/
+  	function setDefSettings(curr){	// *** consider adding these features to toJSON(options)
+		curr.set({
+			borderColor: 'rgba(67,46,79,0.75)',
+			cornerColor: 'rgba(58,174,175,0.85)',
+			cornerSize: 9,
+			transparentCorners: false,
+			originX: "center",
+			originY: "center",
+		});
+		if(curr.height>curr.width)
+			curr.set({minScaleLimit: 10.0/curr.height});
+		else
+			curr.set({minScaleLimit: 10.0/curr.width});
+	}
   	function addBlock(){
   		var rect = new fabric.Rect({
   			width: 10,
@@ -168,10 +248,87 @@
   		canvas.setActiveObject(rect);
   		isSaved = false;
   	}
+	function addText() {
+		var input = document.getElementById("newtext");
+		var text = input.value;
+		if(text == null || text.trim() == ""){
+			alert('Please enter something!');
+			input.focus(); // focuses on the blank to fill
+			return;
+		}
+		var newText = new fabric.IText(text);
+		newText.set({fill: "#000000"});
+
+		canvas.add(newText);
+		setDefSettings(newText);
+		newText.center();
+		newText.setCoords();
+
+		canvas.setActiveObject(newText);
+		isSaved = false;
+  	}
+	function addPostIt(){
+  		var color = blkcolor;
+  		var input = document.getElementById("newtext");
+  		var text = input.value;
+  		if(text == null || text.trim() == ""){
+  			alert('Please enter something!');
+			input.focus(); // focuses on the blank to fill
+			return;
+		}
+		var newText = new fabric.IText(text);
+		newText.fontSize = 20;
+		newText.backgroundColor = color;
+		newText.darkerShade = tinycolor.darken(color, 20).toHexString();
+		canvas.add(newText);
+		setDefSettings(newText);
+		newText.center();
+		newText.setCoords();
+		newText.lockUniScaling = true;
+		newText.paddingX = 10;
+		newText.paddingY = 20;
+		canvas.setActiveObject(newText);
+		isSaved = false;
+  	}
+  	// IMAGE FUNCTIONS
+	function imageBox(e) {
+		$("#imagebox").overlay().load();
+	}
+	function preloadImage() {
+		var url = document.getElementById("imageurl").value;
+		var image = document.getElementById("imageHolder");
+		// image.crossOrigin = 'anonymous';
+       	image.src = url;
+       	$("#noPreview").hide();
+       	$("#imageHolder").show();
+       	$("img").error(function(){
+    		$(this).hide();
+    		$("#noPreview").show();
+    	});
+	}
+	function addImage(){
+		var url = document.getElementById("imageHolder").src;
+		fabric.Image.fromURL(url, function(oImg){
+			if(oImg.getHeight()>oImg.getWidth()){
+				oImg.scale((canvas.getHeight()/oImg.getHeight())/2);
+			}else{
+				oImg.scale((canvas.getWidth()/oImg.getWidth())/2);
+			}
+			setDefSettings(oImg);
+			canvas.add(oImg);
+			oImg.center();
+			oImg.setCoords();
+			canvas.setActiveObject(oImg);
+		}, {crossOrigin: 'anonymous'});
+		$("#imagebox").overlay().close();
+	}
+
+	/************************ OBJECT MODIFIERS *************************/
   	function cloneActive(){
   		var curr = canvas.getActiveGroup() || canvas.getActiveObject();
   		var items = curr._objects;
-  		if(items){
+  		// If curr contains multiple objects
+  		if(items) {
   			var newItems = [];
   			curr.forEachObject( function(o) {
   				newItems.push(o.clone());
@@ -184,14 +341,18 @@
   			canvas.discardActiveObject();
   			canvas.discardActiveGroup();
   			canvas.setActiveObject(clone);
-  		}else if(curr){
+  		}
+  		//  If curr is a single object
+  		else if(curr) {
   			var clone = fabric.util.object.clone(curr);
   			canvas.add(clone);
   			clone.center();
   			clone.setCoords();
   			canvas.discardActiveObject();
   			canvas.setActiveObject(clone);
-  		}else{
+  		}
+  		// If no relevant object selected (remove this if isSaved is removed)
+  		else {
   			return;
   		}
   		isSaved = false;
@@ -265,16 +426,7 @@
   		canvas.discardActiveObject();
   		isSaved = false;
   	}
-	function setBG() {
-		canvas.setBackgroundColor(bgcolor, canvas.renderAll.bind(canvas));
-		isSaved = false;
-	}
-	function setBlkColor() {
-		canvas.getActiveObject().setFill(blkcolor2);
-		canvas.renderAll();
-		isSaved = false;
-	}
-	function straightenActive(){
+  	function straightenActive(){
 		var curr = canvas.getActiveObject();
 		curr.straighten();
 		curr.setCoords();
@@ -291,96 +443,125 @@
 		canvas.renderAll();
 		isSaved = false;
 	}
-
+	function setBlkColor() {
+		canvas.getActiveObject().setFill(blkcolor2);
+		canvas.renderAll();
+		isSaved = false;
+	}
+	// TEXT FUNCTIONS
 	function textFont(){
 		var curr = canvas.getActiveObject();
 		if(!curr) return;
 		var txt = document.getElementById("infoFont").value;
 	}
+	function setActiveStyle(styleName, value, object) {
+		object = object || canvas.getActiveObject();
+		if (!object) return;
 
-  	function addText() {
-  		var input = document.getElementById("newtext");
-  		var text = input.value;
-  		if(text == null || text.trim() == ""){
-  			alert('Please enter something!');
-			input.focus(); // focuses on the blank to fill
-			return;
+		if (object.setSelectionStyles && object.isEditing) {
+			var style = { };
+			style[styleName] = value;
+			object.setSelectionStyles(style);
+			object.setCoords();
 		}
-		var newText = new fabric.IText(text);
-
-		canvas.add(newText);
-		setDefSettings(newText);
-		newText.center();
-		newText.setCoords();
-
-		canvas.setActiveObject(newText);
-		isSaved = false;
-  	}
-
-  	function addPostIt(){
-  		var color = blkcolor;
-  		var input = document.getElementById("newtext");
-  		var text = input.value;
-  		if(text == null || text.trim() == ""){
-  			alert('Please enter something!');
-			input.focus(); // focuses on the blank to fill
-			return;
+		else {
+			object[styleName] = value;
 		}
-		var newText = new fabric.IText(text);
-		newText.fontSize = 20;
-		newText.backgroundColor = color;
-		newText.darkerShade = tinycolor.darken(color, 20).toHexString();
-		canvas.add(newText);
-		setDefSettings(newText);
-		newText.center();
-		newText.setCoords();
-		newText.lockUniScaling = true;
-		newText.paddingX = 10;
-		newText.paddingY = 20;
-		canvas.setActiveObject(newText);
+
+		object.setCoords();
+		canvas.renderAll();
+	}
+	function setActiveProp(name, value) {
+		var object = canvas.getActiveObject();
+		if (!object) return;
+
+		if (name == "backgroundColor") {
+			setActiveProp("darkerShade", tinycolor.darken(value, 20).toHexString());
+		}
+		object.set(name, value).setCoords();
+		canvas.renderAll();
+	}
+	function getActiveStyle(styleName, object) {
+		object = object || canvas.getActiveObject();
+		if (!object) return '';
+
+		return (object.getSelectionStyles && object.isEditing)
+		? (object.getSelectionStyles()[styleName] || '')
+		: (object[styleName] || '');
+	}
+	function isUnderline() {
+		return getActiveStyle('textDecoration').indexOf('underline') > -1;
+	}
+	function toggleUnderline() {
+		var value = isUnderline()
+		? getActiveStyle('textDecoration').replace('underline', '')
+		: (getActiveStyle('textDecoration') + ' underline');
+
+		setActiveStyle('textDecoration', value);
+	}
+	function isLinethrough() {
+		return getActiveStyle('textDecoration').indexOf('line-through') > -1;
+	}
+	function toggleLinethrough() {
+		var value = isLinethrough()
+		? getActiveStyle('textDecoration').replace('line-through', '')
+		: (getActiveStyle('textDecoration') + ' line-through');
+
+		setActiveStyle('textDecoration', value);
+	}
+	function isOverline() {
+		return getActiveStyle('textDecoration').indexOf('overline') > -1;
+	}
+	function toggleOverline() {
+		var value = isOverline()
+		? getActiveStyle('textDecoration').replace('overline', '')
+		: (getActiveStyle('textDecoration') + ' overline');
+
+		setActiveStyle('textDecoration', value);
+	}
+
+	/************************ CANVAS MODIFIERS *************************/
+	$(function () {
+		$("#selectableBG").selectable({
+               stop: function() {
+                  $(".ui-selected", this).each(function() {
+                  	if ($("#selectableBG li").index(this) > -1) {
+                    	bgselected = $("#selectableBG li").index(this) + 1;
+                 	}
+                  });
+               }
+   		});
+	});
+
+  	function setBG() {
+		canvas.setBackgroundColor(bgcolor, canvas.renderAll.bind(canvas));
 		isSaved = false;
-  	}
+	}
+	function bgimgBox(e) {
+		$("#bgimgbox").overlay().load();
+	}
+	function bgpreloadImage() {
+		var url = document.getElementById("bgimageurl").value;
+		var image = document.getElementById("bgimageHolder");
+       	$("#bgimageHolder").show();
+       	image.src = url;
+       	$("#bgnoPreview").hide();
+       	$("img").error(function(){
+    		$(this).hide();
+    		$("#bgnoPreview").show();
+    	});
+	}
+    function changeBGImg() {
+    	if (bgselected < 6) {
+	    	canvas.setBackgroundImage('../images/bg' + bgselected + '.jpg', canvas.renderAll.bind(canvas));
+    	} else {
+    		canvas.backgroundImage = false;
+    		canvas.renderAll();
+    	}
+    	isSaved = false;
+    }
 
-  	function addPostIt2(){
-  		//Creates 2 rect, 1 for the top and 1 for the mainbody
-  		//Should the height for the top be fixed??? i think so.. even when scaling.. but whatever.
-  		//The top will have a darker color, use tinycolor to pick the darker shade? (possible)
-  		//Insert both rect and group together to produce the postit.
-  		var colour = blkcolor;
-  		var color = tinycolor(colour);
-  		
-  		var input = document.getElementById("newtext");
-  		var text = input.value;
-  		/*if(text == null || text.trim() == ""){
-  			alert('Please enter something!');
-			input.focus(); // focuses on the blank to fill
-			return;
-		}*/
-		var textObj = new fabric.Text(text);
-		var rectBody = new fabric.Rect({
-			fill: colour, //lighter
-  			width: 150,
-  			height: 100,
-		});
-		var rectTop = new fabric.Rect({
-			fill: tinycolor.darken(color, 20).toHexString(), //Darker
-  			width: 150,
-  			height: 20,
-		});
-
-		var postIt = new fabric.Group([rectBody,rectTop]);
-		postIt.postIt = true;
-		canvas.add(postIt);
-		setDefSettings(postIt);
-		postIt.center();
-		postIt.setCoords();
-		postIt.item(1).setScaleY(1);
-		postIt.item(1).height = 10;
-		canvas.setActiveObject(postIt);
-		isSaved=false;
-  	}
-
-  	/*** Tab-related functions ***/
+  	/************************ TAB-RELATED *************************/
 	function switchTab(){
 		$("#myTab > .active").removeClass("active");
 		$("#myTabContent > .active").removeClass("active");
@@ -465,7 +646,7 @@
 		isSaved = false;
 	}
 
-	/*** Code to set limit to boundaries ***/
+	/************************ BOARD BOUNDARIES *************************/
 	// Save original state for clone (on selection)
 	// Triggers switchTab(), updates InfoWindow
 	function objSelected(e) {
@@ -480,14 +661,11 @@
   		switchTab();
   		updateInfoWin(orig);
 
-  		
-
+  		// To shift to updateInfoWin
 		if (canvas.getActiveObject()) {
-
 			document.getElementById("infotable").style.display = "block";
   			document.getElementById("toolBox1").style.display = "block";
 			document.getElementById("toolBox2").style.display = "block";
-
   			if (canvas.getActiveObject().type=="i-text") {
 				e.target.lockUniScaling = true;
 				document.getElementById("infotable2").style.display = "none";
@@ -601,237 +779,11 @@
 		// Implement new coordinates
 		if(updateCoords){
 			curr.setCoords();
-			console.log("Hit: checkPos");
 			return true;
 		}
 		return false;
 	}
 
-	/*** Upload Image ***/
-	function imageBox(e) {
-		$("#imagebox").overlay().load();
-	}
-
-	function bgimgBox(e) {
-		$("#bgimgbox").overlay().load();
-	}
-
-	function preloadImage() {
-		var url = document.getElementById("imageurl").value;
-		var image = document.getElementById("imageHolder");
-		// image.crossOrigin = 'anonymous';
-       	image.src = url;
-       	$("#noPreview").hide();
-       	$("#imageHolder").show();
-       	$("img").error(function(){
-    		$(this).hide();
-    		$("#noPreview").show();
-    	});
-	}
-
-	function bgpreloadImage() {
-		var url = document.getElementById("bgimageurl").value;
-		var image = document.getElementById("bgimageHolder");
-       	$("#bgimageHolder").show();
-       	image.src = url;
-       	$("#bgnoPreview").hide();
-       	$("img").error(function(){
-    		$(this).hide();
-    		$("#bgnoPreview").show();
-    	});
-	}
-
-	function addImage(){
-		var url = document.getElementById("imageHolder").src;
-		fabric.Image.fromURL(url, function(oImg){
-			if(oImg.getHeight()>oImg.getWidth()){
-				oImg.scale((canvas.getHeight()/oImg.getHeight())/2);
-			}else{
-				oImg.scale((canvas.getWidth()/oImg.getWidth())/2);
-			}
-			setDefSettings(oImg);
-			canvas.add(oImg);
-			oImg.center();
-			oImg.setCoords();
-			canvas.setActiveObject(oImg);
-		}, {crossOrigin: 'anonymous'});
-		$("#imagebox").overlay().close();
-	}
-
-	var bgselected;
-	$(function () {
-		$("#selectableBG").selectable({
-               stop: function() {
-                  $(".ui-selected", this).each(function() {
-                  	if ($("#selectableBG li").index(this) > -1) {
-                    	bgselected = $("#selectableBG li").index(this) + 1;
-                 	}
-                  });
-               }
-   		});
-	});
-
-    function changeBGImg() {
-    	if (bgselected < 6) {
-	    	canvas.setBackgroundImage('../images/bg' + bgselected + '.jpg', canvas.renderAll.bind(canvas));
-    	} else {
-    		canvas.backgroundImage = false;
-    		canvas.renderAll();
-    	}
-    	isSaved = false;
-    }
-
-    function showToolBox() {
-		$.post("/getEditor", { 
-			user: "{{ currBoard.boardUser }}",
-			boardID: {{ currBoard.boardID }},
-			boardEditor: "{{ user.email }}"
-		}).done(function( data ) {
-				if (data == "") {
-					document.getElementById("editinglocked").style.display = "none";
-    				document.getElementById("toolBoxButton").style.display = "none";
-    				document.getElementById("exitButton").style.display = "block";
-    				document.getElementById("myTab").style.display = "block";
-    				document.getElementById("myTabContent").style.display = "block";
-    				document.getElementById("boardButtons").style.display = "block";
-    				
-    				idleInterval = setInterval(timerIncrement, 60000); // 1 minute
- 					//Zero the idle timer on mouse movement.
-    				$(this).mousemove(function (e) {
-        				idleTime = 0;
-    				});
-    				$(this).keypress(function (e) {
-						idleTime = 0;
-					});
-					initEdit();
-					return;
-				}
-				document.getElementById("editinglocked").style.display = "block";
-		});
-		
-    }
-
-    function timerIncrement() {
-    	idleTime = idleTime + 1;
-		if (idleTime > 14) { // 15 minutes
-       		idleTime = 0;
-       		timedOut(true);
-       		clearInterval(idleInterval);
-		}
-	}
-
-	function timedOut(afk) {
-		if(afk){
-			// Auto-save changes
-			$.post("/saveBoard", {
-				boardUser: "{{ currBoard.boardUser }}",
-				boardID: {{ currBoard.boardID }},
-				data: JSON.stringify(canvas)
-			});
-			isSaved = true;
-			// Reset editor in NDB
-			$.post("/resetEditor", {
-				user: "{{ currBoard.boardUser }}",
-				boardID: {{ currBoard.boardID }}
-			}).done(function( data ) { // unnecessary data?
-				// document.getElementById("toolBoxButton").style.display = "block";
-				// Remove functions -> alert -> reload
-				document.getElementById("exitButton").style.display = "none";
-				document.getElementById("myTab").style.display = "none";
-				document.getElementById("myTabContent").style.display = "none";
-				document.getElementById("boardButtons").style.display = "none";
-				document.getElementById("editinglocked").style.display = "none";
-				alert("You have been kicked out of edit mode, you AFK-er! \n(P.S. your work has been auto-saved)");
-				location.reload();
-			});
-		} else {
-			if (document.getElementById("toolBoxButton").style.display == "none") {
-	    		jQuery.ajax({
-       		  		url: 'http://pinnerspace.appspot.com/resetEditor',
-                  	data: {
-                  		user: "{{ currBoard.boardUser }}",
-                  		boardID: {{ currBoard.boardID }}
-                  	},
-                	type: "POST",
-         			async: false
-    			});
-	    	}
-		}
-	}
-
-	function setActiveStyle(styleName, value, object) {
-		object = object || canvas.getActiveObject();
-		if (!object) return;
-
-		if (object.setSelectionStyles && object.isEditing) {
-			var style = { };
-			style[styleName] = value;
-			object.setSelectionStyles(style);
-			object.setCoords();
-		}
-		else {
-			object[styleName] = value;
-		}
-
-		object.setCoords();
-		canvas.renderAll();
-	}
-
-	function setActiveProp(name, value) {
-		var object = canvas.getActiveObject();
-		if (!object) return;
-
-		if (name == "backgroundColor") {
-			setActiveProp("darkerShade", tinycolor.darken(value, 20).toHexString());
-		}
-		object.set(name, value).setCoords();
-		canvas.renderAll();
-	}
-
-	function getActiveStyle(styleName, object) {
-		object = object || canvas.getActiveObject();
-		if (!object) return '';
-
-		return (object.getSelectionStyles && object.isEditing)
-		? (object.getSelectionStyles()[styleName] || '')
-		: (object[styleName] || '');
-	}
-
-	function isUnderline() {
-		return getActiveStyle('textDecoration').indexOf('underline') > -1;
-	}
-
-	function toggleUnderline() {
-		var value = isUnderline()
-		? getActiveStyle('textDecoration').replace('underline', '')
-		: (getActiveStyle('textDecoration') + ' underline');
-
-		setActiveStyle('textDecoration', value);
-	}
-
-	function isLinethrough() {
-		return getActiveStyle('textDecoration').indexOf('line-through') > -1;
-	}
-
-	function toggleLinethrough() {
-		var value = isLinethrough()
-		? getActiveStyle('textDecoration').replace('line-through', '')
-		: (getActiveStyle('textDecoration') + ' line-through');
-
-		setActiveStyle('textDecoration', value);
-	}
-
-	function isOverline() {
-		return getActiveStyle('textDecoration').indexOf('overline') > -1;
-	}
-
-	function toggleOverline() {
-		var value = isOverline()
-		? getActiveStyle('textDecoration').replace('overline', '')
-		: (getActiveStyle('textDecoration') + ' overline');
-
-		setActiveStyle('textDecoration', value);
-	}
 	</script>
 	<style>
 	table.center {
@@ -886,7 +838,7 @@
 	<!--End of Canvas Script-->
 </head>
 <body onload="init({{boardData}})">
-	<!--HEADER-->
+	<!--************************* HEADER *************************-->
 	<div id="header">
 		<div class="jumbotron">
 			<h2 class="title" style="text-align: center">PinnerSpace</h2>
@@ -903,10 +855,10 @@
 		</div>
 	</div>
 	
-	<!--BODY-->
+	<!--************************* BODY *************************-->
 	<table class="center">
 		<tr>
-			<!--LEFT: Pinboard-->
+			<!--************************* LEFT: Pinboard *************************-->
 			<td>
 				<div id="pinboard" style="width: 900px; height:600px; margin: 0 auto;">
 					<!--canvas id must be consistent with js script-->
@@ -916,9 +868,9 @@
 				</div>
 			</td>
 
-			<!--RIGHT: Info++ -->
+			<!--************************* RIGHT: Info++ *************************-->
 			<td style="padding:10px">
-				<!--BOARD NAME/SELECTOR-->
+				<!--************************* BOARD NAME/SELECTOR *************************-->
 				<div id="boardInfo" align="left">
 					You are currently viewing <strong>{{ currBoard.boardName }}</strong><br>
 				</div>
@@ -968,7 +920,7 @@
 					<hr>
 				</div>
 				
-				<!--TABSS-->
+				<!--************************* TABS *************************-->
 				<ul id="myTab" class="nav nav-pills">
 					<li class="active"><a href="#new" data-toggle="tab">New Object</a></li>
 					<li id="currObjTab"><a href="#modifycurrent" data-toggle="tab">Current Object</a></li>
@@ -976,7 +928,7 @@
 				</ul>
 				<hr>
 				<div id="myTabContent" class="tab-content">
-					<!--New Objects-->
+					<!--************************* New Objects *************************-->
 					<div class="tab-pane fade in active" id="new">
 						<p>
 						Add a Block:
@@ -1006,7 +958,7 @@
 							</div>
 						</div>
 					</div>
-					<!--Current Object-->
+					<!--************************* Current Object *************************-->
 					<div class="tab-pane fade" id="modifycurrent">
 						<table id="infotable">
 							<tr>
@@ -1093,7 +1045,7 @@
 						</div>
 						<p></p>
 					</div>
-					<!--Modify Canvas-->
+					<!--************************* Modify Canvas *************************-->
 					<div class="tab-pane fade" id="modifycanvas">
 					<p>
 						Background Colour:
