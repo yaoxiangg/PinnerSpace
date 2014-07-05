@@ -225,16 +225,25 @@
   			top: currGrp.top,
   			angle: currGrp.angle,
   		};
-  		// Create new group while destroying old one
-  		var grpItems = [];
-  		currGrp.forEachObject( function(o) {
-  			grpItems.push(o.clone());
-  			canvas.remove(o);
-  		});
-  		var newGrp = new fabric.Group(grpItems);
-  		canvas.discardActiveGroup();
-
+  		// Save items to add/remove in two arrays
+  		var grpItems = [];		// Clones of items
+  		var toRemove = [];		// Actual items
+  		// Find and save items in order of layer position
+  		// (Largest index = top object in canvas | Currently an n*m algo; I don't see a workaround.)
+  		for(var i=0; i<canvas._objects.length; i++){
+  			var temp = canvas.item(i);
+  			if(currGrp.contains(temp)){
+  				grpItems.push(temp.clone());		// Last object in grpItems is top item
+  				toRemove.push(temp);				// Save the items to remove (no concurrent removal)
+  			}
+  		}
+  		// Remove current items
+  		for(var i=0; i<toRemove.length;i++){
+  			canvas.remove(toRemove[i]);
+  		}
+		canvas.discardActiveGroup();
 		// Add group onto canvas
+		var newGrp = new fabric.Group(grpItems);
 		canvas.add(newGrp);
 		setDefSettings(newGrp);
 		newGrp.set(coords);
