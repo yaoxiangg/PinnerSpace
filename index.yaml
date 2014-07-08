@@ -14,3 +14,9 @@ indexes:
   ancestor: yes
   properties:
   - name: boardID
+
+- kind: PairInvitedBoard
+  ancestor: yes
+  properties:
+  - name: invited
+  - name: boardID

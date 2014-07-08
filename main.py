@@ -47,6 +47,7 @@ class Board(ndb.Model):
 	#TESTING
 	boardJSON = ndb.TextProperty()
 	editing = ndb.StringProperty(default="") # Empty if no user is editing, else is the user email
+	isPublic = ndb.BooleanProperty(default=True)
 
 #Account Datastore - Parent of Board
 class Account(ndb.Model):
@@ -61,10 +62,17 @@ class Account(ndb.Model):
 	following = ndb.IntegerProperty(default=0)
 	access_token = ndb.StringProperty()
 	login_type = ndb.StringProperty()
+	invitation = ndb.IntegerProperty(default=0)
 
 class PairFollowerOwner(ndb.Model):
 	follower = ndb.StringProperty()
 	owner = ndb.StringProperty()
+	boardID = ndb.IntegerProperty(repeated=True)
+	boardName = ndb.StringProperty(repeated=True)
+
+class PairInvitedBoard(ndb.Model):
+	invited = ndb.StringProperty()
+	boardUser = ndb.StringProperty(repeated=True)
 	boardID = ndb.IntegerProperty(repeated=True)
 	boardName = ndb.StringProperty(repeated=True)
 
@@ -321,9 +329,14 @@ class DisplayAllBoards(webapp2.RequestHandler):
 		user=current_user(self)
 		if user:
 			userKey = ndb.Key('Account', user.email)
+			query = ndb.gql("SELECT * "
+				"FROM PairInvitedBoard "
+				"WHERE ANCESTOR IS :1 ",
+				userKey)
 			template_values = {
 			'user': userKey.get(),
 			'error': self.request.get('error'),
+			'invited': query,
 			}
 			showBoardsOf(self, "boards.html", user.email, template_values)
 		else:
@@ -674,6 +687,71 @@ class ResetEditor(webapp2.RequestHandler):
 			currBoard.editing = ""
 			currBoard.put()
 
+class InviteUserHandler(webapp2.RequestHandler):
+	def post(self):
+		invitee = self.request.get('user')
+		boardUser = self.request.get('boardUser')
+		boardID = self.request.get('boardID')
+		boardName = self.request.get('boardName')
+		#Create new record for PairInvitedBoard if not exist, delete if empty field. else, retain and add.
+		#Every login, check for record and notify user if there is any invitation.
+		userKey = ndb.Key('Account', str(invitee))
+		query = ndb.gql("SELECT * "
+		"FROM PairInvitedBoard "
+		"WHERE ANCESTOR IS :1 "
+		"AND invited = :2",
+		userKey, invitee)
+		pairInvited = query.fetch(1)
+		if pairInvited:
+			pairGet = pairInvited[0]
+			index = 0
+			while index < len(pairGet.boardID):
+				if pairGet.boardID[index] == int(boardID) and pairGet.boardUser[index] == str(boardUser):
+					return;
+				index += 1
+			pairGet.boardID.append(int(boardID))
+			pairGet.boardUser.append(str(boardUser))
+			pairGet.boardName.append(str(boardName))
+			pairGet.put()
+		else:
+			pairInvited = PairInvitedBoard(parent=userKey, invited=str(invitee), boardUser=[str(boardUser)], boardID=[int(boardID)], boardName=[str(boardName)])
+			pairGet = pairInvited.put()
+		userKey.get().invitation += 1
+		userKey.get().put()
+
+class AcceptRejectInvitationHandler(webapp2.RequestHandler):
+	def post(self):
+		#Delete record if empty field.
+		user=current_user(self)
+		boardID = self.request.get('boardID')
+		boardUser = self.request.get('boardUser')
+		userKey = ndb.Key('Account', user.email)
+		boardKey = ndb.Key('Account', boardUser, 'Board', int(boardID))
+		currBoard = boardKey.get()
+		currBoard.put()
+		query = ndb.gql("SELECT * "
+		"FROM PairInvitedBoard "
+		"WHERE ANCESTOR IS :1 "
+		"AND invited = :2 "
+		"ORDER BY boardID ASC",
+		userKey, user.email)
+		pairInvited = query.fetch(1)
+		pairInvited = pairInvited[0]
+		index = pairInvited.boardID.index(int(boardID))
+		while pairInvited.boardUser[index] != str(boardUser):
+			index += 1
+		del pairInvited.boardID[index]
+		del	pairInvited.boardName[index]
+		del	pairInvited.boardUser[index]
+		pairInvited.put()
+		if (len(pairInvited.boardID) == 0):
+			pairInvited.key.delete()
+		userKey.get().invitation -= 1
+		userKey.get().put()
+		#Add to followers
+
+
+
 #App
 app = webapp2.WSGIApplication([('/', MainHandler),
 	('/board', ShowBoard),
@@ -696,4 +774,6 @@ app = webapp2.WSGIApplication([('/', MainHandler),
 	('/login/Google', LoginGoogle),
 	('/getEditor', GetEditor),
 	('/resetEditor', ResetEditor),
-	('/updateBoardName', UpdateBoardName)], debug=True)
+	('/updateBoardName', UpdateBoardName),
+	('/inviteUsers', InviteUserHandler),
+	('/processInvitation', AcceptRejectInvitationHandler)], debug=True)

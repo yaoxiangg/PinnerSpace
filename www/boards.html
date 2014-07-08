@@ -14,6 +14,35 @@
 				input.focus();
 			}
 		}
+
+		function acceptInvitation() {
+			//AJAX AcceptInvitation on done, redirect to followboard.
+			var inviter = $('#inviterUser').val();
+			var inviterBoardID = $('#inviterBoardID').val();
+			$.post("/processInvitation", {
+				boardUser: inviter,
+				boardID: inviterBoardID
+			}).done(function( data ) {
+				$.post("/followBoard", {
+					boardUser: inviter,
+					boardID: inviterBoardID
+				}).done(function(data) {
+					location.reload();
+				});
+			});
+		}
+
+		function rejectInvitation() {
+			//AJAX rejectInvitation on done, redirect to board.
+			var inviter = $('#inviterUser').val();
+			var inviterBoardID = $('#inviterBoardID').val();
+			$.post("/processInvitation", {
+				boardUser: inviter,
+				boardID: inviterBoardID
+			});
+			location.reload();
+		}
+
 	</script>
 	<style>
 	.btntext {
@@ -115,6 +144,7 @@
 		<tr><th colspan="3">Currently Following</th></tr>
 			{% for record in following %}
 				{% for boardID in record.boardID %}
+					{% if record.isPublic[loop.index0] %}
 					<tr>
 						<td></td>
 						<td><button class="btn disabled btntext btn-primary btn-sm" name="boardID" type="submit" width="100%" value={{ boardID }}>Board{{ boardID }}: {{ record.boardName[loop.index0] }}</button></td>
@@ -135,10 +165,26 @@
 							{% endif %}
 						</td>
 					</tr>
+					{% endif %}
 				{% endfor %}
 			{% endfor %}
 		{% endif %}
-
+		<tr><th colspan="3">Invitations</th></tr>
+		{% if user.invitation == 0 %}
+		<tr><th colspan="3">There are no invitations</th></tr>
+		{% else %}
+			{% for record in invited %}
+				{% for boardUser in record.boardUser %}
+					<tr><td></td>
+					<td><button class="btn disabled btntext btn-primary btn-sm" name="boardID" type="submit" width="100%">From {{ boardUser }}<br>- {{ record.boardName[loop.index0] }}</button></td>
+					<input type="hidden" id="inviterBoardID" name="boardID" value={{ record.boardID[loop.index0] }}>
+					<input type="hidden" id="inviterUser" name="boardUser" value="{{ boardUser }}">
+					<td><button class="btn btn-success btn-sm" onclick="acceptInvitation()">Follow<br>&nbsp</button></td>
+					<td><button class="btn btn-danger btn-sm" onclick="rejectInvitation()">Reject<br>&nbsp</button></td>
+					</tr>
+				{% endfor %}
+			{% endfor %}
+		{% endif %}
 		</table>	
 		<p><p>
 		<b>{{ error }}</b>

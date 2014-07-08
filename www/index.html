@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+	<meta charset="utf-8">
 	<title>PinnerSpace Home</title>
 	<link rel="stylesheet" href="../bootstrap/css/bootstrap.min.css">
 	<link rel="stylesheet" href="../bootstrap/css/bootstrap-theme.min.css">
@@ -287,6 +288,9 @@
 		newText.lockUniScaling = true;
 		newText.paddingX = 10;
 		newText.paddingY = 20;
+		newText.scaleX = 0.5;
+		newText.scaleY = 0.5;
+		newText.fontSize = 30;
 		canvas.setActiveObject(newText);
 		isSaved = false;
   	}
@@ -668,6 +672,7 @@
 			document.getElementById("toolBox2").style.display = "block";
   			if (canvas.getActiveObject().type=="i-text") {
 				e.target.lockUniScaling = true;
+				document.getElementById("fontSize").value = e.target.fontSize;
 				document.getElementById("infotable2").style.display = "none";
 				document.getElementById("itext-controls").style.display = "block";
   			} else {
@@ -718,6 +723,8 @@
 		};
 		// console.log("After checkOOB: " + JSON.stringify(atLimit));
 		updateInfoWin(orig);
+		setDefSettings(curr);
+  		curr.setCoords();
 		isSaved = false;
 	}
 	// Returns object holding whether curr is OOB in the four canvas edges

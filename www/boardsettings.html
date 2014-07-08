@@ -6,14 +6,60 @@
 	<link rel="stylesheet" href="../bootstrap/css/bootstrap-theme.min.css">
 	<script src="../scripts/jquery-1.11.1.min.js" type="text/javascript"></script>
 	<script src="../bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+	<script src="../scripts/jquery.tools.min.js" type="text/javascript"></script>
+	<script src="../scripts/jquery-ui-1.10.4.custom.min.js" type="text/javascript"></script>
 	<style>
 	th {
 		text-align: center;
 	}
+	#inviteUsersBox {
+    	display:none;
+    	width:400px;
+    	border:8px solid #666;
+    	/* for modern browsers use semi-transparent color on the border. nice! */
+    	border:8px solid rgba(82, 82, 82, 0.698);
+    	/* hot CSS3 features for mozilla and webkit-based browsers (rounded borders) */
+    	-moz-border-radius:5px;
+   		-webkit-border-radius:5px;
+   		position: fixed
+	}
+
+  	#inviteUsersBox div {
+    	border:1px solid #3B5998;
+    	background-color:#ffffff;
+  	}
 	</style>
-	<!--End of Google Login Script-->
+	<script type="text/javascript">
+
+	function init() {
+		$("#inviteUsersBox").overlay({
+			mask: {
+				color: '#fff',
+				loadSpeed: 200,
+				opacity: 0.5
+			},
+			closeOnClick: false,
+		});
+	}
+
+	function inviteBox(e) {
+		$("#inviteUsersBox").overlay().load();
+	}
+
+	function inviteUser() {
+		var invitee = $('#invitee').val();
+		$.post("/inviteUsers", {
+				user: invitee,
+				boardUser: "{{ board.boardUser }}",
+				boardID: {{ board.boardID }},
+				boardName: "{{ board.boardName }}"
+				
+		});
+		//On error, tell user that they failed in inviting
+	}
+	</script>
 </head>
-<body>
+<body onload="init()">
 	<div id="header">
 		<div class="jumbotron">
 			<h2 class="title" style="text-align: center">PinnerSpace</h2>
@@ -42,7 +88,9 @@
 			<input type="submit" value="Submit">
 		</form>
 	</div>
-	<p><p>
+	<p></p><p></p>
+		<button onclick="inviteBox()">Invite Users to this Board</button>
+	<p></p><p></p>
 	{% if board.followers|length < 1 %}
 	<tr><td> There is no one following this board. </td></tr>
 	{% else %}
@@ -100,6 +148,19 @@
 	</tr>
 	{% endfor %}
 	</table>
+
+	<div id="inviteUsersBox">
+		<div>
+			<p class="close">x</p>
+			<p></p><p></p>
+			<h2>Invite Users</h2>
+			<p><p>
+				<input type="text" id="invitee" name="invitee" placeholder="Enter UserID/Email" value="">
+				<button name="userInvited" onclick="inviteUser()">Invite</button>
+			<p></p><p></p>
+			<hr>
+		</div>
+	</div>
 	<!--END BODY-->
 </body>
 </html>
