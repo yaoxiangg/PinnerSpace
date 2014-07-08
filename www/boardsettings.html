@@ -78,7 +78,12 @@
 	
 	<!--BODY-->
 	<center>
-	<b>Settings Page for Board{{ board.boardID }} : {{ board.boardName }}</b>
+	<b>Settings Page for Board{{ board.boardID }} : {{ board.boardName }} </b>
+	{% if board.isPublic %}
+	<button class="btn btn-success disabled badge" name="label">Public</button>
+	{% else %}
+	<button class="btn btn-warning disabled badge" name="label">Private</button>
+	{% endif %}
 	<table align="center">
 	<hr>
 	<div>
