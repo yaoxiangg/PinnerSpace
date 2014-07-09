@@ -55,6 +55,9 @@
 	th, td {
 		text-align: center;
 	}
+	#errorMsg {
+		color: red;
+	}
 	</style>
 </head>
 <body onload="init({{numBoards}})">
@@ -188,9 +191,10 @@
 			{% endfor %}
 		{% endif %}
 		</table>	
-		<p><p>
-		<em>{{ error }}</em>
-		<p><p>
+		<p>
+		<p id="errorMsg"><em>{{ error }}</em></p>
+		<p>
+		<p>
 	</div>
 	<!--END BODY-->
 </body>

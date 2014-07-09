@@ -32,6 +32,12 @@
   	#btnPrivate, #btnPublic, #successInvite, #failInvite {
   		display: none;
   	}
+  	#successInvite {
+  		color:green;
+  	}
+  	#failInvite {
+  		color:red;
+  	}
 	</style>
 	<script type="text/javascript">
 
@@ -77,9 +83,9 @@
 
 	function switchVisibility(visible) {
 		if (visible) {
-			var resp=confirm("By switch to \"Public\", this board can be seen by anyone.\nAre you sure you want to switch to \"Public\"?");
+			var resp=confirm("Upon switching to \"Public\", this board can be seen by anyone.\nAre you sure you want to switch to \"Public\"?");
 		} else {
-			var resp=confirm("By switch to \"Private\", this board will only be seen by people who received your invitation.\nAre you sure you want to switch to \"Private\"?");
+			var resp=confirm("Upon switching to \"Private\", this board will only be seen by people who received your invitation.\nAre you sure you want to switch to \"Private\"?");
 		}
 		if(resp==true){
 			$.post("/switchVisibility", {
