@@ -15,6 +15,12 @@ indexes:
   properties:
   - name: boardID
 
+- kind: Board
+  ancestor: yes
+  properties:
+  - name: isPublic
+  - name: boardID
+
 - kind: PairInvitedBoard
   ancestor: yes
   properties:

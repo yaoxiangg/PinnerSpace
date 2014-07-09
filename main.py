@@ -279,6 +279,7 @@ def showBoardsOf(instance, _target, email, template_values):
 		query = ndb.gql("SELECT * "
 		"FROM Board "
 		"WHERE ANCESTOR IS :1 "
+		"AND isPublic = True "
 		"ORDER BY boardID ASC",
 		userKey)
 		template_values.update({
@@ -293,12 +294,12 @@ def showBoardsOf(instance, _target, email, template_values):
 			user.key)
 			template_values.update({'following': query2})
 		if query.count() == 0 and email != user.email:
-			template_values.update({'error': "Cannot find any board for %s" % email,})
+			template_values.update({'error': "Cannot find any public board for %s" % email,})
 	else:
 		template_values.update({'error': "User does not exist",})
-
 	template = jinja_environment.get_template(_target)
 	instance.response.out.write(template.render(template_values))
+	return;
 
 #This function is used in ChangeDefaultBoard, FollowBoard, UnfollowBaord
 def refreshBoard(instance, boardUser, userKey):
@@ -363,11 +364,12 @@ class DisplayAllBoards(webapp2.RequestHandler):
 				if target != None:
 					template_values.update({'target_mail': target_mail,})
 					showBoardsOf(self, "boards.html", target_mail, template_values)
+					return;
 				else:
 					showBoardsOf(self, "boards.html", "#", template_values)
+					return;
 			except:
-				template_values = {'error': "User does not exist",}
-				showBoardsOf(self, "boards.html", "", template_values)
+				self.redirect('/boards')
 
 #Change Default Board
 class ChangeDefaultBoard(webapp2.RequestHandler):
@@ -501,11 +503,26 @@ class DeleteBoard(webapp2.RequestHandler):
 		#Delete from all followers
 		#following - 1 for all followers.
 		for follower in boardKey.get().followers:
-			followerGet = ndb.Key('Account', follower).get()
+			followerKey = ndb.Key('Account', follower)
+			followerGet = followerKey.get()
 			followerGet.following -= 1
 			if followerGet.defaultBoardID == int(boardid) and followerGet.defaultBoardUser == userGet.email:
 				followerGet.defaultBoardUser = ""
 				followerGet.defaultBoardID = 0
+			#Remove from PairFollowerOwner
+			query = ndb.gql("SELECT * "
+				"FROM PairFollowerOwner "
+				"WHERE ANCESTOR IS :1 "
+				"AND owner = :2",
+				followerKey, user.email)
+			pairFollower = query.fetch(1)
+			pairFollower = pairFollower[0]
+			index = pairFollower.boardID.index(int(boardid))
+			pairFollower.boardID.remove(int(boardid))
+			del	pairFollower.boardName[index] 
+			pairFollower.put()
+			if (len(pairFollower.boardID) == 0):
+				pairFollower.key.delete()
 			followerGet.put()
 		
 		boardKey.delete()
@@ -750,6 +767,18 @@ class AcceptRejectInvitationHandler(webapp2.RequestHandler):
 		userKey.get().put()
 		#Add to followers
 
+class SwitchVisibilityHandler(webapp2.RequestHandler):
+	def post(self):
+		user=current_user(self)
+		visibility = str(self.request.get('visibility'))
+		boardID = self.request.get('boardID')
+		boardKey = ndb.Key('Account', user.email, 'Board', int(boardID))
+		currBoard = boardKey.get()
+		if visibility == "true":
+			currBoard.isPublic = True
+		else:
+			currBoard.isPublic = False
+		currBoard.put()
 
 
 #App
@@ -776,4 +805,5 @@ app = webapp2.WSGIApplication([('/', MainHandler),
 	('/resetEditor', ResetEditor),
 	('/updateBoardName', UpdateBoardName),
 	('/inviteUsers', InviteUserHandler),
-	('/processInvitation', AcceptRejectInvitationHandler)], debug=True)
+	('/processInvitation', AcceptRejectInvitationHandler),
+	('/switchVisibility', SwitchVisibilityHandler)], debug=True)

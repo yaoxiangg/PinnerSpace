@@ -28,6 +28,10 @@
     	border:1px solid #3B5998;
     	background-color:#ffffff;
   	}
+
+  	#btnPrivate, #btnPublic, #successInvite, #failInvite {
+  		display: none;
+  	}
 	</style>
 	<script type="text/javascript">
 
@@ -40,6 +44,13 @@
 			},
 			closeOnClick: false,
 		});
+		if ("{{ board.isPublic }}" == "True") {
+			document.getElementById("btnPublic").style.display = "inline-block";
+			document.getElementById("btnPrivate").style.display = "none";
+		} else {
+			document.getElementById("btnPublic").style.display = "none";
+			document.getElementById("btnPrivate").style.display = "inline-block";
+		}
 	}
 
 	function inviteBox(e) {
@@ -47,15 +58,43 @@
 	}
 
 	function inviteUser() {
+		document.getElementById("successInvite").style.display = "none";
+		document.getElementById("failInvite").style.display = "none";
 		var invitee = $('#invitee').val();
 		$.post("/inviteUsers", {
 				user: invitee,
 				boardUser: "{{ board.boardUser }}",
 				boardID: {{ board.boardID }},
 				boardName: "{{ board.boardName }}"
-				
+		}).done(function( data ) {
+			document.getElementById("successInvite").style.display = "inline-block";
+			document.getElementById("failInvite").style.display = "none";
+		}).fail(function( data ) {
+			document.getElementById("successInvite").style.display = "none";
+			document.getElementById("failInvite").style.display = "inline-block";
 		});
-		//On error, tell user that they failed in inviting
+	}
+
+	function switchVisibility(visible) {
+		if (visible) {
+			var resp=confirm("By switch to \"Public\", this board can be seen by anyone.\nAre you sure you want to switch to \"Public\"?");
+		} else {
+			var resp=confirm("By switch to \"Private\", this board will only be seen by people who received your invitation.\nAre you sure you want to switch to \"Private\"?");
+		}
+		if(resp==true){
+			$.post("/switchVisibility", {
+				visibility: visible,
+				boardID: {{ board.boardID }}
+			}).done(function( data ) {
+				if (visible) {
+					document.getElementById("btnPublic").style.display = "inline-block";
+					document.getElementById("btnPrivate").style.display = "none";
+				} else {
+					document.getElementById("btnPublic").style.display = "none";
+					document.getElementById("btnPrivate").style.display = "inline-block";
+				}
+			});
+		}
 	}
 	</script>
 </head>
@@ -79,11 +118,8 @@
 	<!--BODY-->
 	<center>
 	<b>Settings Page for Board{{ board.boardID }} : {{ board.boardName }} </b>
-	{% if board.isPublic %}
-	<button class="btn btn-success disabled badge" name="label">Public</button>
-	{% else %}
-	<button class="btn btn-warning disabled badge" name="label">Private</button>
-	{% endif %}
+	<button class="btn btn-success badge" id="btnPublic" name="label" onclick="switchVisibility(false)">Public</button>
+	<button class="btn btn-warning badge" id="btnPrivate" name="label" onclick="switchVisibility(true)">Private</button>
 	<table align="center">
 	<hr>
 	<div>
@@ -162,7 +198,9 @@
 			<p><p>
 				<input type="text" id="invitee" name="invitee" placeholder="Enter UserID/Email" value="">
 				<button name="userInvited" onclick="inviteUser()">Invite</button>
-			<p></p><p></p>
+			<p></p>
+			<p id="successInvite">Invitation sent!</p>
+			<p id="failInvite">Fail to send invitation.<br>Some where must have gone wrong!</p>
 			<hr>
 		</div>
 	</div>
