@@ -89,9 +89,9 @@
 		<p><p>
 		<table>
 			{% if targetMail != user.email and targetMail %}
-			<tr><th colspan="3">Boards of {{ targetMail }}</th><tr>
+			<tr><th colspan="4">Boards of {{ targetMail }}</th><tr>
 			{% elif targetMail %}
-			<tr><th colspan="3">My Boards</th></tr>
+			<tr><th colspan="4">My Boards</th></tr>
 			{% endif %}
 			{% for board in boards %}
 			<tr>
@@ -142,8 +142,8 @@
 		<p><p>
 		{% if following %}
 			{% if following.count() > 0 %}
-		<tr><th colspan="3"><p></th></tr>
-		<tr><th colspan="3">Currently Following</th></tr>
+		<tr><th colspan="4"><p></th></tr>
+		<tr><th colspan="4">Currently Following</th></tr>
 			{% for record in following %}
 				{% for boardID in record.boardID %}
 					<tr>
@@ -170,10 +170,10 @@
 			{% endfor %}
 		{% endif %}
 		{% endif %}
-		<tr><th colspan="3"><p></th></tr>
-		<tr><th colspan="3">My Invitations</th></tr>
+		<tr><th colspan="4"><p></th></tr>
+		<tr><th colspan="4">My Invitations</th></tr>
 		{% if user.invitation == 0 %}
-		<tr><td colspan="3">There are no invitations</td></tr>
+		<tr><td colspan="4">There are no invitations</td></tr>
 		{% else %}
 			{% for record in invited %}
 				{% for boardUser in record.boardUser %}
