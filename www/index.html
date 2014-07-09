@@ -92,7 +92,7 @@
 			}
 		});
 		window.onbeforeunload = function(e){	// Page-leave functionality
-			saveCanvas(false); 					// ***Got to see if the async is affected by number of objects on canvas
+			saveCanvas(false);
 			timedOut(false);
 		};
 		// Initial load auxiliary function(s)
@@ -168,17 +168,22 @@
 				location.reload(); // not sure if we need the optional force-load-from-server
 			});
 		} else {
-			if (document.getElementById("toolBoxButton").style.display == "none") {
-	    		$.ajax({
-       		  		url: 'resetEditor',
-                  	data: {
-                  		user: "{{ currBoard.boardUser }}",
-                  		boardID: {{ currBoard.boardID }}
-                  	},
-                	type: "POST",
-         			async: false
-    			});
-	    	}
+			$.post("/saveBoard", {
+				boardUser: "{{ currBoard.boardUser }}",
+				boardID: {{ currBoard.boardID }},
+				data: JSON.stringify(canvas)
+			}).done(function(data) {
+				$.ajax({
+					url: 'resetEditor',
+					data: {
+						user: "{{ currBoard.boardUser }}",
+						boardID: {{ currBoard.boardID }}
+					},
+					type: "POST",
+					async: false
+				});
+				location.reload();
+			});
 		}
 	}
 
@@ -923,7 +928,7 @@
 				{% endif %}
 
 				<div id="exitButton">
-					<div id="toolBoxExitButton"><button onclick="location.reload()">Save and Exit</button></div>
+					<div id="toolBoxExitButton"><button onclick="timedOut(false)">Save and Exit</button></div>
 					<hr>
 				</div>
 				
