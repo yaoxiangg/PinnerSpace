@@ -169,8 +169,8 @@
 			});
 		} else {
 			if (document.getElementById("toolBoxButton").style.display == "none") {
-	    		jQuery.ajax({
-       		  		url: 'http://pinnerspace.appspot.com/resetEditor',
+	    		$.ajax({
+       		  		url: 'resetEditor',
                   	data: {
                   		user: "{{ currBoard.boardUser }}",
                   		boardID: {{ currBoard.boardID }}
