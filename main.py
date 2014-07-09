@@ -276,12 +276,22 @@ def showBoardsOf(instance, _target, email, template_values):
 	if email != "" and email != "#":
 		userKey = ndb.Key('Account', email)
 		#Get All Board, for each board, display the link.
-		query = ndb.gql("SELECT * "
-		"FROM Board "
-		"WHERE ANCESTOR IS :1 "
-		"AND isPublic = True "
-		"ORDER BY boardID ASC",
-		userKey)
+		
+		if email == user.email:
+			query = ndb.gql("SELECT * "
+				"FROM Board "
+				"WHERE ANCESTOR IS :1 "
+				"ORDER BY boardID ASC",
+				userKey)
+
+		else:
+			query = ndb.gql("SELECT * "
+				"FROM Board "
+				"WHERE ANCESTOR IS :1 "
+				"AND isPublic = True "
+				"ORDER BY boardID ASC",
+				userKey)
+		
 		template_values.update({
 		'targetMail': email,
 		'boards': query,
