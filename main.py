@@ -96,6 +96,10 @@ def current_user(self):
 			access_token = self.request.cookies.get("token")
 			if access_token == None:
 				return None
+			if self._current_user.access_token != access_token:
+				self.response.set_cookie("user", "", expires=datetime.now() - timedelta(days=1) )
+				self.response.set_cookie("token", "", expires=datetime.now() - timedelta(days=1) )
+				return None
 
 			profilename = ""
 			

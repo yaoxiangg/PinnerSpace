@@ -67,17 +67,22 @@
 		document.getElementById("successInvite").style.display = "none";
 		document.getElementById("failInvite").style.display = "none";
 		var invitee = $('#invitee').val();
+		if (invitee == "{{ board.boardUser }}") {
+			//Cannot invite yourself.
+			$("#failInvite").effect("fade", "", 500, "");
+			return;
+		}
 		$.post("/inviteUsers", {
 				user: invitee,
 				boardUser: "{{ board.boardUser }}",
 				boardID: {{ board.boardID }},
 				boardName: "{{ board.boardName }}"
 		}).done(function( data ) {
-			document.getElementById("successInvite").style.display = "inline-block";
+			$("#successInvite").effect("fade", "", 500, "");
 			document.getElementById("failInvite").style.display = "none";
 		}).fail(function( data ) {
+			$("#failInvite").effect("fade", "", 500, "");
 			document.getElementById("successInvite").style.display = "none";
-			document.getElementById("failInvite").style.display = "inline-block";
 		});
 	}
 
