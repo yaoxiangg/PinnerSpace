@@ -625,25 +625,29 @@ class LoginFBHandler(webapp2.RequestHandler):
 		self.redirect("https://graph.facebook.com/oauth/authorize?" + urllib.urlencode(args))
 		args["client_secret"] = '34ba2e64a0f9be54ec21f5a7e4646957'
 		args["code"] = self.request.get("code")
-		response = cgi.parse_qs(urllib.urlopen("https://graph.facebook.com/oauth/access_token?" + urllib.urlencode(args)).read())
-		access_token = response["access_token"][-1]
 
-		profile = json.load(urllib.urlopen("https://graph.facebook.com/me?" + urllib.urlencode(dict(access_token=access_token))))
-		fbuser = ndb.Key('Account', str(profile["email"]))
-		if fbuser.get() == None:
-			user = Account(id=str(profile["email"]), accid=str(profile["id"]), usernick=profile["name"], email=str(profile["email"]), access_token=access_token, login_type="facebook")
-			user.put()
-		else:
-			fbuser.get().access_token = access_token
-			fbuser.get().login_type = "facebook"
-			fbuser.get().put()
-		self.response.set_cookie("user", str(profile["email"]), expires=datetime.now() + timedelta(days=1))
-		self.response.set_cookie("token", str(access_token), expires=datetime.now() + timedelta(days=1))
-		self.redirect("/")
+		response = cgi.parse_qs(urllib.urlopen("https://graph.facebook.com/oauth/access_token?" + urllib.urlencode(args)).read())
+		try:
+			access_token = response["access_token"][-1]
+			self.response.set_cookie("token", str(access_token), expires=datetime.now() + timedelta(days=1))
+			profile = json.load(urllib.urlopen("https://graph.facebook.com/me?" + urllib.urlencode(dict(access_token=access_token))))
+			fbuser = ndb.Key('Account', str(profile["email"]))
+			if fbuser.get() == None:
+				user = Account(id=str(profile["email"]), accid=str(profile["id"]), usernick=profile["name"], email=str(profile["email"]), access_token=access_token, login_type="facebook")
+				user.put()
+			else:
+				fbuser.get().access_token = access_token
+				fbuser.get().login_type = "facebook"
+				fbuser.get().put()
+				self.response.set_cookie("user", str(profile["email"]), expires=datetime.now() + timedelta(days=1))
+				self.response.set_cookie("token", str(access_token), expires=datetime.now() + timedelta(days=1))
+			self.redirect("/")
+		except:
+			self.redirect("/")
 
 class LoginFB(webapp2.RequestHandler):
 	def get(self):
-		args = dict(client_id='1430441490551788', redirect_uri="http://pinnerspace.appspot.com/login/FB")
+		args = dict(client_id='1430441490551788', redirect_uri="http://pinnerspace.appspot.com/login/FB", scope="email")
 		self.redirect("https://graph.facebook.com/oauth/authorize?" + urllib.urlencode(args))
 
 class LoginGoogleHandler(webapp2.RequestHandler):
