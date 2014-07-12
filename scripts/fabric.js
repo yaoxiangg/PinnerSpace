@@ -16413,7 +16413,7 @@ fabric.util.object.extend(fabric.Object.prototype, /** @lends fabric.Object.prot
         var instance = new fabric.Image(img, object);
         callback && callback(instance);
       });
-    }, null, object.crossOrigin);
+    }, object.crossOrigin);
   };
 
   /**
@@ -16426,7 +16426,7 @@ fabric.util.object.extend(fabric.Object.prototype, /** @lends fabric.Object.prot
   fabric.Image.fromURL = function(url, callback, imgOptions) {
     fabric.util.loadImage(url, function(img) {
       callback(new fabric.Image(img, imgOptions));
-    }, null, imgOptions && imgOptions.crossOrigin);
+    }, imgOptions && imgOptions.crossOrigin);
   };
 
   /* _FROM_SVG_START_ */
