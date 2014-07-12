@@ -33,6 +33,7 @@
 	var canvas;
 	var bgcolor = '#FFFFFF';	// Colour setter for background
 	var bgselected;				// Image ID setter for background
+	var fntcolor = '#000000';	// Colour setter for new text
 	var blkcolor = '#FFFFFF',	// Colour setter for new block
 		blkcolor2 = '#FFFFFF';	// Colour setter for current block
 	var orig;					// Holds last selected/modified object (for clone)
@@ -92,7 +93,8 @@
 			}
 		});
 		window.onbeforeunload = function(e){	// Page-leave functionality
-			saveCanvas(false);
+			if(!isSaved)
+				saveCanvas(false);
 			timedOut(false);
 		};
 		// Initial load auxiliary function(s)
@@ -101,7 +103,7 @@
 	function promptBoardEmpty() {
 		var data = jQuery.parseJSON(lastSave);
 		if(data.objects == ""){
-			var input = document.getElementById("addblock");
+			var input = document.getElementById("newblkcol");
 			alert("It appears your board is empty.\nPerhaps you would like to start by adding a block?");
 			input.focus();
 		}
@@ -145,7 +147,7 @@
 	}
 	function timedOut(afk) {
 		if(afk){
-			// Auto-save changes (unneccessary?)
+			// Auto-save changes
 			$.post("/saveBoard", {
 				boardUser: "{{ currBoard.boardUser }}",
 				boardID: {{ currBoard.boardID }},
@@ -199,6 +201,15 @@
 		isSaved = true;
 	}
 	function saveCanvas(wAlert){
+		/*$.ajax({
+			url: 'resetEditor',
+			data: {
+				user: "{{ currBoard.boardUser }}",
+				boardID: {{ currBoard.boardID }}
+			},
+			type: "POST",
+			async: false
+		});*/
 		$.post("/saveBoard", {
 			boardUser: "{{ currBoard.boardUser }}",
 			boardID: {{ currBoard.boardID }},
@@ -258,12 +269,10 @@
 		var input = document.getElementById("newtext");
 		var text = input.value;
 		if(text == null || text.trim() == ""){
-			alert('Please enter something!');
-			input.focus(); // focuses on the blank to fill
-			return;
+			text = "Click to edit";
 		}
 		var newText = new fabric.IText(text);
-		newText.set({fill: "#000000"});
+		newText.set({fill: fntcolor});
 
 		canvas.add(newText);
 		setDefSettings(newText);
@@ -274,28 +283,27 @@
 		isSaved = false;
   	}
 	function addPostIt(){
-  		var color = blkcolor;
+  		var bgcolor = blkcolor;
+  		var txtcolor = fntcolor;
   		var input = document.getElementById("newtext");
-  		var text = input.value;
-  		if(text == null || text.trim() == ""){
-  			alert('Please enter something!');
-			input.focus(); // focuses on the blank to fill
-			return;
+  		var text = input.value || "Click to edit";
+		if(text == null || text.trim() == ""){
+			text = "Click to edit";
 		}
 		var newText = new fabric.IText(text);
-		newText.fontSize = 20;
-		newText.backgroundColor = color;
-		newText.darkerShade = tinycolor.darken(color, 20).toHexString();
+		newText.fontSize = 30;
+		newText.backgroundColor = bgcolor;
+		newText.fill = txtcolor;
+		newText.paddingX = 10;
+		newText.paddingY = 20;
+		newText.scaleX = 1;
+		newText.scaleY = 1;
+		newText.lockUniScaling = true;
+		newText.darkerShade = tinycolor.darken(bgcolor, 20).toHexString();
 		canvas.add(newText);
 		setDefSettings(newText);
 		newText.center();
 		newText.setCoords();
-		newText.lockUniScaling = true;
-		newText.paddingX = 10;
-		newText.paddingY = 20;
-		newText.scaleX = 0.5;
-		newText.scaleY = 0.5;
-		newText.fontSize = 30;
 		canvas.setActiveObject(newText);
 		isSaved = false;
   	}
@@ -837,6 +845,9 @@
   		padding:2px;
   		border-spacing:5px;
   	}
+  	#newobjtable td {
+  		padding:2px;
+  	}
   	#myTab, #myTabContent , #editinglocked, #boardButtons, #exitButton, #itext-controls{
   		display: none;
   	}
@@ -928,7 +939,12 @@
 				{% endif %}
 
 				<div id="exitButton">
-					<div id="toolBoxExitButton"><button onclick="timedOut(false)">Save and Exit</button></div>
+					<span id="toolBoxExitButton"><button onclick="timedOut(false)">Save and Exit</button></span>
+					{% if user.email == currBoard.boardUser %}
+					<form name="input" action="./boardSettings" method="post" width="100%" style="display:inline">
+						<button name="boardID" type="submit" width="100%" value={{ currBoard.boardID }}>Board Settings</button>
+					</form>
+					{% endif %}
 					<hr>
 				</div>
 				
@@ -942,21 +958,25 @@
 				<div id="myTabContent" class="tab-content">
 					<!--************************* New Objects *************************-->
 					<div class="tab-pane fade in active" id="new">
-						<p>
-						Add a Block:
-						<input class="color {pickerFaceColor:'#DBDBDB'}" value="FFFFFF" onchange="blkcolor='#'+this.color.toString().toUpperCase()" id="addblock">
-						<input type="submit" value="New Block" onclick="addBlock()">
-						</p>
-						<p>
-						Add Text:
-						<input type="text" id="newtext" placeholder="<insert text>">
-						<button onclick="addText()">Add it!</button>
-						</p>
-						<p class="postitbutton">
-							<button onclick="addPostIt()">New Post-It</button>
-						</p>
-						<p class="imagebutton">
-							<button onclick="imageBox()">Add Image</button>
+						<table id="newobjtable">
+						<tr>
+						<td>Object Colour:</td>
+						<td><input class="color {pickerFaceColor:'#DBDBDB', pickerPosition:'top'}" value="FFFFFF" onchange="blkcolor='#'+this.color.toString().toUpperCase()" id="newblkcol"></td>
+						</tr><tr>
+						<td align="right">Text Colour:</td>
+						<td><input class="color {pickerFaceColor:'#DBDBDB', pickerPosition:'top'}" value="000000" onchange="fntcolor='#'+this.color.toString().toUpperCase()" id="newtextcol"></td>
+						<tr>
+						<td align="right">Text(optional):</td>
+						<td><textarea id="newtext" maxlength="255" rows="3" placeholder="<insert text>"></textarea></td>
+						</table>
+						<p id="newobjbuttons">
+							<strong>Create a new</strong>
+							<span class="btn-group">
+								<button type="button" class="btn btn-info" id="addblock" onclick="addBlock()">Block</button>
+								<button type="button" class="btn btn-info" id="addtext" onclick="addText()">Textbox</button>
+								<button type="button" class="btn btn-info" id="addpostit" onclick="addPostIt()">Post-It</button>
+								<button type="button" class="btn btn-info" id="addimage" onclick="imageBox()">Image</button>
+							</span>
 						</p>
 						<div id="imagebox" style="position: fixed;">
 							<div>
