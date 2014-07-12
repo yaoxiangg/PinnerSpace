@@ -38,6 +38,22 @@
   	#failInvite {
   		color:red;
   	}
+
+  	.dropdown-menu>li {
+  		text-align: center;
+  	}
+
+  	.dropdown-btn {
+    	background:none;
+     	border:none;
+     	outline-color: transparent;
+     	width: 158px;
+  	}
+
+  	.dropdown-menu>li>a {
+  		padding: 3px 0px;
+  	}
+
 	</style>
 	<script type="text/javascript">
 
@@ -150,53 +166,63 @@
 	{% endif %}
 	{% for follower in board.followers %}
 	<tr>
-		<td>{{ follower }}</td>
-		{% if follower in board.boardEditor %}
-		<td><form name="input" action="./updateBoard" method="post">
-			<input type="hidden" name="userGranted" value={{ follower }}>
-			<input type="hidden" name="state" value="editor">
-			<input type="hidden" name="boardID" value={{ board.boardID }}>
-			<button class="btn btn-warning btn-xs" name="userPermission" type="submit" value="post">Post Only</button>
-		</form>
+		<td><button class="disabled btn btn-primary">{{ follower }}</button> -&nbsp</td>
+		<td>
+			<div class="btn-group">
+				<button class="disabled btn btn-primary">
+				{% if follower in board.boardEditor %}
+				Full Edit Rights
+				{% elif follower in board.boardPoster %}
+				Post Only
+				{% else %}
+				View Only
+				{% endif %}
+				</button>
+				<button data-toggle="dropdown" class="btn btn-primary dropdown-toggle"><span class="caret"></span></button>
+				<ul class="dropdown-menu">
+					{% if follower in board.boardEditor %}
+					<li><a><form name="input" action="./updateBoard" method="post">
+						<input type="hidden" name="userGranted" value={{ follower }}>
+						<input type="hidden" name="state" value="editor">
+						<input type="hidden" name="boardID" value={{ board.boardID }}>
+						<button class="dropdown-btn" name="userPermission" type="submit" value="post">Post Only</button>
+					</form></a></li>
+					<li><a><form name="input" action="./updateBoard" method="post">
+						<input type="hidden" name="userGranted" value={{ follower }}>
+						<input type="hidden" name="state" value="editor">
+						<input type="hidden" name="boardID" value={{ board.boardID }}>
+						<button class="dropdown-btn" name="userPermission" type="submit" value="view">View Only</button>
+					</form></a></li>
+					{% elif follower in board.boardPoster %}
+					<li><a><form name="input" action="./updateBoard" method="post">
+						<input type="hidden" name="userGranted" value={{ follower }}>
+						<input type="hidden" name="state" value="poster">
+						<input type="hidden" name="boardID" value={{ board.boardID }}>
+						<button class="dropdown-btn" name="userPermission" type="submit" value="edit">Enable All Edits</button>
+					</form></a></li>
+					<li><a><form name="input" action="./updateBoard" method="post">
+						<input type="hidden" name="userGranted" value={{ follower }}>
+						<input type="hidden" name="state" value="poster">
+						<input type="hidden" name="boardID" value={{ board.boardID }}>
+						<button class="dropdown-btn" name="userPermission" type="submit" value="view">View Only</button>
+					</form></a></li>
+					{% else %}
+					<li><a><form name="input" action="./updateBoard" method="post">
+						<input type="hidden" name="userGranted" value={{ follower }}>
+						<input type="hidden" name="state" value="viewer">
+						<input type="hidden" name="boardID" value={{ board.boardID }}>
+						<button class="dropdown-btn" name="userPermission" type="submit" value="edit">Enable All Edits</button>
+					</form></a></li>
+					<li><a><form name="input" action="./updateBoard" method="post">
+						<input type="hidden" name="userGranted" value={{ follower }}>
+						<input type="hidden" name="state" value="viewer">
+						<input type="hidden" name="boardID" value={{ board.boardID }}>
+						<button class="dropdown-btn" name="userPermission" type="submit" value="post">Post Only</button>
+					</form></a></li>
+					{% endif %}
+				</ul>
+			</div>
 		</td>
-		<td><form name="input" action="./updateBoard" method="post">
-			<input type="hidden" name="userGranted" value={{ follower }}>
-			<input type="hidden" name="state" value="editor">
-			<input type="hidden" name="boardID" value={{ board.boardID }}>
-			<button class="btn btn-danger btn-xs" name="userPermission" type="submit" value="view">View Only</button>
-		</form>
-		</td>
-		{% elif follower in board.boardPoster %}
-		<td><form name="input" action="./updateBoard" method="post">
-			<input type="hidden" name="userGranted" value={{ follower }}>
-			<input type="hidden" name="state" value="poster">
-			<input type="hidden" name="boardID" value={{ board.boardID }}>
-			<button class="btn btn-success btn-xs" name="userPermission" type="submit" value="edit">Enable All Edits</button>
-		</form>
-		</td>
-		<td><form name="input" action="./updateBoard" method="post">
-			<input type="hidden" name="userGranted" value={{ follower }}>
-			<input type="hidden" name="state" value="poster">
-			<input type="hidden" name="boardID" value={{ board.boardID }}>
-			<button class="btn btn-danger btn-xs" name="userPermission" type="submit" value="view">View Only</button>
-		</form>
-		</td>
-		{% else %}
-		<td><form name="input" action="./updateBoard" method="post">
-			<input type="hidden" name="userGranted" value={{ follower }}>
-			<input type="hidden" name="state" value="viewer">
-			<input type="hidden" name="boardID" value={{ board.boardID }}>
-			<button class="btn btn-success btn-xs" name="userPermission" type="submit" value="edit">Enable All Edits</button>
-		</form>
-		</td>
-		<td><form name="input" action="./updateBoard" method="post">
-			<input type="hidden" name="userGranted" value={{ follower }}>
-			<input type="hidden" name="state" value="viewer">
-			<input type="hidden" name="boardID" value={{ board.boardID }}>
-			<button class="btn btn-warning btn-xs" name="userPermission" type="submit" value="post">Post Only</button>
-		</form>
-		</td>
-		{% endif %}
 	</tr>
 	{% endfor %}
 	</table>
