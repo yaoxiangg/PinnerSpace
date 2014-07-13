@@ -798,6 +798,14 @@ class SwitchVisibilityHandler(webapp2.RequestHandler):
 			currBoard.isPublic = False
 		currBoard.put()
 
+#TESTING
+class GetBoardData(webapp2.RequestHandler):
+	def get(self):
+		user = current_user(self)
+		boardID = self.request.get('boardID')
+		boardUser = self.request.get('boardUser')
+		currBoard = ndb.Key('Account', user.email, 'Board', int(boardID)).get()
+		return currBoard.boardJSON
 
 #App
 app = webapp2.WSGIApplication([('/', MainHandler),
@@ -824,4 +832,5 @@ app = webapp2.WSGIApplication([('/', MainHandler),
 	('/updateBoardName', UpdateBoardName),
 	('/inviteUsers', InviteUserHandler),
 	('/processInvitation', AcceptRejectInvitationHandler),
-	('/switchVisibility', SwitchVisibilityHandler)], debug=True)
+	('/switchVisibility', SwitchVisibilityHandler),
+	('/getBoardData', GetBoardData)], debug=True)

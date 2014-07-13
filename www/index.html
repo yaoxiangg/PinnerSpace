@@ -389,13 +389,13 @@
 
 		// Store and Load canvas data
 		lastSave = JSON.stringify(boardData); // console.log(boardData); // boardData is an object (boardData.object); loadFromJSON works with string
-		loadCanvas();
+		loadCanvas(false);
 	}
 	function initEdit(){
 		// Clear static canvas and load interactive canvas
 		canvas.dispose();
 		canvas = new fabric.Canvas('canvas');
-		loadCanvas();
+		loadCanvas(true);
 		// Add edit-mode functionalities
 		canvas.on({
 			'object:modified': checkOOB,
@@ -480,13 +480,13 @@
 			isSaved = true;
 			// Reset editor in NDB
 			$.ajax({
-			url: 'resetEditor',
-			data: {
-				user: "{{ currBoard.boardUser }}",
-				boardID: {{ currBoard.boardID }}
-			},
-			type: "POST",
-			async: false
+				url: 'resetEditor',
+				data: {
+					user: "{{ currBoard.boardUser }}",
+					boardID: {{ currBoard.boardID }}
+				},
+				type: "POST",
+				async: false
 			}).done(function( data ) { // unnecessary data?
 				// document.getElementById("toolBoxButton").style.display = "block";
 				// Remove functions -> alert -> reload
@@ -508,12 +508,27 @@
 				type: "POST",
 				async: false
 			});
-			location.reload();
 		}
 	}
 
 	/************************ BOARD FUNCTIONS *************************/
-	function loadCanvas(){
+	function loadCanvas(frServer){
+		if(frServer){
+			console.log("hit");
+			$.ajax({
+				url: 'getBoardData',
+				data: {
+					boardUser: "{{ currBoard.boardUser }}",
+					boardID: {{ currBoard.boardID }}
+				},
+				type: "GET",
+				//dataType: "json"
+			}).done(function( data ) {
+				console.log(data);
+				//lastSave = JSON.stringify(data);
+				console.log("success");
+			});
+		}
 		canvas.loadFromJSON(
 			lastSave,							// Input data: load from lastSave
 			canvas.renderAll.bind(canvas),		// 'Callback'(optional): rerender canvas
@@ -542,7 +557,7 @@
 	function revert(){
 		var resp=confirm("You sure? All your unsaved work will be lost...");
 		if(resp==true){
-  			loadCanvas();
+  			loadCanvas(false);
   			orig=null;
   		}
   	}
@@ -859,14 +874,14 @@
 	/************************ CANVAS MODIFIERS *************************/
 	$(function () {
 		$("#selectableBG").selectable({
-               stop: function() {
-                  $(".ui-selected", this).each(function() {
-                  	if ($("#selectableBG li").index(this) > -1) {
-                    	bgselected = $("#selectableBG li").index(this) + 1;
-                 	}
-                  });
-               }
-   		});
+			stop: function() {
+				$(".ui-selected", this).each(function() {
+					if ($("#selectableBG li").index(this) > -1) {
+						bgselected = $("#selectableBG li").index(this) + 1;
+					}
+				});
+			}
+		});
 	});
 
   	function setBG() {
