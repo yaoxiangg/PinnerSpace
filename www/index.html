@@ -500,26 +500,15 @@
 			});
 		} else {
 			$.ajax({
-				url: 'saveBoard',
+				url: 'resetEditor',
 				data: {
-					boardUser: "{{ currBoard.boardUser }}",
-					boardID: {{ currBoard.boardID }},
-					data: JSON.stringify(canvas)
+					user: "{{ currBoard.boardUser }}",
+					boardID: {{ currBoard.boardID }}
 				},
 				type: "POST",
 				async: false
-			}).done(function(data) {
-				$.ajax({
-					url: 'resetEditor',
-					data: {
-						user: "{{ currBoard.boardUser }}",
-						boardID: {{ currBoard.boardID }}
-					},
-					type: "POST",
-					async: false
-				});
-				location.reload();
 			});
+			location.reload();
 		}
 	}
 
@@ -545,15 +534,6 @@
 			type: "POST",
 			async: false
 		});
-		/*$.ajax({
-			url: 'resetEditor',
-			data: {
-				user: "{{ currBoard.boardUser }}",
-				boardID: {{ currBoard.boardID }}
-			},
-			type: "POST",
-			async: false
-		});*/
 		lastSave = JSON.stringify(canvas);
 		if(wAlert)
 			alert("Successfully saved!");
