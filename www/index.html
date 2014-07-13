@@ -5,9 +5,327 @@
 	<title>PinnerSpace Home</title>
 	<link rel="stylesheet" href="../bootstrap/css/bootstrap.min.css">
 	<link rel="stylesheet" href="../bootstrap/css/bootstrap-theme.min.css">
+	<style>
+	table.center {
+    	margin-left:auto; 
+    	margin-right:auto;
+  	}
+  	table td { 
+  		display: table-cell;
+  		vertical-align: top; 
+	}
+	#imagebox, #bgimgbox {
+    	display:none;
+    	width:800px;
+    	border:8px solid #666;
+    	/* for modern browsers use semi-transparent color on the border. nice! */
+    	border:8px solid rgba(82, 82, 82, 0.698);
+    	/* hot CSS3 features for mozilla and webkit-based browsers (rounded borders) */
+    	-moz-border-radius:5px;
+   		-webkit-border-radius:5px;
+	}
+
+  	#imagebox div, #bgimgbox div {
+    	border:1px solid #3B5998;
+    	background-color:#fff;
+  	}
+  	#noPreview {
+  		display:none;
+  	}
+
+  	#bgimageurl {
+  		display:none;
+  	}
+  	#selectableBG .ui-selecting { background: #FECA40; }
+ 	#selectableBG .ui-selected { background: #F39814; color: white; }
+ 	#selectableBG { padding-left: 80px; width: 800px; list-style-type: none;}
+  	#selectableBG li { padding: 1px; width: 200px; height: 140px; line-height: 135px; text-align: center; display: inline-block; vertical-align: middle;}
+
+  	#infotable td {
+  		padding:2px;
+  		border-spacing:5px;
+  	}
+  	#newobjtable td {
+  		padding:2px;
+  	}
+  	#myTab, #myTabContent , #editinglocked, #boardButtons, #exitButton, #itext-controls{
+  		display: none;
+  	}
+
+  	input[type=range] {
+  		width: 50px;
+  		display: inline-table;
+  		vertical-align: middle;
+  	}
+  	</style>
+</head>
+<body onload="init({{boardData}})">
+	<!--************************* HEADER *************************-->
+	<div id="header">
+		<div class="jumbotron">
+			<h2 class="title" style="text-align: center">PinnerSpace</h2>
+			
+			<ul class="nav nav-pills pull-left clearfix">
+				<li><a href="./">Home</a></li>
+				<li><a href="./boards">Boards</a></li>
+				<li><a href="./settings">Settings</a></li>
+			</ul>
+			<ul class="nav nav-pills pull-right"> <!--class="span4 offset8 signin-align"-->
+				<li class="disabled"><a>Welcome back <b>{{ user_nick }}</b>!</a></li>
+				<li><a href="/logout">Logout</a></li>
+			</ul>
+		</div>
+	</div>
+	
+	<!--************************* BODY *************************-->
+	<table class="center">
+		<tr>
+			<!--************************* LEFT: Pinboard *************************-->
+			<td>
+				<div id="pinboard" style="width: 900px; height:600px; margin: 0 auto;">
+					<!--canvas id must be consistent with js script-->
+					<canvas id="canvas" width="900" height="600" style="border: 1px solid black;">
+						This text is displayed if your browser does not support HTML5 Canvas.
+					</canvas>
+				</div>
+			</td>
+
+			<!--************************* RIGHT: Info++ *************************-->
+			<td width="375px" style="padding:10px">
+				<!--************************* BOARD NAME/SELECTOR *************************-->
+				<div id="boardInfo" align="left">
+					You are currently viewing <strong>{{ currBoard.boardName }}</strong><br>
+				</div>
+				<span>Want to view another board? Click here</span>
+				<p>
+				<div class="btn-group">
+					<button class="disabled btn btn-primary">{{ currBoard.boardName }}</button>
+					{% if user.numBoards > 0 or user.following > 0 %}
+					<button data-toggle="dropdown" class="btn btn-primary dropdown-toggle"><span class="caret"></span></button>
+					<ul class="dropdown-menu">
+						{% for board in boards %}
+						{% if board.boardID != currBoard.boardID or board.boardUser != currBoard.boardUser %}
+						<li><a href="./board?boardID={{ board.boardID }}&boardUser={{ board.boardUser }}">{{ board.boardName }}</a></li>
+						{% endif %}
+						{% endfor %}
+						<li class="divider"></li>
+						{% for board2 in boards2 %}
+						{% if board2.boardID != currBoard.boardID or board2.boardUser != currBoard.boardUser %}
+						<li><a href="./board?boardID={{ board2.boardID }}&boardUser={{ board2.boardUser }}">{{ board2.boardName }}</a></li>
+						{% endif %}
+						{% endfor %}
+					</ul>
+					{% endif %}
+				</div>
+				</p>
+				
+				<!--BREAK--><hr>
+
+				<!--TO BE FILLED-->
+				{% if user.email == currBoard.boardUser or user.email in currBoard.boardEditor %}
+				<!--EDIT BUTTON-->
+				<div id="toolBoxButton"><button onclick="showToolBox()">Edit</button></div>
+				<div id="editinglocked">Someone else is editing. Please try again later.</div>
+
+				{% elif user.email == currBoard.boardUser or user.email in currBoard.boardPoster %}
+				<!--EDIT BUTTON-->
+				<div id="toolBoxButton"><button onclick="showToolBox()">Edit</button></div>
+				<div id="editinglocked">Someone else is editing. Please try again later.</div>
+				
+
+				{% else %}
+				<!--Show set of buttons exclusive to board viewers-->
+				{% endif %}
+
+				<div id="exitButton">
+					<span id="toolBoxExitButton"><button onclick="timedOut(false)">Save and Exit</button></span>
+					{% if user.email == currBoard.boardUser %}
+					<form name="input" action="./boardSettings" method="post" width="100%" style="display:inline">
+						<button name="boardID" type="submit" width="100%" value={{ currBoard.boardID }}>Board Settings</button>
+					</form>
+					{% endif %}
+					<hr>
+				</div>
+				
+				<!--************************* TABS *************************-->
+				<ul id="myTab" class="nav nav-pills">
+					<li class="active"><a href="#new" data-toggle="tab">New Object</a></li>
+					<li id="currObjTab"><a href="#modifycurrent" data-toggle="tab">Current Object</a></li>
+					<li><a href="#modifycanvas" data-toggle="tab">Modify Canvas</a></li>
+				</ul>
+				<hr>
+				<div id="myTabContent" class="tab-content">
+					<!--************************* New Objects *************************-->
+					<div class="tab-pane fade in active" id="new">
+						<table id="newobjtable">
+						<tr><strong>Properties:</strong></tr>
+						<tr><p></tr>
+						<tr>
+						<td>Object Colour:</td>
+						<td><input class="color {pickerFaceColor:'#DBDBDB', pickerPosition:'top'}" value="FFFFFF" onchange="blkcolor='#'+this.color.toString().toUpperCase()" id="newblkcol"></td>
+						</tr><tr>
+						<td align="right">Text Colour:</td>
+						<td><input class="color {pickerFaceColor:'#DBDBDB', pickerPosition:'top'}" value="000000" onchange="fntcolor='#'+this.color.toString().toUpperCase()" id="newtextcol"></td>
+						<tr>
+						<td align="right">Text(optional):</td>
+						<td><textarea id="newtext" maxlength="255" rows="3" placeholder="<insert text>"></textarea></td></tr>
+						</table>
+						<p></p>
+						<p id="newobjbuttons">
+							<strong>Create a new</strong>
+							<p></p>
+							<span class="btn-group">
+								<button type="button" class="btn btn-info" id="addblock" onclick="addBlock()">Block</button>
+								<button type="button" class="btn btn-info" id="addtext" onclick="addText()">Textbox</button>
+								<button type="button" class="btn btn-info" id="addpostit" onclick="addPostIt()">Post-It</button>
+								<button type="button" class="btn btn-info" id="addimage" onclick="imageBox()">Image</button>
+							</span>
+						</p>
+						<div id="imagebox" style="position: fixed;">
+							<div>
+								<p class="close">x</p>
+								<h2>Insert Picture</h2>
+								<input type="text" id="imageurl" onblur="preloadImage()" placeholder="<Image Url>">
+								<button onclick="addImage()">Add it!</button>
+								<hr>
+								<center><p id="noPreview">No preview available</p>
+								<img id="imageHolder" src="" width="780px"></img></center>
+							</div>
+						</div>
+					</div>
+					<!--************************* Current Object *************************-->
+					<div class="tab-pane fade" id="modifycurrent">
+						<table id="infotable">
+							<tr>
+								<td> Height: </td><td> <input type="text" id="infoH" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
+								<td> Width: </td><td> <input type="text" id="infoW" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
+							</tr>
+							<tr>
+								<td> X: </td><td> <input type="text" id="infoX" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
+								<td> Y: </td><td> <input type="text" id="infoY" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
+								<td> Angle: </td><td> <input type="text" id="infoAng" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"></td>
+							</tr>
+						</table>
+						<p></p>
+						<div id="toolBox1">
+							<button class="btn" onclick="straightenActive()">Straighten</button>
+							<button class="btn" onclick="canvas.getActiveObject().bringForward()">Bring Forward</button>
+							<button class="btn" onclick="canvas.getActiveObject().sendBackwards()">Send Backwards</button>
+						</div>
+						<p></p>
+						<!--NOT FOR ITEXT-->
+						<div id="infotable2">
+							<p>
+								Fill:
+								<input id="infoColor" class="color {pickerFaceColor:'#DBDBDB'}" value="FFFFFF" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
+								<input type="submit" value="Apply" onclick="setBlkColor()">
+							</p>
+						</div>
+						<!--ITEXT CONTROLS-->
+						<div id="itext-controls">
+							<div>
+								Font Type:
+								<select id="fontFamily" name="fontFamily">
+									<option value="arial" selected="">Arial</option>
+									<option value="comic sans ms">Comic Sans MS</option>
+									<option value="consolas">Consolas</option>
+									<option value="courier">Courier</option>
+									<option value="georgia">Georgia</option>
+									<option value="helvetica">Helvetica</option>
+									<option value="impact">Impact</option>
+									<option value="lucida console">Lucida Console</option>
+									<option value="myriad pro">Myriad Pro</option>
+									<option value="segoe ui">Segoe UI</option>
+									<option value="tahoma">Tahoma</option>
+									<option value="times new roman">Times New Roman</option>
+									<option value="verdana">Verdana</option>	
+								</select>
+								Font Size:
+								<input type="range" value="20" min="20" max="120" step="1" id="fontSize"  onchange="setActiveStyle(id, this.value)">
+							</div>
+							<p></p>
+							<div>
+								PostIt Color:
+								<input type="color" value="" id="backgroundColor" size="10" onchange="setActiveProp(id, this.value)">
+								Text Highlight:
+								<input type="color" value="" id="textBackgroundColor" size="10" onchange="setActiveProp(id, this.value)">
+							</div>
+							<p></p>
+							<div>
+								Stroke (Width/Color):
+								<input type="range" value="1" min="1" max="5" id="strokeWidth" onchange="setActiveStyle(id, parseInt(this.value,10))">
+								<input type="color" value="" id="stroke" onchange="setActiveStyle(id, this.value)">
+							</div>
+							<p></p>
+							Text Align:
+							<select id="textAlign" name="textAlign">
+								<option value="left">Left</option>
+								<option value="center">Center</option>
+								<option value="right">Right</option>
+								<option value="justify">Justify</option>
+							</select>
+							<p></p>
+							<button type="button" class="btn btn-object-action" onclick="setActiveStyle('fontWeight', getActiveStyle('fontWeight') === 'bold' ? '' : 'bold');" ng-class="{'btn-inverse': isBold()}">Bold</button>
+							<button type="button" class="btn btn-object-action" id="text-cmd-italic" onclick="setActiveStyle('fontStyle', getActiveStyle('fontStyle') === 'italic' ? '' : 'italic');" ng-class="{'btn-inverse': isItalic()}">Italic</button>
+							<button type="button" class="btn btn-object-action" id="text-cmd-underline" onclick="toggleUnderline()" ng-class="{'btn-inverse': isUnderline()}">Underline</button>
+							<button type="button" class="btn btn-object-action" id="text-cmd-linethrough" onclick="toggleLinethrough()" ng-class="{'btn-inverse': isLinethrough()}">Linethrough</button>
+						</div>
+						<p></p>
+						<!--END ITEXT CONTROLS-->
+						<div id="toolBox2">
+							<button class="btn" onclick="delActive()">Delete</button>
+							<button class="btn" onclick="cloneActive()">Clone</button>
+							<button class="btn" onclick="groupActive()">Group</button>
+							<button class="btn" onclick="breakActiveGrp()">Break Group</button>
+						</div>
+						<p></p>
+					</div>
+					<!--************************* Modify Canvas *************************-->
+					<div class="tab-pane fade" id="modifycanvas">
+					<p>
+						Background Colour:
+						<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="bgcolor='#'+this.color.toString().toUpperCase()">
+						<input type="submit" value="Apply" onclick="setBG()">
+						<p class="bgimgbutton">
+							<button onclick="bgimgBox()">Background Image</button>
+						</p>
+						<div id="bgimgbox" style="position: fixed;">
+							<div>
+								<p class="close">x</p>
+								<center><h2>Background</h2></center>
+								<ul id="selectableBG">
+									<li class="ui-state-default"><img height="120" width="180" src="../images/bg1.jpg"></img></li>
+									<li class="ui-state-default"><img height="120" width="180" src="../images/bg2.jpg"></img></li>
+									<li class="ui-state-default"><img height="120" width="180" src="../images/bg3.jpg"></img></li>
+									<li class="ui-state-default"><img height="120" width="180" src="../images/bg4.jpg"></img></li>
+									<li class="ui-state-default"><img height="120" width="180" src="../images/bg5.jpg"></img></li>
+									<li class="ui-state-default"><img height="120" width="180" id="bgimageHolder" src="../images/bg6.jpg"></img></li>
+								</ul>
+								<center>
+								<p><input type="text" id="bgimageurl" onblur="bgpreloadImage()" placeholder="<Custom Image Url - 900 x 600>"></p>
+								<button onclick="changeBGImg()">Change Background</button>
+								<hr>
+								</center>
+							</div>
+						</div>
+					</p>
+					</div>
+				</div>
+				<div id="boardButtons">
+				<p>
+					<button class="btn btn-success" onclick="saveCanvas(true)">Save Changes</button>
+					<button class="btn btn-warning" onclick="revert()">Reset Changes</button>
+					<button class="btn btn-danger" onclick="clearCanvas()">Clear Board</button>
+				</p>
+				</div>
+			</td>
+			<!--END OF RIGHT COLUMN-->
+		</tr>
+	</table>
+	<!--END BODY-->
 	<script src="../scripts/jquery-1.11.1.min.js" type="text/javascript"></script>
 	<script src="../bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
-	<script src="../scripts/fabric.js" type="text/javascript"></script>
+	<script src="../scripts/fabric.min.js" type="text/javascript"></script>
 	<script src="../scripts/jscolor/jscolor.js" type="text/javascript"></script>
 	<script src="../scripts/jquery.tools.min.js" type="text/javascript"></script>
 	<script src="../scripts/jquery-ui-1.10.4.custom.min.js" type="text/javascript"></script>
@@ -116,17 +434,17 @@
 			boardEditor: "{{ user.email }}"
 		}).done(function( data ) {
 				if (data == "") {
+					$("#exitButton").effect("fade", "", 500, "");
+					$("#boardButtons").effect("fade", "", 500, "");
+					$("#myTab").effect("fade", "", 500, "");
+					$("#myTabContent").effect("fade", "", 500, "");
 					document.getElementById("editinglocked").style.display = "none";
     				document.getElementById("toolBoxButton").style.display = "none";
-    				document.getElementById("exitButton").style.display = "block";
-    				document.getElementById("myTab").style.display = "block";
-    				document.getElementById("myTabContent").style.display = "block";
-    				document.getElementById("boardButtons").style.display = "block";
     				startIdleListener();
     				initEdit();
 					return;
 				}
-				document.getElementById("editinglocked").style.display = "block";
+				$("#editinglocked").effect("fade", "", 500, "");
 		});
 	}
 
@@ -297,8 +615,8 @@
 		newText.fill = txtcolor;
 		newText.paddingX = 10;
 		newText.paddingY = 20;
-		newText.scaleX = 1;
-		newText.scaleY = 1;
+		newText.scaleX = 0.6;
+		newText.scaleY = 0.6;
 		newText.lockUniScaling = true;
 		newText.darkerShade = tinycolor.darken(bgcolor, 20).toHexString();
 		canvas.add(newText);
@@ -806,320 +1124,5 @@
 	}
 
 	</script>
-	<style>
-	table.center {
-    	margin-left:auto; 
-    	margin-right:auto;
-  	}
-  	table td { 
-  		display: table-cell;
-  		vertical-align: top; 
-	}
-	#imagebox, #bgimgbox {
-    	display:none;
-    	width:800px;
-    	border:8px solid #666;
-    	/* for modern browsers use semi-transparent color on the border. nice! */
-    	border:8px solid rgba(82, 82, 82, 0.698);
-    	/* hot CSS3 features for mozilla and webkit-based browsers (rounded borders) */
-    	-moz-border-radius:5px;
-   		-webkit-border-radius:5px;
-	}
-
-  	#imagebox div, #bgimgbox div {
-    	border:1px solid #3B5998;
-    	background-color:#fff;
-  	}
-  	#noPreview {
-  		display:none;
-  	}
-
-  	#bgimageurl {
-  		display:none;
-  	}
-  	#selectableBG .ui-selecting { background: #FECA40; }
- 	#selectableBG .ui-selected { background: #F39814; color: white; }
- 	#selectableBG { padding-left: 80px; width: 800px; list-style-type: none;}
-  	#selectableBG li { padding: 1px; width: 200px; height: 140px; line-height: 135px; text-align: center; display: inline-block; vertical-align: middle;}
-
-  	#infotable td {
-  		padding:2px;
-  		border-spacing:5px;
-  	}
-  	#newobjtable td {
-  		padding:2px;
-  	}
-  	#myTab, #myTabContent , #editinglocked, #boardButtons, #exitButton, #itext-controls{
-  		display: none;
-  	}
-
-  	input[type=range] {
-  		width: 50px;
-  		display: inline-table;
-  		vertical-align: middle;
-  	}
-  	</style>
-	<!--End of Canvas Script-->
-</head>
-<body onload="init({{boardData}})">
-	<!--************************* HEADER *************************-->
-	<div id="header">
-		<div class="jumbotron">
-			<h2 class="title" style="text-align: center">PinnerSpace</h2>
-			
-			<ul class="nav nav-pills pull-left clearfix">
-				<li><a href="./">Home</a></li>
-				<li><a href="./boards">Boards</a></li>
-				<li><a href="./settings">Settings</a></li>
-			</ul>
-			<ul class="nav nav-pills pull-right"> <!--class="span4 offset8 signin-align"-->
-				<li class="disabled"><a>Welcome back <b>{{ user_nick }}</b>!</a></li>
-				<li><a href="/logout">Logout</a></li>
-			</ul>
-		</div>
-	</div>
-	
-	<!--************************* BODY *************************-->
-	<table class="center">
-		<tr>
-			<!--************************* LEFT: Pinboard *************************-->
-			<td>
-				<div id="pinboard" style="width: 900px; height:600px; margin: 0 auto;">
-					<!--canvas id must be consistent with js script-->
-					<canvas id="canvas" width="900" height="600" style="border: 1px solid black;">
-						This text is displayed if your browser does not support HTML5 Canvas.
-					</canvas>
-				</div>
-			</td>
-
-			<!--************************* RIGHT: Info++ *************************-->
-			<td style="padding:10px">
-				<!--************************* BOARD NAME/SELECTOR *************************-->
-				<div id="boardInfo" align="left">
-					You are currently viewing <strong>{{ currBoard.boardName }}</strong><br>
-				</div>
-				<span>Want to view another board? Click here</span>
-				<p>
-				<div class="btn-group">
-					<button class="disabled btn btn-primary">{{ currBoard.boardName }}</button>
-					{% if user.numBoards > 0 or user.following > 0 %}
-					<button data-toggle="dropdown" class="btn btn-primary dropdown-toggle"><span class="caret"></span></button>
-					<ul class="dropdown-menu">
-						{% for board in boards %}
-						{% if board.boardID != currBoard.boardID or board.boardUser != currBoard.boardUser %}
-						<li><a href="./board?boardID={{ board.boardID }}&boardUser={{ board.boardUser }}">{{ board.boardName }}</a></li>
-						{% endif %}
-						{% endfor %}
-						<li class="divider"></li>
-						{% for board2 in boards2 %}
-						{% if board2.boardID != currBoard.boardID or board2.boardUser != currBoard.boardUser %}
-						<li><a href="./board?boardID={{ board2.boardID }}&boardUser={{ board2.boardUser }}">{{ board2.boardName }}</a></li>
-						{% endif %}
-						{% endfor %}
-					</ul>
-					{% endif %}
-				</div>
-				</p>
-				
-				<!--BREAK--><hr>
-
-				<!--TO BE FILLED-->
-				{% if user.email == currBoard.boardUser or user.email in currBoard.boardEditor %}
-				<!--EDIT BUTTON-->
-				<div id="toolBoxButton"><button onclick="showToolBox()">Edit</button></div>
-				<div id="editinglocked">Someone else is editing. Please try again later.</div>
-
-				{% elif user.email == currBoard.boardUser or user.email in currBoard.boardPoster %}
-				<!--EDIT BUTTON-->
-				<div id="toolBoxButton"><button onclick="showToolBox()">Edit</button></div>
-				<div id="editinglocked">Someone else is editing. Please try again later.</div>
-				
-
-				{% else %}
-				<!--Show set of buttons exclusive to board viewers-->
-				{% endif %}
-
-				<div id="exitButton">
-					<span id="toolBoxExitButton"><button onclick="timedOut(false)">Save and Exit</button></span>
-					{% if user.email == currBoard.boardUser %}
-					<form name="input" action="./boardSettings" method="post" width="100%" style="display:inline">
-						<button name="boardID" type="submit" width="100%" value={{ currBoard.boardID }}>Board Settings</button>
-					</form>
-					{% endif %}
-					<hr>
-				</div>
-				
-				<!--************************* TABS *************************-->
-				<ul id="myTab" class="nav nav-pills">
-					<li class="active"><a href="#new" data-toggle="tab">New Object</a></li>
-					<li id="currObjTab"><a href="#modifycurrent" data-toggle="tab">Current Object</a></li>
-					<li><a href="#modifycanvas" data-toggle="tab">Modify Canvas</a></li>
-				</ul>
-				<hr>
-				<div id="myTabContent" class="tab-content">
-					<!--************************* New Objects *************************-->
-					<div class="tab-pane fade in active" id="new">
-						<table id="newobjtable">
-						<tr>
-						<td>Object Colour:</td>
-						<td><input class="color {pickerFaceColor:'#DBDBDB', pickerPosition:'top'}" value="FFFFFF" onchange="blkcolor='#'+this.color.toString().toUpperCase()" id="newblkcol"></td>
-						</tr><tr>
-						<td align="right">Text Colour:</td>
-						<td><input class="color {pickerFaceColor:'#DBDBDB', pickerPosition:'top'}" value="000000" onchange="fntcolor='#'+this.color.toString().toUpperCase()" id="newtextcol"></td>
-						<tr>
-						<td align="right">Text(optional):</td>
-						<td><textarea id="newtext" maxlength="255" rows="3" placeholder="<insert text>"></textarea></td>
-						</table>
-						<p id="newobjbuttons">
-							<strong>Create a new</strong>
-							<span class="btn-group">
-								<button type="button" class="btn btn-info" id="addblock" onclick="addBlock()">Block</button>
-								<button type="button" class="btn btn-info" id="addtext" onclick="addText()">Textbox</button>
-								<button type="button" class="btn btn-info" id="addpostit" onclick="addPostIt()">Post-It</button>
-								<button type="button" class="btn btn-info" id="addimage" onclick="imageBox()">Image</button>
-							</span>
-						</p>
-						<div id="imagebox" style="position: fixed;">
-							<div>
-								<p class="close">x</p>
-								<h2>Insert Picture</h2>
-								<input type="text" id="imageurl" onblur="preloadImage()" placeholder="<Image Url>">
-								<button onclick="addImage()">Add it!</button>
-								<hr>
-								<center><p id="noPreview">No preview available</p>
-								<img id="imageHolder" src="" width="780px"></img></center>
-							</div>
-						</div>
-					</div>
-					<!--************************* Current Object *************************-->
-					<div class="tab-pane fade" id="modifycurrent">
-						<table id="infotable">
-							<tr>
-								<td> Height: </td><td> <input type="text" id="infoH" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
-								<td> Width: </td><td> <input type="text" id="infoW" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
-							</tr>
-							<tr>
-								<td> X: </td><td> <input type="text" id="infoX" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
-								<td> Y: </td><td> <input type="text" id="infoY" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
-								<td> Angle: </td><td> <input type="text" id="infoAng" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"></td>
-							</tr>
-						</table>
-						<p></p>
-						<div id="toolBox1">
-							<button class="btn" onclick="straightenActive()">Straighten</button>
-							<button class="btn" onclick="canvas.getActiveObject().bringForward()">Bring Forward</button>
-							<button class="btn" onclick="canvas.getActiveObject().sendBackwards()">Send Backwards</button>
-						</div>
-						<p></p>
-						<!--NOT FOR ITEXT-->
-						<div id="infotable2">
-							<p>
-								Fill:
-								<input id="infoColor" class="color {pickerFaceColor:'#DBDBDB'}" value="FFFFFF" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
-								<input type="submit" value="Apply" onclick="setBlkColor()">
-							</p>
-						</div>
-						<!--ITEXT CONTROLS-->
-						<div id="itext-controls">
-							<div>
-								Font Type:
-								<select id="fontFamily" name="fontFamily">
-									<option value="arial" selected="">Arial</option>
-									<option value="comic sans ms">Comic Sans MS</option>
-									<option value="consolas">Consolas</option>
-									<option value="courier">Courier</option>
-									<option value="georgia">Georgia</option>
-									<option value="helvetica">Helvetica</option>
-									<option value="impact">Impact</option>
-									<option value="lucida console">Lucida Console</option>
-									<option value="myriad pro">Myriad Pro</option>
-									<option value="segoe ui">Segoe UI</option>
-									<option value="tahoma">Tahoma</option>
-									<option value="times new roman">Times New Roman</option>
-									<option value="verdana">Verdana</option>	
-								</select>
-								Font Size:
-								<input type="range" value="20" min="20" max="120" step="1" id="fontSize"  onchange="setActiveStyle(id, this.value)">
-							</div>
-							<p></p>
-							<div>
-								PostIt Color:
-								<input type="color" value="" id="backgroundColor" size="10" onchange="setActiveProp(id, this.value)">
-								Text Highlight:
-								<input type="color" value="" id="textBackgroundColor" size="10" onchange="setActiveProp(id, this.value)">
-							</div>
-							<p></p>
-							<div>
-								Stroke (Width/Color):
-								<input type="range" value="1" min="1" max="5" id="strokeWidth" onchange="setActiveStyle(id, parseInt(this.value,10))">
-								<input type="color" value="" id="stroke" onchange="setActiveStyle(id, this.value)">
-							</div>
-							<p></p>
-							Text Align:
-							<select id="textAlign" name="textAlign">
-								<option value="left">Left</option>
-								<option value="center">Center</option>
-								<option value="right">Right</option>
-								<option value="justify">Justify</option>
-							</select>
-							<p></p>
-							<button type="button" class="btn btn-object-action" onclick="setActiveStyle('fontWeight', getActiveStyle('fontWeight') === 'bold' ? '' : 'bold');" ng-class="{'btn-inverse': isBold()}">Bold</button>
-							<button type="button" class="btn btn-object-action" id="text-cmd-italic" onclick="setActiveStyle('fontStyle', getActiveStyle('fontStyle') === 'italic' ? '' : 'italic');" ng-class="{'btn-inverse': isItalic()}">Italic</button>
-							<button type="button" class="btn btn-object-action" id="text-cmd-underline" onclick="toggleUnderline()" ng-class="{'btn-inverse': isUnderline()}">Underline</button>
-							<button type="button" class="btn btn-object-action" id="text-cmd-linethrough" onclick="toggleLinethrough()" ng-class="{'btn-inverse': isLinethrough()}">Linethrough</button>
-						</div>
-						<p></p>
-						<!--END ITEXT CONTROLS-->
-						<div id="toolBox2">
-							<button class="btn" onclick="delActive()">Delete</button>
-							<button class="btn" onclick="cloneActive()">Clone</button>
-							<button class="btn" onclick="groupActive()">Group</button>
-							<button class="btn" onclick="breakActiveGrp()">Break Group</button>
-						</div>
-						<p></p>
-					</div>
-					<!--************************* Modify Canvas *************************-->
-					<div class="tab-pane fade" id="modifycanvas">
-					<p>
-						Background Colour:
-						<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="bgcolor='#'+this.color.toString().toUpperCase()">
-						<input type="submit" value="Apply" onclick="setBG()">
-						<p class="bgimgbutton">
-							<button onclick="bgimgBox()">Background Image</button>
-						</p>
-						<div id="bgimgbox" style="position: fixed;">
-							<div>
-								<p class="close">x</p>
-								<center><h2>Background</h2></center>
-								<ul id="selectableBG">
-									<li class="ui-state-default"><img height="120" width="180" src="../images/bg1.jpg"></img></li>
-									<li class="ui-state-default"><img height="120" width="180" src="../images/bg2.jpg"></img></li>
-									<li class="ui-state-default"><img height="120" width="180" src="../images/bg3.jpg"></img></li>
-									<li class="ui-state-default"><img height="120" width="180" src="../images/bg4.jpg"></img></li>
-									<li class="ui-state-default"><img height="120" width="180" src="../images/bg5.jpg"></img></li>
-									<li class="ui-state-default"><img height="120" width="180" id="bgimageHolder" src="../images/bg6.jpg"></img></li>
-								</ul>
-								<center>
-								<p><input type="text" id="bgimageurl" onblur="bgpreloadImage()" placeholder="<Custom Image Url - 900 x 600>"></p>
-								<button onclick="changeBGImg()">Change Background</button>
-								<hr>
-								</center>
-							</div>
-						</div>
-					</p>
-					</div>
-				</div>
-				<div id="boardButtons">
-				<p>
-					<button class="btn btn-success" onclick="saveCanvas(true)">Save Changes</button>
-					<button class="btn btn-warning" onclick="revert()">Reset Changes</button>
-					<button class="btn btn-danger" onclick="clearCanvas()">Clear Board</button>
-				</p>
-				</div>
-			</td>
-			<!--END OF RIGHT COLUMN-->
-		</tr>
-	</table>
-	<!--END BODY-->
 </body>
 </html>

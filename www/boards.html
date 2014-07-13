@@ -4,47 +4,6 @@
 	<title>PinnerSpace - My Boards</title>
 	<link rel="stylesheet" href="../bootstrap/css/bootstrap.min.css">
 	<link rel="stylesheet" href="../bootstrap/css/bootstrap-theme.min.css">
-	<script src="../scripts/jquery-1.11.1.min.js" type="text/javascript"></script>
-	<script src="../bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
-	<script type="text/javascript">
-		function init(numboards){
-			if(numboards == 0){
-				var input = document.getElementById("createboard");
-				alert("To start using PinnerSpace, you'll need a board.\nType a Board Name below, and hit 'Create a board'!\nWhen you're done, click 'Home' on the left to view your new board.");
-				input.focus();
-			}
-		}
-
-		function acceptInvitation() {
-			//AJAX AcceptInvitation on done, redirect to followboard.
-			var inviter = $('#inviterUser').val();
-			var inviterBoardID = $('#inviterBoardID').val();
-			$.post("/processInvitation", {
-				boardUser: inviter,
-				boardID: inviterBoardID
-			}).done(function( data ) {
-				$.post("/followBoard", {
-					boardUser: inviter,
-					boardID: inviterBoardID
-				}).done(function(data) {
-					location.reload();
-				});
-			});
-		}
-
-		function rejectInvitation() {
-			//AJAX rejectInvitation on done, redirect to board.
-			var inviter = $('#inviterUser').val();
-			var inviterBoardID = $('#inviterBoardID').val();
-			$.post("/processInvitation", {
-				boardUser: inviter,
-				boardID: inviterBoardID
-			}).done(function(data) {
-				location.reload();
-			});
-		}
-
-	</script>
 	<style>
 	.btntext {
 		text-align: left;
@@ -197,5 +156,46 @@
 		<p>
 	</div>
 	<!--END BODY-->
+	<script src="../scripts/jquery-1.11.1.min.js" type="text/javascript"></script>
+	<script src="../bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		function init(numboards){
+			if(numboards == 0){
+				var input = document.getElementById("createboard");
+				alert("To start using PinnerSpace, you'll need a board.\nType a Board Name below, and hit 'Create a board'!\nWhen you're done, click 'Home' on the left to view your new board.");
+				input.focus();
+			}
+		}
+
+		function acceptInvitation() {
+			//AJAX AcceptInvitation on done, redirect to followboard.
+			var inviter = $('#inviterUser').val();
+			var inviterBoardID = $('#inviterBoardID').val();
+			$.post("/processInvitation", {
+				boardUser: inviter,
+				boardID: inviterBoardID
+			}).done(function( data ) {
+				$.post("/followBoard", {
+					boardUser: inviter,
+					boardID: inviterBoardID
+				}).done(function(data) {
+					location.reload();
+				});
+			});
+		}
+
+		function rejectInvitation() {
+			//AJAX rejectInvitation on done, redirect to board.
+			var inviter = $('#inviterUser').val();
+			var inviterBoardID = $('#inviterBoardID').val();
+			$.post("/processInvitation", {
+				boardUser: inviter,
+				boardID: inviterBoardID
+			}).done(function(data) {
+				location.reload();
+			});
+		}
+
+	</script>
 </body>
 </html>
