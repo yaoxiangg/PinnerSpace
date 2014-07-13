@@ -467,16 +467,26 @@
 	function timedOut(afk) {
 		if(afk){
 			// Auto-save changes
-			$.post("/saveBoard", {
-				boardUser: "{{ currBoard.boardUser }}",
-				boardID: {{ currBoard.boardID }},
-				data: JSON.stringify(canvas)
+			$.ajax({
+				url: 'saveBoard',
+				data: {
+					boardUser: "{{ currBoard.boardUser }}",
+					boardID: {{ currBoard.boardID }},
+					data: JSON.stringify(canvas)
+				},
+				type: "POST",
+				async: false
 			});
 			isSaved = true;
 			// Reset editor in NDB
-			$.post("/resetEditor", {
+			$.ajax({
+			url: 'resetEditor',
+			data: {
 				user: "{{ currBoard.boardUser }}",
 				boardID: {{ currBoard.boardID }}
+			},
+			type: "POST",
+			async: false
 			}).done(function( data ) { // unnecessary data?
 				// document.getElementById("toolBoxButton").style.display = "block";
 				// Remove functions -> alert -> reload
@@ -489,10 +499,15 @@
 				location.reload(); // not sure if we need the optional force-load-from-server
 			});
 		} else {
-			$.post("/saveBoard", {
-				boardUser: "{{ currBoard.boardUser }}",
-				boardID: {{ currBoard.boardID }},
-				data: JSON.stringify(canvas)
+			$.ajax({
+				url: 'saveBoard',
+				data: {
+					boardUser: "{{ currBoard.boardUser }}",
+					boardID: {{ currBoard.boardID }},
+					data: JSON.stringify(canvas)
+				},
+				type: "POST",
+				async: false
 			}).done(function(data) {
 				$.ajax({
 					url: 'resetEditor',
@@ -520,6 +535,16 @@
 		isSaved = true;
 	}
 	function saveCanvas(wAlert){
+		$.ajax({
+			url: 'saveBoard',
+			data: {
+				boardUser: "{{ currBoard.boardUser }}",
+				boardID: {{ currBoard.boardID }},
+				data: JSON.stringify(canvas)
+			},
+			type: "POST",
+			async: false
+		});
 		/*$.ajax({
 			url: 'resetEditor',
 			data: {
@@ -529,11 +554,6 @@
 			type: "POST",
 			async: false
 		});*/
-		$.post("/saveBoard", {
-			boardUser: "{{ currBoard.boardUser }}",
-			boardID: {{ currBoard.boardID }},
-			data: JSON.stringify(canvas)
-		});
 		lastSave = JSON.stringify(canvas);
 		if(wAlert)
 			alert("Successfully saved!");
