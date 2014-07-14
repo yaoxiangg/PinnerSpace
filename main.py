@@ -804,7 +804,7 @@ class GetBoardData(webapp2.RequestHandler):
 		user = current_user(self)
 		boardID = self.request.get('boardID')
 		boardUser = self.request.get('boardUser')
-		currBoard = ndb.Key('Account', user.email, 'Board', int(boardID)).get()
+		currBoard = ndb.Key('Account', boardUser, 'Board', int(boardID)).get()
 		self.response.out.write(currBoard.boardJSON)
 
 #App
