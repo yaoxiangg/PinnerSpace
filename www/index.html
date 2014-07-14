@@ -60,7 +60,7 @@
   	}
   	</style>
 </head>
-<body onload="init({{boardData}})">
+<body onload="init()">
 	<!--************************* HEADER *************************-->
 	<div id="header">
 		<div class="jumbotron">
@@ -139,7 +139,7 @@
 				{% endif %}
 
 				<div id="exitButton">
-					<span id="toolBoxExitButton"><button onclick="timedOut(false)">Save and Exit</button></span>
+					<span id="toolBoxExitButton"><button onclick="location.reload(true)">Save and Exit</button></span>
 					{% if user.email == currBoard.boardUser %}
 					<form name="input" action="./boardSettings" method="post" width="100%" style="display:inline">
 						<button name="boardID" type="submit" width="100%" value={{ currBoard.boardID }}>Board Settings</button>
@@ -365,7 +365,7 @@
 	var idleInterval;			// Holds ID for setInterval() idle timer (for reset)
 	
 	/************************ BOARD INITIALISATION *************************/
-	function init(boardData){
+	function init(){
 		// Initialise imagebox for addImage()
 		$("#imagebox").overlay({
 			mask: {
@@ -390,15 +390,39 @@
 		// Initialise Canvas
 		canvas = new fabric.StaticCanvas('canvas');
 
-		// Store and Load canvas data
-		lastSave = JSON.stringify(boardData); // console.log(boardData); // boardData is an object (boardData.object); loadFromJSON works with string
-		loadCanvas(false);
+		// Retrive board data from server and load canvas
+		$.ajax({
+			url: 'getBoardData',
+			data: {
+				boardUser: "{{ currBoard.boardUser }}",
+				boardID: {{ currBoard.boardID }}
+			},
+			type: "GET",
+			//async: false
+		}).done(function( data ) {
+			lastSave = data; // Save server data locally
+			loadCanvas();
+		});
 	}
 	function initEdit(){
-		// Clear static canvas and load interactive canvas
-		canvas.dispose();
-		canvas = new fabric.Canvas('canvas');
-		loadCanvas(true);
+		// Reinitialise board using data from server (ensures it's updated)
+		$.ajax({
+			url: 'getBoardData',
+			data: {
+				boardUser: "{{ currBoard.boardUser }}",
+				boardID: {{ currBoard.boardID }}
+			},
+			type: "GET",
+			async: false
+		}).done(function( data ) {
+			// Save server data locally
+			lastSave = data;
+			// Clear static canvas and load interactive canvas
+			canvas.dispose();
+			canvas = new fabric.Canvas('canvas');
+			loadCanvas();
+		});
+		
 		// Add edit-mode functionalities
 		canvas.on({
 			'object:modified': checkOOB,
@@ -499,7 +523,7 @@
 				document.getElementById("boardButtons").style.display = "none";
 				document.getElementById("editinglocked").style.display = "none";
 				alert("You have been kicked out of edit mode, you AFK-er! \n(P.S. your work has been auto-saved)");
-				location.reload(); // not sure if we need the optional force-load-from-server
+				location.reload(true); // not sure if we need the optional force-load-from-server
 			});
 		} else {
 			$.ajax({
@@ -511,28 +535,11 @@
 				type: "POST",
 				async: false
 			});
-			location.reload();
 		}
 	}
 
 	/************************ BOARD FUNCTIONS *************************/
-	function loadCanvas(frServer){
-		if(frServer){
-			console.log("hit");
-			$.ajax({
-				url: 'getBoardData',
-				data: {
-					boardUser: "{{ currBoard.boardUser }}",
-					boardID: {{ currBoard.boardID }}
-				},
-				type: "GET",
-				//dataType: "json"
-			}).done(function( data ) {
-				console.log(data);
-				//lastSave = JSON.stringify(data);
-				console.log("success");
-			});
-		}
+	function loadCanvas(){
 		canvas.loadFromJSON(
 			lastSave,							// Input data: load from lastSave
 			canvas.renderAll.bind(canvas),		// 'Callback'(optional): rerender canvas
@@ -551,7 +558,7 @@
 				data: JSON.stringify(canvas)
 			},
 			type: "POST",
-			async: false
+			async: false	// Not sure if should remove this, it's making the saving slower i think
 		});
 		lastSave = JSON.stringify(canvas);
 		if(wAlert)
@@ -561,7 +568,7 @@
 	function revert(){
 		var resp=confirm("You sure? All your unsaved work will be lost...");
 		if(resp==true){
-  			loadCanvas(false);
+  			loadCanvas();
   			orig=null;
   		}
   	}
