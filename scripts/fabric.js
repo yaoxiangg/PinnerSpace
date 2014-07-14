@@ -10298,7 +10298,7 @@ paddingY: 0,
      */
     backgroundColor:          '',
 	darkerShade: '',
-
+	postit: false,
     /**
      * When defined, an object is rendered via stroke and this property specifies its color
      * @type String
@@ -10607,6 +10607,7 @@ paddingY: 0,
             clipTo:             this.clipTo && String(this.clipTo),
             backgroundColor:    this.backgroundColor,
 			darkerShade: this.darkerShade,
+			postit: this.postit,
 			paddingX: this.paddingX,
 			paddingY: this.paddingY
           };

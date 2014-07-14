@@ -246,8 +246,10 @@
 							</div>
 							<p></p>
 							<div>
+								<span id="changePostitColor">
 								PostIt Color:
 								<input type="color" value="" id="backgroundColor" size="10" onchange="setActiveProp(id, this.value)">
+								</span>
 								Text Highlight:
 								<input type="color" value="" id="textBackgroundColor" size="10" onchange="setActiveProp(id, this.value)">
 							</div>
@@ -635,6 +637,7 @@
 		newText.scaleX = 0.6;
 		newText.scaleY = 0.6;
 		newText.lockUniScaling = true;
+		newText.postit = true;
 		newText.darkerShade = tinycolor.darken(bgcolor, 20).toHexString();
 		canvas.add(newText);
 		setDefSettings(newText);
@@ -1033,6 +1036,10 @@
 				document.getElementById("fontSize").value = e.target.fontSize;
 				document.getElementById("infotable2").style.display = "none";
 				document.getElementById("itext-controls").style.display = "block";
+				if (e.target.postit == false)
+					document.getElementById("changePostitColor").style.display = "none";
+				else
+					document.getElementById("changePostitColor").style.display = "inline-block";
   			} else {
   				document.getElementById("infotable2").style.display = "block";
 				document.getElementById("itext-controls").style.display = "none";
