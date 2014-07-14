@@ -805,7 +805,7 @@ class GetBoardData(webapp2.RequestHandler):
 		boardID = self.request.get('boardID')
 		boardUser = self.request.get('boardUser')
 		currBoard = ndb.Key('Account', user.email, 'Board', int(boardID)).get()
-		return currBoard.boardJSON
+		self.response.out.write(currBoard.boardJSON)
 
 #App
 app = webapp2.WSGIApplication([('/', MainHandler),

@@ -33,9 +33,10 @@
   		display:none;
   	}
 
-  	#bgimageurl {
-  		display:none;
+  	#bgimageurl.placeholder {
+    	text-align: center;
   	}
+
   	#selectableBG .ui-selecting { background: #FECA40; }
  	#selectableBG .ui-selected { background: #F39814; color: white; }
  	#selectableBG { padding-left: 80px; width: 800px; list-style-type: none;}
@@ -82,9 +83,9 @@
 		<tr>
 			<!--************************* LEFT: Pinboard *************************-->
 			<td>
-				<div id="pinboard" style="width: 900px; height:600px; margin: 0 auto;">
+				<div id="pinboard" style="width: 902px; height:602px; margin: 0 auto; border: 1px solid black;">
 					<!--canvas id must be consistent with js script-->
-					<canvas id="canvas" width="900" height="600" style="border: 1px solid black;">
+					<canvas id="canvas" width="900" height="600">
 						This text is displayed if your browser does not support HTML5 Canvas.
 					</canvas>
 				</div>
@@ -302,7 +303,7 @@
 									<li class="ui-state-default"><img height="120" width="180" id="bgimageHolder" src="../images/bg6.jpg"></img></li>
 								</ul>
 								<center>
-								<p><input type="text" id="bgimageurl" onblur="bgpreloadImage()" placeholder="<Custom Image Url - 900 x 600>"></p>
+								<p><input type="text" id="bgimageurl" onblur="bgpreloadImage()"size="35" placeholder="Custom Background Image Url"></p>
 								<button onclick="changeBGImg()">Change Background</button>
 								<hr>
 								</center>
@@ -508,6 +509,7 @@
 				type: "POST",
 				async: false
 			});
+			location.reload();
 		}
 	}
 
@@ -898,7 +900,7 @@
        	image.src = url;
        	$("#bgnoPreview").hide();
        	$("img").error(function(){
-    		$(this).hide();
+       		image.src = "images/bg6.jpg";
     		$("#bgnoPreview").show();
     	});
 	}
@@ -906,8 +908,19 @@
     	if (bgselected < 6) {
 	    	canvas.setBackgroundImage('../images/bg' + bgselected + '.jpg', canvas.renderAll.bind(canvas));
     	} else {
-    		canvas.backgroundImage = false;
-    		canvas.renderAll();
+    		imagesrc = document.getElementById("bgimageHolder").src;
+    		url = document.getElementById("bgimageurl").value;
+    		if (url != "" && imagesrc != "http://pinnerspace.appspot.com/images/bg6.jpg" && imagesrc != "http://localhost:10080/images/bg6.jpg") {
+    			canvas.setBackgroundImage(imagesrc, canvas.renderAll.bind(canvas),{
+    				width: canvas.width,
+    				height: canvas.height,
+    				originX: 'left',
+    				originY: 'top'
+    			});
+    		} else {
+    			canvas.backgroundImage = false;
+    			canvas.renderAll();
+    		}
     	}
     	isSaved = false;
     }
