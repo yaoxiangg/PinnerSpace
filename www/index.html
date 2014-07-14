@@ -913,9 +913,7 @@
     		if (url != "" && imagesrc != "http://pinnerspace.appspot.com/images/bg6.jpg" && imagesrc != "http://localhost:10080/images/bg6.jpg") {
     			canvas.setBackgroundImage(imagesrc, canvas.renderAll.bind(canvas),{
     				width: canvas.width,
-    				height: canvas.height,
-    				originX: 'left',
-    				originY: 'top'
+    				height: canvas.height
     			});
     		} else {
     			canvas.backgroundImage = false;
