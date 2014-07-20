@@ -6,10 +6,10 @@
 	<link rel="stylesheet" href="../bootstrap/css/bootstrap.min.css">
 	<link rel="stylesheet" href="../bootstrap/css/bootstrap-theme.min.css">
 	<link rel="stylesheet" href="../scripts/colpick/css/colpick.css" type="text/css">
-	<!--body {
-		background-image: url("../images/brickwall.jpg");
-	}-->
 	<style>
+	/*body {
+		background-image: url("../images/brickwall.jpg");
+	}*/
 	table.center {
     	margin-left:auto; 
     	margin-right:auto;
@@ -84,7 +84,7 @@
 				<li><a href="./boards">Boards</a></li>
 				<li><a href="./settings">Settings</a></li>
 			</ul>
-			<ul class="nav nav-pills pull-right"> <!--class="span4 offset8 signin-align"-->
+			<ul class="nav nav-pills pull-right">
 				<li class="disabled"><a>Welcome back <b>{{ user_nick }}</b>!</a></li>
 				<li><a href="/logout">Logout</a></li>
 			</ul>
@@ -172,19 +172,20 @@
 					<!--************************* New Objects *************************-->
 					<div class="tab-pane fade in active" id="new">
 						<table id="newobjtable">
-						<tr><strong>Properties:</strong></tr>
-						<tr><p></tr>
-						<tr>
-						<td>Object Colour:</td>
-						<td><!--<input class="color {pickerFaceColor:'#DBDBDB', pickerPosition:'top'}" value="FFFFFF" onchange="blkcolor='#'+this.color.toString().toUpperCase()" id="newblkcol">-->
-						<span class="color-box" id="newblkcol" /></td>
-						</tr><tr>
-						<td align="right">Text Colour:</td>
-						<td><!--<input class="color {pickerFaceColor:'#DBDBDB', pickerPosition:'top'}" value="000000" onchange="fntcolor='#'+this.color.toString().toUpperCase()" id="newtextcol">-->
-						<span class="color-box" id="newtextcolor" /></td>
-						<tr>
-						<td align="right">Text(optional):</td>
-						<td><textarea id="newtext" maxlength="255" rows="3" placeholder="<insert text>"></textarea></td></tr>
+							<tr><strong>Properties:</strong></tr>
+							<tr><p></tr>
+							<tr>
+								<td align="right">Object Colour:</td>
+								<td><span class="color-box" id="newblkcol" /></td>
+							</tr>
+							<tr>
+								<td align="right">Text Colour:</td>
+								<td><span class="color-box" id="newtextcolor" /></td>
+							</tr>
+							<tr>
+								<td align="right">Text(optional):</td>
+								<td><textarea id="newtext" maxlength="255" rows="3" placeholder="<insert text>"></textarea></td>
+							</tr>
 						</table>
 						<p></p>
 						<p id="newobjbuttons">
@@ -214,9 +215,7 @@
 						<div id="toolBox1">
 							<strong>Object Controls:</strong>
 							<p></p>
-							<span id="grpbtn" hidden="true"><button class="btn btn-default" onclick="groupActive()">Group</button></span>
 							<div class="btn-group">
-								<!--<button type="button" class="btn btn-default" onclick="straightenActive()">Straighten</button>-->
 								<button type="button" class="btn btn-default" onclick="delActive()">Delete</button>
 								<button type="button" class="btn btn-default" onclick="cloneActive()">Clone</button>
 								<div class="btn-group">
@@ -224,20 +223,29 @@
 										<span class="caret"></span>
 									</button>
 									<ul class="dropdown-menu" role="menu">
-										<li><a href="#" onclick="canvas.getActiveObject().bringForward(); return false;">Bring Forward</a></li>
-										<li><a href="#" onclick="canvas.getActiveObject().sendBackwards(); return false;">Send Backwards</a></li>
+										<li><a href="" onclick="canvas.getActiveObject().bringForward(); return false;">Bring Forward</a></li>
+										<li><a href="" onclick="canvas.getActiveObject().sendBackwards(); return false;">Send Backwards</a></li>
 									</ul>
 								</div>
 							</div>
 							<span id="breakgrpbtn" hidden="true"><button type="button" class="btn btn-default" onclick="breakActiveGrp()">Break Group</button> </span>
 							<p></p>
 						</div>
+						<div id="toolBox2" hidden>
+							<strong>Group Controls:</strong>
+							<p></p>
+							<div class="btn-group">
+								<button type="button" class="btn btn-default" onclick="delActive()">Delete</button>
+								<button type="button" class="btn btn-default" onclick="cloneActive()">Clone</button>
+							</div>
+							<button class="btn btn-default" onclick="groupActive()">Group</button>
+							<p></p>
+						</div>
 						<div id="infotablep">
 							<table id="infotable">
-								<tr id="infotable1a">
+								<tr id="infotable1a"> <!--to hide when it is i-text-->
 									<td> Height: </td><td> <input type="text" id="infoH" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
 									<td> Width: </td><td> <input type="text" id="infoW" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
-									<!--to hide when it is i-text-->
 									<td id="infoFill"> Fill: </td><td id="infoFillB"> <span class="color-box" id="fillColor" /> </td>
 								</tr>
 								<tr id="infotable1b">
@@ -282,7 +290,7 @@
 							<div>
 								Font Size:
 								<input type="range" value="20" min="20" max="120" step="1" id="fontSize"  onchange="setActiveStyle(id, this.value)">
-								Text Align:
+								Align:
 								<select id="textAlign" name="textAlign">
 									<option value="left">Left</option>
 									<option value="center">Center</option>
@@ -294,10 +302,9 @@
 							<div>
 								<span id="changePostitColor">
 								PostIt Color:
-								<!--<input type="color" value="" id="backgroundColor" size="10" onchange="setActiveProp(id, this.value)">-->
 								<span class="color-box" id="backgroundColor" />
 								</span>
-								Text Highlight:
+								Highlight:
 								<span class="color-box" id="textBackgroundColor"/>
 							</div>
 							<p></p>
@@ -305,7 +312,6 @@
 								Stroke (Width/Color):
 								<input type="range" value="1" min="1" max="5" id="strokeWidth" onchange="setActiveStyle(id, parseInt(this.value,10))">
 								<span class="color-box" id="stroke" />
-								<!--<input type="color" value="" id="stroke" onchange="setActiveStyle(id, this.value)">-->
 							</div>
 						</div>
 						<!--END ITEXT CONTROLS-->
@@ -356,7 +362,6 @@
 	<script src="../scripts/jquery-1.11.1.min.js" type="text/javascript"></script>
 	<script src="../bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
 	<script src="../scripts/fabric.min.js" type="text/javascript"></script>
-	<script src="../scripts/jscolor/jscolor.js" type="text/javascript"></script>
 	<script src="../scripts/jquery.tools.min.js" type="text/javascript"></script>
 	<script src="../scripts/jquery-ui-1.10.4.custom.min.js" type="text/javascript"></script>
 	<script src="../scripts/tinycolor.js" type="text/javascript"></script>
@@ -891,6 +896,8 @@
 		newGrp.setCoords();
 		canvas.setActiveObject(newGrp);
 		isSaved = false;
+
+		console.log(newGrp);
   	}
   	function breakActiveGrp() {
   		var curr = canvas.getActiveObject();
@@ -906,28 +913,6 @@
   		canvas.discardActiveObject();
   		isSaved = false;
   	}
-  	function straightenActive(){
-		var curr = canvas.getActiveObject();
-		curr.straighten();
-		curr.setCoords();
-		checkPos(curr);
-		checkScaleAngle(curr);
-		atLimit = {
-			top: curr.getTop(),
-			left: curr.getLeft(),
-			scaleX: curr.getScaleX(),
-			scaleY: curr.getScaleY(),
-			angle: curr.getAngle(),
-		};
-		orig = fabric.util.object.clone(curr);
-		canvas.renderAll();
-		isSaved = false;
-	}
-	function setBlkColor() {
-		canvas.getActiveObject().setFill(blkcolor2);
-		canvas.renderAll();
-		isSaved = false;
-	}
 	// TEXT FUNCTIONS
 	function textFont(){
 		var curr = canvas.getActiveObject();
@@ -1012,11 +997,6 @@
 			}
 		});
 	});
-
-  	function setBG() {
-		canvas.setBackgroundColor(bgcolor, canvas.renderAll.bind(canvas));
-		isSaved = false;
-	}
 	function bgimgBox(e) {
 		$("#bgimgbox").overlay().load();
 	}
@@ -1058,33 +1038,60 @@
 		$("#modifycurrent").addClass("in active");
 	}
 	function updateInfoWin(curr){
-		var infoX = document.getElementById("infoX");
-		var infoY = document.getElementById("infoY");
-		var infoW = document.getElementById("infoW");
-		var infoH = document.getElementById("infoH");
-		var infoAng = document.getElementById("infoAng");
-		infoX.value = toTwoDP(curr.getLeft());
-		infoY.value = toTwoDP(curr.getTop());
-		infoW.value = toTwoDP(curr.getWidth());
-		infoH.value = toTwoDP(curr.getHeight());
-		infoAng.value = toTwoDP(curr.getAngle() % 360);
-		// Set colour pickers
-		if(curr.postit /*curr.type=="i-text"*/){ //BUG
-			$('#backgroundColor').colpickSetColor(curr.get("backgroundColor"),true);
-			// Following values can be null initially. only set when required.
-			if(curr.getTextBackgroundColor())
-				$('#textBackgroundColor').colpickSetColor(curr.getTextBackgroundColor(),true);
-			else
-				$('#textBackgroundColor').colpickSetColor('#ffffff',true);
-			if(curr.getStroke())
-				$('#stroke').colpickSetColor(curr.getStroke(),true);
-			else
-				$('#stroke').colpickSetColor('#ffffff',true);
-		}else if(curr.type == "i-text"){
-			if(curr.getStroke()) $('#stroke').colpickSetColor(curr.getStroke(), true);
-			else $('#stroke').colpickSetColor('#ffffff', true)
-		}else{
-			$('#fillColor').colpickSetColor(curr.getFill(),true);
+		document.getElementById("infoX").value = toTwoDP(curr.getLeft());
+		document.getElementById("infoY").value = toTwoDP(curr.getTop());
+		document.getElementById("infoW").value = toTwoDP(curr.getWidth());
+		document.getElementById("infoH").value = toTwoDP(curr.getHeight());
+		document.getElementById("infoAng").value = toTwoDP(curr.getAngle() % 360);
+		// Change fields for infowin
+		var activeObj = canvas.getActiveObject();
+		var activeGrp = canvas.getActiveGroup();
+		if(activeGrp){
+			document.getElementById("toolBox2").style.display = "block";
+			document.getElementById("toolBox1").style.display = "none";
+			document.getElementById("infotablep").style.display = "table";
+			document.getElementById("infotable1a").style.display = "none";
+			document.getElementById("itext-controls").style.display = "none";
+		}else if(activeObj){
+			document.getElementById("toolBox1").style.display = "block";
+			document.getElementById("toolBox2").style.display = "none";
+			document.getElementById("infotablep").style.display = "table";
+			if(activeObj._objects != null){
+				document.getElementById("breakgrpbtn").style.display = "inline-block";
+				document.getElementById("infoFill").style.display = "none";
+				document.getElementById("infoFillB").style.display = "none";
+			}else{
+				document.getElementById("breakgrpbtn").style.display = "none";
+				// Note: this works overall since infotable is controlled by later commands
+				document.getElementById("infoFill").style.display = "table-cell";
+				document.getElementById("infoFillB").style.display = "table-cell";
+			}
+			if(activeObj.type=='i-text'){
+				activeObj.lockUniScaling = true;
+				document.getElementById("fontSize").value = activeObj.fontSize;
+				document.getElementById("infotable1a").style.display = "none";
+				document.getElementById("itext-controls").style.display = "block";
+				if(activeObj.postit){
+					document.getElementById("changePostitColor").style.display = "inline-block";
+					$('#backgroundColor').colpickSetColor(activeObj.get("backgroundColor"),true);
+					if(activeObj.getTextBackgroundColor())
+						$('#textBackgroundColor').colpickSetColor(activeObj.getTextBackgroundColor(),true);
+					else
+						$('#textBackgroundColor').colpickSetColor('#ffffff',true);
+					if(activeObj.getStroke())
+						$('#stroke').colpickSetColor(activeObj.getStroke(),true);
+					else
+						$('#stroke').colpickSetColor('#ffffff',true);
+				}else{
+					if(activeObj.getStroke()) $('#stroke').colpickSetColor(activeObj.getStroke(), true);
+					else $('#stroke').colpickSetColor('#ffffff', true)
+					document.getElementById("changePostitColor").style.display = "none";
+				}
+			}else{
+				document.getElementById("infotable1a").style.display = "table-row";
+				document.getElementById("itext-controls").style.display = "none";
+				$('#fillColor').colpickSetColor(activeObj.getFill(),true);
+			}
 		}
 	}
 	function toTwoDP(num){
@@ -1100,7 +1107,7 @@
 		atLimit=null;
 		orig=null;
 		document.getElementById("toolBox1").style.display = "none";
-		//document.getElementById("toolBox2").style.display = "none";
+		document.getElementById("toolBox2").style.display = "none";
 		document.getElementById("infotablep").style.display = "none";
 		document.getElementById("itext-controls").style.display = "none";
 	}
@@ -1160,31 +1167,6 @@
 		};
   		switchTab();
   		updateInfoWin(orig);
-
-  		// To shift to updateInfoWin
-		if (canvas.getActiveObject()) {
-			document.getElementById("infotablep").style.display = "block";
-  			document.getElementById("toolBox1").style.display = "block";
-			//document.getElementById("toolBox2").style.display = "block";
-  			if (canvas.getActiveObject().type=="i-text") {
-				e.target.lockUniScaling = true;
-				document.getElementById("fontSize").value = e.target.fontSize;
-				document.getElementById("infotable1a").style.display = "none";
-				document.getElementById("itext-controls").style.display = "block";
-				if (e.target.postit == false){
-					document.getElementById("changePostitColor").style.display = "none";
-				} else {
-					document.getElementById("changePostitColor").style.display = "inline-block";
-				}
-  			} else {
-  				document.getElementById("infotable1a").style.display = "table-row";
-				document.getElementById("itext-controls").style.display = "none";
-  			}
-  		} else {
-  			document.getElementById("infotablep").style.display = "none";
-  			document.getElementById("toolBox1").style.display = "none";
-			//document.getElementById("toolBox2").style.display = "block";
-  		}
   	}
 
   	// Save last acceptable state (on scale/rotate)
