@@ -8,8 +8,28 @@
 	<link rel="stylesheet" href="../scripts/colpick/css/colpick.css" type="text/css">
 	<style>
 	/*body {
-		background-image: url("../images/brickwall.jpg");
+		background-image: url("../images/galacticmetropolis3.png");
 	}*/
+	.jumbotron {
+		background-image: url("../images/galacticmetropolis2.png");
+	}
+	#pinnerspace {
+		font-family: "Trebuchet MS", Helvetica, sans-serif;
+		font-size: 3em;
+		color:white;
+	}
+	#pinboard {
+  		border-style: ridge;
+  		border-width: 10px;
+  		border-color: #E7CAA4;
+  	}
+	#wb {
+		color:white;
+	}
+	#wb-logout, #nav-menu {
+		background-color: rgba(0,0,0,0.2);
+	}
+
 	table.center {
     	margin-left:auto; 
     	margin-right:auto;
@@ -77,16 +97,16 @@
 	<!--************************* HEADER *************************-->
 	<div id="header">
 		<div class="jumbotron">
-			<h2 class="title" style="text-align: center">PinnerSpace</h2>
+			<h2 id="pinnerspace" class="title" style="text-align: center">PinnerSpace</h2>
 			
-			<ul class="nav nav-pills pull-left clearfix">
-				<li><a href="./">Home</a></li>
-				<li><a href="./boards">Boards</a></li>
-				<li><a href="./settings">Settings</a></li>
+			<ul id="nav-menu" class="nav nav-pills pull-left clearfix">
+				<li><a href="./"><b>Home</b></a></li>
+				<li><a href="./boards"><b>Boards</b></a></li>
+				<li><a href="./settings"><b>Settings</b></a></li>
 			</ul>
-			<ul class="nav nav-pills pull-right">
-				<li class="disabled"><a>Welcome back <b>{{ user_nick }}</b>!</a></li>
-				<li><a href="/logout">Logout</a></li>
+			<ul id="wb-logout" class="nav nav-pills pull-right">
+				<li class="disabled"><a id="wb">Welcome back <b>{{ user_nick }}</b>!</a></li>
+				<li><a href="/logout"><b>Logout</b></a></li>
 			</ul>
 		</div>
 	</div>
@@ -96,7 +116,7 @@
 		<tr>
 			<!--************************* LEFT: Pinboard *************************-->
 			<td>
-				<div id="pinboard" style="width: 902px; height:602px; margin: 0 auto; border: 1px solid black;">
+				<div id="pinboard" style="width: 920px; height:620px; margin: 0 auto;">
 					<!--canvas id must be consistent with js script-->
 					<canvas id="canvas" width="900" height="600">
 						This text is displayed if your browser does not support HTML5 Canvas.
@@ -105,7 +125,7 @@
 			</td>
 
 			<!--************************* RIGHT: Info++ *************************-->
-			<td width="375px" style="padding:10px">
+			<td id="rightside" width="375px" style="padding:10px">
 				<!--************************* BOARD NAME/SELECTOR *************************-->
 				<div id="boardInfo" align="left">
 					You are currently viewing <strong>{{ currBoard.boardName }}</strong><br>
