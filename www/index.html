@@ -6,6 +6,9 @@
 	<link rel="stylesheet" href="../bootstrap/css/bootstrap.min.css">
 	<link rel="stylesheet" href="../bootstrap/css/bootstrap-theme.min.css">
 	<link rel="stylesheet" href="../scripts/colpick/css/colpick.css" type="text/css">
+	<!--body {
+		background-image: url("../images/brickwall.jpg");
+	}-->
 	<style>
 	table.center {
     	margin-left:auto; 
@@ -55,10 +58,11 @@
   	}
 
 	.color-box {
-		float:left;
-		width:30px;
-		height:30px;
-		margin:5px;
+		display: inline-block;
+		vertical-align: bottom;
+		width:22px;
+		height:22px;
+		margin:0px;
 		border: 1px solid gray;
 	}
 
@@ -128,18 +132,18 @@
 					{% endif %}
 				</div>
 				</p>
-				<span>aaa</span><div class="color-box"></div>
+
 				<!--BREAK--><hr>
 
 				<!--TO BE FILLED-->
 				{% if user.email == currBoard.boardUser or user.email in currBoard.boardEditor %}
 				<!--EDIT BUTTON-->
-				<div id="toolBoxButton"><button onclick="showToolBox()">Edit</button></div>
+				<div id="toolBoxButton"><button class="btn btn-info" onclick="showToolBox()">Edit</button></div>
 				<div id="editinglocked">Someone else is editing. Please try again later.</div>
 
 				{% elif user.email == currBoard.boardUser or user.email in currBoard.boardPoster %}
 				<!--EDIT BUTTON-->
-				<div id="toolBoxButton"><button onclick="showToolBox()">Edit</button></div>
+				<div id="toolBoxButton"><button class="btn btn-info" onclick="showToolBox()">Edit</button></div>
 				<div id="editinglocked">Someone else is editing. Please try again later.</div>
 				
 
@@ -148,10 +152,10 @@
 				{% endif %}
 
 				<div id="exitButton">
-					<span id="toolBoxExitButton"><button onclick="location.reload(true)">Save and Exit</button></span>
+					<span id="toolBoxExitButton"><button type="button" class="btn btn-info" onclick="location.reload(true)">Save and Exit</button></span>
 					{% if user.email == currBoard.boardUser %}
 					<form name="input" action="./boardSettings" method="post" width="100%" style="display:inline">
-						<button name="boardID" type="submit" width="100%" value={{ currBoard.boardID }}>Board Settings</button>
+						<button name="boardID" type="submit" class="btn btn-info" width="100%" value={{ currBoard.boardID }}>Board Settings</button>
 					</form>
 					{% endif %}
 					<hr>
@@ -172,10 +176,12 @@
 						<tr><p></tr>
 						<tr>
 						<td>Object Colour:</td>
-						<td><input class="color {pickerFaceColor:'#DBDBDB', pickerPosition:'top'}" value="FFFFFF" onchange="blkcolor='#'+this.color.toString().toUpperCase()" id="newblkcol"></td>
+						<td><!--<input class="color {pickerFaceColor:'#DBDBDB', pickerPosition:'top'}" value="FFFFFF" onchange="blkcolor='#'+this.color.toString().toUpperCase()" id="newblkcol">-->
+						<span class="color-box" id="newblkcol" /></td>
 						</tr><tr>
 						<td align="right">Text Colour:</td>
-						<td><input class="color {pickerFaceColor:'#DBDBDB', pickerPosition:'top'}" value="000000" onchange="fntcolor='#'+this.color.toString().toUpperCase()" id="newtextcol"></td>
+						<td><!--<input class="color {pickerFaceColor:'#DBDBDB', pickerPosition:'top'}" value="000000" onchange="fntcolor='#'+this.color.toString().toUpperCase()" id="newtextcol">-->
+						<span class="color-box" id="newtextcolor" /></td>
 						<tr>
 						<td align="right">Text(optional):</td>
 						<td><textarea id="newtext" maxlength="255" rows="3" placeholder="<insert text>"></textarea></td></tr>
@@ -185,10 +191,10 @@
 							<strong>Create a new</strong>
 							<p></p>
 							<span class="btn-group">
-								<button type="button" class="btn btn-info" id="addblock" onclick="addBlock()">Block</button>
-								<button type="button" class="btn btn-info" id="addtext" onclick="addText()">Textbox</button>
-								<button type="button" class="btn btn-info" id="addpostit" onclick="addPostIt()">Post-It</button>
-								<button type="button" class="btn btn-info" id="addimage" onclick="imageBox()">Image</button>
+								<button type="button" class="btn btn-default" id="addblock" onclick="addBlock()">Block</button>
+								<button type="button" class="btn btn-default" id="addtext" onclick="addText()">Textbox</button>
+								<button type="button" class="btn btn-default" id="addpostit" onclick="addPostIt()">Post-It</button>
+								<button type="button" class="btn btn-default" id="addimage" onclick="imageBox()">Image</button>
 							</span>
 						</p>
 						<div id="imagebox" style="position: fixed;">
@@ -205,99 +211,111 @@
 					</div>
 					<!--************************* Current Object *************************-->
 					<div class="tab-pane fade" id="modifycurrent">
-						<table id="infotable">
-							<tr>
-								<td> Height: </td><td> <input type="text" id="infoH" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
-								<td> Width: </td><td> <input type="text" id="infoW" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
-							</tr>
-							<tr>
-								<td> X: </td><td> <input type="text" id="infoX" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
-								<td> Y: </td><td> <input type="text" id="infoY" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
-								<td> Angle: </td><td> <input type="text" id="infoAng" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"></td>
-							</tr>
-						</table>
-						<p></p>
 						<div id="toolBox1">
-							<button class="btn" onclick="straightenActive()">Straighten</button>
-							<button class="btn" onclick="canvas.getActiveObject().bringForward()">Bring Forward</button>
-							<button class="btn" onclick="canvas.getActiveObject().sendBackwards()">Send Backwards</button>
+							<strong>Object Controls:</strong>
+							<p></p>
+							<span id="grpbtn" hidden="true"><button class="btn btn-default" onclick="groupActive()">Group</button></span>
+							<div class="btn-group">
+								<!--<button type="button" class="btn btn-default" onclick="straightenActive()">Straighten</button>-->
+								<button type="button" class="btn btn-default" onclick="delActive()">Delete</button>
+								<button type="button" class="btn btn-default" onclick="cloneActive()">Clone</button>
+								<div class="btn-group">
+									<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"> Position
+										<span class="caret"></span>
+									</button>
+									<ul class="dropdown-menu" role="menu">
+										<li><a href="#" onclick="canvas.getActiveObject().bringForward(); return false;">Bring Forward</a></li>
+										<li><a href="#" onclick="canvas.getActiveObject().sendBackwards(); return false;">Send Backwards</a></li>
+									</ul>
+								</div>
+							</div>
+							<span id="breakgrpbtn" hidden="true"><button type="button" class="btn btn-default" onclick="breakActiveGrp()">Break Group</button> </span>
+							<p></p>
+						</div>
+						<div id="infotablep">
+							<table id="infotable">
+								<tr id="infotable1a">
+									<td> Height: </td><td> <input type="text" id="infoH" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
+									<td> Width: </td><td> <input type="text" id="infoW" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
+									<!--to hide when it is i-text-->
+									<td id="infoFill"> Fill: </td><td id="infoFillB"> <span class="color-box" id="fillColor" /> </td>
+								</tr>
+								<tr id="infotable1b">
+									<td> X: </td><td> <input type="text" id="infoX" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
+									<td> Y: </td><td> <input type="text" id="infoY" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"> </td>
+									<td> Angle: </td><td> <input type="text" id="infoAng" style="width:50px;" maxlength="6" onchange="updateFromWin(this)"></td>
+								</tr>
+							</table>
 						</div>
 						<p></p>
-						<!--NOT FOR ITEXT-->
-						<div id="infotable2">
-							<p>
-								Fill:
-								<input id="infoColor" class="color {pickerFaceColor:'#DBDBDB'}" value="FFFFFF" onchange="blkcolor2='#'+this.color.toString().toUpperCase()">
-								<input type="submit" value="Apply" onclick="setBlkColor()">
-							</p>
-						</div>
 						<!--ITEXT CONTROLS-->
 						<div id="itext-controls">
+							<strong> Text Controls: </strong>
+							<p></p>
 							<div>
-								Font Type:
-								<select id="fontFamily" name="fontFamily">
-									<option value="arial" selected="">Arial</option>
-									<option value="comic sans ms">Comic Sans MS</option>
-									<option value="consolas">Consolas</option>
-									<option value="courier">Courier</option>
-									<option value="georgia">Georgia</option>
-									<option value="helvetica">Helvetica</option>
-									<option value="impact">Impact</option>
-									<option value="lucida console">Lucida Console</option>
-									<option value="myriad pro">Myriad Pro</option>
-									<option value="segoe ui">Segoe UI</option>
-									<option value="tahoma">Tahoma</option>
-									<option value="times new roman">Times New Roman</option>
-									<option value="verdana">Verdana</option>	
-								</select>
+								<span class="btn-group">
+									<!--Not sure what the ng-class should do and whether it works-->
+									<button type="button" class="btn btn-default" onclick="setActiveStyle('fontWeight', getActiveStyle('fontWeight') === 'bold' ? '' : 'bold');" ng-class="{'btn-inverse': isBold()}"><b>B</b></button>
+									<button type="button" class="btn btn-default" id="text-cmd-italic" onclick="setActiveStyle('fontStyle', getActiveStyle('fontStyle') === 'italic' ? '' : 'italic');" ng-class="{'btn-inverse': isItalic()}"><i>I</i></button>
+									<button type="button" class="btn btn-default" id="text-cmd-underline" onclick="toggleUnderline()" ng-class="{'btn-inverse': isUnderline()}"><u>U</u></button>
+									<button type="button" class="btn btn-default" id="text-cmd-linethrough" onclick="toggleLinethrough()" ng-class="{'btn-inverse': isLinethrough()}"><del>S</del></button>
+								</span>
+								<span>
+									<select id="fontFamily" name="fontFamily">
+										<option value="arial" selected="">Arial</option>
+										<option value="comic sans ms">Comic Sans MS</option>
+										<option value="consolas">Consolas</option>
+										<option value="courier">Courier</option>
+										<option value="georgia">Georgia</option>
+										<option value="helvetica">Helvetica</option>
+										<option value="impact">Impact</option>
+										<option value="lucida console">Lucida Console</option>
+										<option value="myriad pro">Myriad Pro</option>
+										<option value="segoe ui">Segoe UI</option>
+										<option value="tahoma">Tahoma</option>
+										<option value="times new roman">Times New Roman</option>
+										<option value="verdana">Verdana</option>
+									</select>
+								</span>
+							</div>
+							<p></p>
+							<div>
 								Font Size:
 								<input type="range" value="20" min="20" max="120" step="1" id="fontSize"  onchange="setActiveStyle(id, this.value)">
+								Text Align:
+								<select id="textAlign" name="textAlign">
+									<option value="left">Left</option>
+									<option value="center">Center</option>
+									<option value="right">Right</option>
+									<option value="justify">Justify</option>
+								</select>
 							</div>
 							<p></p>
 							<div>
 								<span id="changePostitColor">
 								PostIt Color:
-								<input type="color" value="" id="backgroundColor" size="10" onchange="setActiveProp(id, this.value)">
+								<!--<input type="color" value="" id="backgroundColor" size="10" onchange="setActiveProp(id, this.value)">-->
+								<span class="color-box" id="backgroundColor" />
 								</span>
 								Text Highlight:
-								<input type="color" value="" id="textBackgroundColor" size="10" onchange="setActiveProp(id, this.value)">
+								<span class="color-box" id="textBackgroundColor"/>
 							</div>
 							<p></p>
 							<div>
 								Stroke (Width/Color):
 								<input type="range" value="1" min="1" max="5" id="strokeWidth" onchange="setActiveStyle(id, parseInt(this.value,10))">
-								<input type="color" value="" id="stroke" onchange="setActiveStyle(id, this.value)">
+								<span class="color-box" id="stroke" />
+								<!--<input type="color" value="" id="stroke" onchange="setActiveStyle(id, this.value)">-->
 							</div>
-							<p></p>
-							Text Align:
-							<select id="textAlign" name="textAlign">
-								<option value="left">Left</option>
-								<option value="center">Center</option>
-								<option value="right">Right</option>
-								<option value="justify">Justify</option>
-							</select>
-							<p></p>
-							<button type="button" class="btn btn-object-action" onclick="setActiveStyle('fontWeight', getActiveStyle('fontWeight') === 'bold' ? '' : 'bold');" ng-class="{'btn-inverse': isBold()}">Bold</button>
-							<button type="button" class="btn btn-object-action" id="text-cmd-italic" onclick="setActiveStyle('fontStyle', getActiveStyle('fontStyle') === 'italic' ? '' : 'italic');" ng-class="{'btn-inverse': isItalic()}">Italic</button>
-							<button type="button" class="btn btn-object-action" id="text-cmd-underline" onclick="toggleUnderline()" ng-class="{'btn-inverse': isUnderline()}">Underline</button>
-							<button type="button" class="btn btn-object-action" id="text-cmd-linethrough" onclick="toggleLinethrough()" ng-class="{'btn-inverse': isLinethrough()}">Linethrough</button>
 						</div>
-						<p></p>
 						<!--END ITEXT CONTROLS-->
-						<div id="toolBox2">
-							<button class="btn" onclick="delActive()">Delete</button>
-							<button class="btn" onclick="cloneActive()">Clone</button>
-							<button class="btn" onclick="groupActive()">Group</button>
-							<button class="btn" onclick="breakActiveGrp()">Break Group</button>
-						</div>
 						<p></p>
 					</div>
 					<!--************************* Modify Canvas *************************-->
 					<div class="tab-pane fade" id="modifycanvas">
 					<p>
 						Background Colour:
-						<input class="color {pickerFaceColor:'#DBDBDB'}" onchange="bgcolor='#'+this.color.toString().toUpperCase()">
-						<input type="submit" value="Apply" onclick="setBG()">
+						<span class="color-box" id="canvasBGCol" />
 						<p class="bgimgbutton">
 							<button onclick="bgimgBox()">Background Image</button>
 						</p>
@@ -359,26 +377,12 @@
 	if (window.location.href.indexOf('#_=_') > 0) {
     	window.location = window.location.href.replace(/#.*/, '');
 	}
-	$('.color-box').colpick({
-		colorScheme:'dark',
-		layout:'hex',
-		submit:0,
-		color:'aabbcc',
-		onChange:function(hsb,hex,rgb,el,bySetColor) {
-			$(el).css('background-color','#'+hex);
-			// Fill the text box just if the color was set using the picker, and not the colpickSetColor function.
-			if(!bySetColor) $(el).val(hex);
-		}
-	})
-	.css('background-color', '#aabbcc');
 
 	/************************ GLOBAL VARIABLES *************************/
 	var canvas;
-	var bgcolor = '#FFFFFF';	// Colour setter for background
 	var bgselected;				// Image ID setter for background
 	var fntcolor = '#000000';	// Colour setter for new text
-	var blkcolor = '#FFFFFF',	// Colour setter for new block
-		blkcolor2 = '#FFFFFF';	// Colour setter for current block
+	var blkcolor = '#FFFFFF';	// Colour setter for new block
 	var orig;					// Holds last selected/modified object (for clone)
 	var atLimit;				// Holds last acceptable position
 	var lastSave;				// Holds last save state (for load/revert)
@@ -426,6 +430,27 @@
 			loadCanvas();
 		});
 	}
+	function showToolBox() {
+		// Check if anyone is editing, reject edit request if so
+		$.post("/getEditor", { 
+			user: "{{ currBoard.boardUser }}",
+			boardID: {{ currBoard.boardID }},
+			boardEditor: "{{ user.email }}"
+		}).done(function( data ) {
+				if (data == "") {
+					$("#exitButton").effect("fade", "", 500, "");
+					$("#boardButtons").effect("fade", "", 500, "");
+					$("#myTab").effect("fade", "", 500, "");
+					$("#myTabContent").effect("fade", "", 500, "");
+					document.getElementById("editinglocked").style.display = "none";
+    				document.getElementById("toolBoxButton").style.display = "none";
+    				startIdleListener();
+    				initEdit();
+					return;
+				}
+				$("#editinglocked").effect("fade", "", 500, "");
+		});
+	}
 	function initEdit(){
 		// Reinitialise board using data from server (ensures it's updated)
 		$.ajax({
@@ -467,6 +492,7 @@
 		// Initial load auxiliary function(s)
 		resetInfoWin();
 		promptBoardEmpty();
+		initColPickers();
 	}
 	function promptBoardEmpty() {
 		var data = jQuery.parseJSON(lastSave);
@@ -476,25 +502,88 @@
 			input.focus();
 		}
 	}
-	function showToolBox() {
-		$.post("/getEditor", { 
-			user: "{{ currBoard.boardUser }}",
-			boardID: {{ currBoard.boardID }},
-			boardEditor: "{{ user.email }}"
-		}).done(function( data ) {
-				if (data == "") {
-					$("#exitButton").effect("fade", "", 500, "");
-					$("#boardButtons").effect("fade", "", 500, "");
-					$("#myTab").effect("fade", "", 500, "");
-					$("#myTabContent").effect("fade", "", 500, "");
-					document.getElementById("editinglocked").style.display = "none";
-    				document.getElementById("toolBoxButton").style.display = "none";
-    				startIdleListener();
-    				initEdit();
-					return;
+	function initColPickers(){
+		// Initialise Colour Pickers
+		// For the time being repetitive because i can't get the loop counter [i] into the onchange function
+		var bgColor = jQuery.parseJSON(lastSave).background;
+		$('#canvasBGCol').colpick({
+			colorScheme:'dark',
+			layout:'hex',
+			submit:0,
+			color: bgColor,
+			onChange:function(hsb,hex,rgb,el,bySetColor) {
+				$(el).css('background-color','#'+hex);
+				if(!bySetColor){
+					canvas.backgroundColor='#'+hex;
+					canvas.renderAll();
+					isSaved=false;
 				}
-				$("#editinglocked").effect("fade", "", 500, "");
+			}
+		}).css('background-color', bgColor);
+		$('#backgroundColor').colpick({
+			colorScheme:'dark',
+			layout:'hex',
+			submit:0,
+			onChange:function(hsb,hex,rgb,el,bySetColor) {
+				$(el).css('background-color','#'+hex);
+				if(!bySetColor){
+					setActiveProp("backgroundColor", '#'+hex);
+				}
+			}
 		});
+		$('#textBackgroundColor').colpick({
+			colorScheme:'dark',
+			layout:'hex',
+			submit:0,
+			onChange:function(hsb,hex,rgb,el,bySetColor) {
+				$(el).css('background-color','#'+hex);
+				if(!bySetColor){
+					setActiveStyle("textBackgroundColor", '#'+hex);
+				}
+			}
+		});
+		$('#stroke').colpick({
+			colorScheme:'dark',
+			layout:'hex',
+			submit:0,
+			onChange:function(hsb,hex,rgb,el,bySetColor) {
+				$(el).css('background-color','#'+hex);
+				if(!bySetColor){
+					setActiveStyle("stroke", '#'+hex);
+				}
+			}
+		});
+		$('#fillColor').colpick({
+			colorScheme:'dark',
+			layout:'hex',
+			submit:0,
+			onChange:function(hsb,hex,rgb,el,bySetColor) {
+				$(el).css('background-color','#'+hex);
+				if(!bySetColor){
+					setActiveStyle("fill", '#'+hex);
+				}
+			}
+		});
+		$('#newtextcolor').colpick({
+			colorScheme:'dark',
+			layout:'hex',
+			submit:0,
+			color: '000000',
+			onChange:function(hsb,hex,rgb,el,bySetColor) {
+				$(el).css('background-color','#'+hex);
+				fntcolor = '#'+hex;
+			}
+		}).css('background-color', '#000000');
+		$('#newblkcol').colpick({
+			colorScheme:'dark',
+			layout:'hex',
+			submit:0,
+			color: 'ffffff',
+			onChange:function(hsb,hex,rgb,el,bySetColor) {
+				$(el).css('background-color','#'+hex);
+				blkcolor = '#'+hex;
+			}
+		}).css('background-color', '#ffffff');
 	}
 
 	/************************ BOARD EDITOR CONTROLLERS *************************/
@@ -580,7 +669,7 @@
 				data: JSON.stringify(canvas)
 			},
 			type: "POST",
-			async: false	// Not sure if should remove this, it's making the saving slower i think
+			async: false
 		});
 		lastSave = JSON.stringify(canvas);
 		if(wAlert)
@@ -974,16 +1063,29 @@
 		var infoW = document.getElementById("infoW");
 		var infoH = document.getElementById("infoH");
 		var infoAng = document.getElementById("infoAng");
-		var infoColor = document.getElementById("infoColor");
 		infoX.value = toTwoDP(curr.getLeft());
 		infoY.value = toTwoDP(curr.getTop());
 		infoW.value = toTwoDP(curr.getWidth());
 		infoH.value = toTwoDP(curr.getHeight());
 		infoAng.value = toTwoDP(curr.getAngle() % 360);
-		// console.log(curr.getFill().substring(1));
-		// CURRENTLY I-TEXT is buggy because it uses rgb(a, b, c)
-		// Should be solved by setting colour when creating text
-		infoColor.color.fromString(curr.getFill().substring(1));
+		// Set colour pickers
+		if(curr.postit /*curr.type=="i-text"*/){ //BUG
+			$('#backgroundColor').colpickSetColor(curr.get("backgroundColor"),true);
+			// Following values can be null initially. only set when required.
+			if(curr.getTextBackgroundColor())
+				$('#textBackgroundColor').colpickSetColor(curr.getTextBackgroundColor(),true);
+			else
+				$('#textBackgroundColor').colpickSetColor('#ffffff',true);
+			if(curr.getStroke())
+				$('#stroke').colpickSetColor(curr.getStroke(),true);
+			else
+				$('#stroke').colpickSetColor('#ffffff',true);
+		}else if(curr.type == "i-text"){
+			if(curr.getStroke()) $('#stroke').colpickSetColor(curr.getStroke(), true);
+			else $('#stroke').colpickSetColor('#ffffff', true)
+		}else{
+			$('#fillColor').colpickSetColor(curr.getFill(),true);
+		}
 	}
 	function toTwoDP(num){
 		return Math.round(num*100)/100;
@@ -994,14 +1096,12 @@
 		document.getElementById("infoW").value="";
 		document.getElementById("infoH").value="";
 		document.getElementById("infoAng").value="";
-		document.getElementById("infoColor").color.fromString('FFFFFF');
 		// Deselect effects
 		atLimit=null;
 		orig=null;
 		document.getElementById("toolBox1").style.display = "none";
-		document.getElementById("toolBox2").style.display = "none";
-		document.getElementById("infotable").style.display = "none";
-		document.getElementById("infotable2").style.display = "none";
+		//document.getElementById("toolBox2").style.display = "none";
+		document.getElementById("infotablep").style.display = "none";
 		document.getElementById("itext-controls").style.display = "none";
 	}
 	function updateFromWin(box){
@@ -1063,26 +1163,27 @@
 
   		// To shift to updateInfoWin
 		if (canvas.getActiveObject()) {
-			document.getElementById("infotable").style.display = "block";
+			document.getElementById("infotablep").style.display = "block";
   			document.getElementById("toolBox1").style.display = "block";
-			document.getElementById("toolBox2").style.display = "block";
+			//document.getElementById("toolBox2").style.display = "block";
   			if (canvas.getActiveObject().type=="i-text") {
 				e.target.lockUniScaling = true;
 				document.getElementById("fontSize").value = e.target.fontSize;
-				document.getElementById("infotable2").style.display = "none";
+				document.getElementById("infotable1a").style.display = "none";
 				document.getElementById("itext-controls").style.display = "block";
-				if (e.target.postit == false)
+				if (e.target.postit == false){
 					document.getElementById("changePostitColor").style.display = "none";
-				else
+				} else {
 					document.getElementById("changePostitColor").style.display = "inline-block";
+				}
   			} else {
-  				document.getElementById("infotable2").style.display = "block";
+  				document.getElementById("infotable1a").style.display = "table-row";
 				document.getElementById("itext-controls").style.display = "none";
   			}
   		} else {
-  			document.getElementById("infotable").style.display = "none";
+  			document.getElementById("infotablep").style.display = "none";
   			document.getElementById("toolBox1").style.display = "none";
-			document.getElementById("toolBox2").style.display = "block";
+			//document.getElementById("toolBox2").style.display = "block";
   		}
   	}
 
