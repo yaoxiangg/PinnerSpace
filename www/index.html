@@ -185,7 +185,7 @@
 				<ul id="myTab" class="nav nav-pills">
 					<li class="active"><a href="#new" data-toggle="tab">New Object</a></li>
 					<li id="currObjTab"><a href="#modifycurrent" data-toggle="tab">Current Object</a></li>
-					<li><a href="#modifycanvas" data-toggle="tab">Modify Canvas</a></li>
+					<li><a href="#modifycanvas" data-toggle="tab">Background</a></li>
 				</ul>
 				<hr>
 				<div id="myTabContent" class="tab-content">
@@ -330,7 +330,7 @@
 							<p></p>
 							<div>
 								Stroke (Width/Color):
-								<input type="range" value="1" min="1" max="5" id="strokeWidth" onchange="setActiveStyle(id, parseInt(this.value,10))">
+								<input type="range" value="0" min="0" max="5" id="strokeWidth" onchange="setActiveStyle(id, parseInt(this.value,10))">
 								<span class="color-box" id="stroke" />
 							</div>
 						</div>
@@ -369,8 +369,8 @@
 				</div>
 				<div id="boardButtons">
 				<p>
-					<button class="btn btn-success" onclick="saveCanvas(true)">Save Changes</button>
-					<button class="btn btn-warning" onclick="revert()">Reset Changes</button>
+					<button class="btn btn-success" onclick="saveCanvas(true)">Save</button>
+					<button class="btn btn-warning" onclick="revert()">Reset Canvas</button>
 					<button class="btn btn-danger" onclick="clearCanvas()">Clear Board</button>
 				</p>
 				</div>
@@ -781,7 +781,7 @@
 		newText.scaleY = 0.6;
 		newText.lockUniScaling = true;
 		newText.postit = true;
-		newText.darkerShade = tinycolor.darken(bgcolor, 20).toHexString();
+		newText.darkerShade = tinycolor.darken(bgcolor, 30).toHexString();
 		canvas.add(newText);
 		setDefSettings(newText);
 		newText.center();
