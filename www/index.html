@@ -896,8 +896,8 @@
   			var temp = canvas.item(i);
   			console.log(temp);
   			if(currGrp.contains(temp)){
-  				console.log(temp.clone());
-  				grpItems.push(temp.clone());		// Last object in grpItems is top item
+  				console.log(fabric.util.object.clone(temp));
+  				grpItems.push(fabric.util.object.clone(temp));		// Last object in grpItems is top item
   				console.log(grpItems);
   				toRemove.push(temp);				// Save the items to remove (no concurrent removal)
   			}
