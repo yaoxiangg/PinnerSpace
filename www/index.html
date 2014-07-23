@@ -152,7 +152,7 @@
 			</td>
 
 			<!--************************* RIGHT: Info++ *************************-->
-			<td id="rightside" width="375px" style="padding:10px">
+			<td id="rightside" width="1px" style="padding:10px">
 				<!--************************* BOARD NAME/SELECTOR *************************-->
 				<p></p>
 
@@ -457,6 +457,11 @@
 			lastSave = data; // Save server data locally
 			loadCanvas();
 		});
+		var editor = "{{ currBoard.boardEditor }}";
+		var poster = "{{ currBoard.boardPoster }}";
+		if ("{{ user.email }}" == "{{ currBoard.boardUser }}" || editor.indexOf("{{ user.email }}") > -1 || poster.indexOf("{{ user.email }}") > -1) {
+			document.getElementById("rightside").width = "375";
+		}
 	}
 	function showToolBox() {
 		// Check if anyone is editing, reject edit request if so
