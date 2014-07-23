@@ -48,6 +48,14 @@
      	height: 28px;
   	}
 
+  	.input-group {
+  		width: 400px;
+  	}
+
+  	.invitation {
+  		width: 300px;
+  	}
+
   	.dropdown-menu>li>a {
   		padding: 0px 0px;
   	}
@@ -78,15 +86,16 @@
 	<button class="btn btn-warning badge" id="btnPrivate" name="label" onclick="switchVisibility(true)">Private</button>
 	<table align="center">
 	<hr>
-	<div>
+	<div class="input-group">
+		<span class="input-group-addon">Board Name:</span>
 		<form name="input" action="./updateBoardName" method="post">
-			Change board name: <input type="text" name="newboardName"  value="{{ board.boardName }}">
+			<input type="text" class="form-control" name="newboardName" placeholder="Enter board name" value="{{ board.boardName }}">
 			<input type="hidden" name="boardID" value={{ board.boardID }}>
-			<input type="submit" value="Submit">
+			<span class="input-group-btn"><input class="btn btn-default" type="submit" value="Update"></span>
 		</form>
 	</div>
 	<p></p><p></p>
-		<button onclick="inviteBox()">Invite Users to this Board</button>
+		<button class="btn btn-default" onclick="inviteBox()">Invite Users to this Board</button>
 	<p></p><p></p>
 	{% if board.followers|length < 1 %}
 	<tr><td> There is no one following this board. </td></tr>
@@ -162,8 +171,10 @@
 			<p></p><p></p>
 			<h2>Invite Users</h2>
 			<p><p>
-				<input type="text" id="invitee" name="invitee" placeholder="Enter UserID/Email" value="">
-				<button name="userInvited" onclick="inviteUser()">Invite</button>
+				<p class="input-group invitation">
+					<input type="text" class="form-control" id="invitee" name="invitee" placeholder="Enter UserID/Email" value="">
+					<span class="input-group-btn"><button class="btn btn-default" name="userInvited" onclick="inviteUser()">Invite</button></span>
+				</p>
 			<p></p>
 			<p id="successInvite">Invitation sent!</p>
 			<p id="failInvite">Fail to send invitation.<br>Some where must have gone wrong!</p>

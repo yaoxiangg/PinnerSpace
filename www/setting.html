@@ -4,6 +4,11 @@
 	<title>PinnerSpace - Settings</title>
 	<link rel="stylesheet" href="../bootstrap/css/bootstrap.min.css">
 	<link rel="stylesheet" href="../bootstrap/css/bootstrap-theme.min.css">
+	<style>
+  	.input-group {
+  		width: 400px;
+  	}
+	</style>
 </head>
 <body>
 	<div id="header">
@@ -33,9 +38,10 @@
 	<p><p>
 	{% if update_status != "Updated Successfully!" %}
     <div id="changeForm" align="center">
-		<form name="input" action="./update" method="post">
-			Change display name: <input type="text" name="newnickname"  value="{{ user.usernick }}">
-			<input type="submit" value="Submit">
+		<form name="input" action="./update" method="post" class="input-group">
+			<span class="input-group-addon">Change display name:</span>
+			<input width="100px" type="text" class="form-control" name="newnickname"  value="{{ user.usernick }}">
+			<span class="input-group-btn"><input class="btn btn-default" type="submit" value="Submit"></span>
 		</form>
 		</div>
     {% endif %}

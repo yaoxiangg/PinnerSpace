@@ -17,6 +17,11 @@
 	#errorMsg {
 		color: red;
 	}
+
+  	.input-group {
+  		width: 450px;
+  	}
+
 	</style>
 </head>
 <body onload="init({{numBoards}})">
@@ -38,15 +43,16 @@
 	
 	<!--BODY-->
 	<div align="center">
-		<form name="input" action="./newBoard" method="post">
-			Board Name: <input type="text" name="boardName" id="createboard">
-			<input type="submit" value="Create new board">
+		<form name="input" action="./newBoard" method="post" class="input-group">
+			<span class="input-group-addon">Board Name:</span>
+			<input width="100px" type="text" class="form-control" name="boardName" id="createboard">
+			<span class="input-group-btn"><input class="btn btn-default" type="submit" value="Create new board"></span>
 		</form>
-		<p>
-		<p>
-		<form name="input" action="./boards" method="post">
-			Find board of: <input type="text" name="targetMail" placeholder="User ID" value="">
-			<input type="submit" value="Submit">
+		<p></p>
+		<form name="input" class="input-group" action="./boards" method="post">
+			<span class="input-group-addon">Search User:</span>
+			<input type="text" class="form-control" name="targetMail" placeholder="User ID" value="">
+			<span class="input-group-btn"><button class="btn btn-default" type="submit" value="Submit">Find Boards</button></span>
 		</form>
 		<p><p>
 		<table>

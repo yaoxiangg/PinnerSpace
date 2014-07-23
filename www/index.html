@@ -91,6 +91,10 @@
   		display: inline-table;
   		vertical-align: middle;
   	}
+
+  	#btnSwitchBoard {
+  		float: right;
+  	}
   	</style>
 </head>
 <body onload="init()">
@@ -116,24 +120,18 @@
 		<tr>
 			<!--************************* LEFT: Pinboard *************************-->
 			<td>
+				<div id="boardInfo" align="center">
+					You are currently viewing <strong>{{ currBoard.boardName }}</strong>
+				</div>
 				<div id="pinboard" style="width: 920px; height:620px; margin: 0 auto;">
 					<!--canvas id must be consistent with js script-->
 					<canvas id="canvas" width="900" height="600">
 						This text is displayed if your browser does not support HTML5 Canvas.
 					</canvas>
 				</div>
-			</td>
 
-			<!--************************* RIGHT: Info++ *************************-->
-			<td id="rightside" width="375px" style="padding:10px">
-				<!--************************* BOARD NAME/SELECTOR *************************-->
-				<div id="boardInfo" align="left">
-					You are currently viewing <strong>{{ currBoard.boardName }}</strong><br>
-				</div>
-				<span>Want to view another board? Click here</span>
-				<p>
-				<div class="btn-group">
-					<button class="disabled btn btn-primary">{{ currBoard.boardName }}</button>
+				<div id="btnSwitchBoard" class="btn-group dropup">
+					<button class="disabled btn btn-primary">View another board</button>
 					{% if user.numBoards > 0 or user.following > 0 %}
 					<button data-toggle="dropdown" class="btn btn-primary dropdown-toggle"><span class="caret"></span></button>
 					<ul class="dropdown-menu">
@@ -151,19 +149,22 @@
 					</ul>
 					{% endif %}
 				</div>
-				</p>
+			</td>
 
-				<!--BREAK--><hr>
+			<!--************************* RIGHT: Info++ *************************-->
+			<td id="rightside" width="375px" style="padding:10px">
+				<!--************************* BOARD NAME/SELECTOR *************************-->
+				<p></p>
 
 				<!--TO BE FILLED-->
 				{% if user.email == currBoard.boardUser or user.email in currBoard.boardEditor %}
 				<!--EDIT BUTTON-->
-				<div id="toolBoxButton"><button class="btn btn-info" onclick="showToolBox()">Edit</button></div>
+				<div id="toolBoxButton"><button class="btn btn-primary" onclick="showToolBox()">Edit</button></div>
 				<div id="editinglocked">Someone else is editing. Please try again later.</div>
 
 				{% elif user.email == currBoard.boardUser or user.email in currBoard.boardPoster %}
 				<!--EDIT BUTTON-->
-				<div id="toolBoxButton"><button class="btn btn-info" onclick="showToolBox()">Edit</button></div>
+				<div id="toolBoxButton"><button class="btn btn-primary" onclick="showToolBox()">Edit</button></div>
 				<div id="editinglocked">Someone else is editing. Please try again later.</div>
 				
 
@@ -172,10 +173,10 @@
 				{% endif %}
 
 				<div id="exitButton">
-					<span id="toolBoxExitButton"><button type="button" class="btn btn-info" onclick="location.reload(true)">Save and Exit</button></span>
+					<span id="toolBoxExitButton"><button type="button" class="btn btn-primary" onclick="location.reload(true)">Save and Exit</button></span>
 					{% if user.email == currBoard.boardUser %}
 					<form name="input" action="./boardSettings" method="post" width="100%" style="display:inline">
-						<button name="boardID" type="submit" class="btn btn-info" width="100%" value={{ currBoard.boardID }}>Board Settings</button>
+						<button name="boardID" type="submit" class="btn btn-primary" width="100%" value={{ currBoard.boardID }}>Board Settings</button>
 					</form>
 					{% endif %}
 					<hr>
@@ -283,6 +284,7 @@
 							<div>
 								<span class="btn-group">
 									<!--Not sure what the ng-class should do and whether it works-->
+									<button class="btn-sm btn btn-default"><del><span class="color-box" id="textColor" /></span></del></button>
 									<button type="button" class="btn btn-default" onclick="setActiveStyle('fontWeight', getActiveStyle('fontWeight') === 'bold' ? '' : 'bold');" ng-class="{'btn-inverse': isBold()}"><b>B</b></button>
 									<button type="button" class="btn btn-default" id="text-cmd-italic" onclick="setActiveStyle('fontStyle', getActiveStyle('fontStyle') === 'italic' ? '' : 'italic');" ng-class="{'btn-inverse': isItalic()}"><i>I</i></button>
 									<button type="button" class="btn btn-default" id="text-cmd-underline" onclick="toggleUnderline()" ng-class="{'btn-inverse': isUnderline()}"><u>U</u></button>
@@ -343,7 +345,7 @@
 						Background Colour:
 						<span class="color-box" id="canvasBGCol" />
 						<p class="bgimgbutton">
-							<button onclick="bgimgBox()">Background Image</button>
+							<button class="btn btn-default" onclick="bgimgBox()">Background Image</button>
 						</p>
 						<div id="bgimgbox" style="position: fixed;">
 							<div>
@@ -359,7 +361,7 @@
 								</ul>
 								<center>
 								<p><input type="text" id="bgimageurl" onblur="bgpreloadImage()"size="35" placeholder="Custom Background Image Url"></p>
-								<button onclick="changeBGImg()">Change Background</button>
+								<button class="btn btn-default" onclick="changeBGImg()">Change Background</button>
 								<hr>
 								<p id="bgnoPreview">No preview available<p>
 								</center>
@@ -565,6 +567,17 @@
 				$(el).css('background-color','#'+hex);
 				if(!bySetColor){
 					setActiveStyle("textBackgroundColor", '#'+hex);
+				}
+			}
+		});
+		$('#textColor').colpick({
+			colorScheme:'dark',
+			layout:'hex',
+			submit:0,
+			onChange:function(hsb,hex,rgb,el,bySetColor) {
+				$(el).css('background-color','#'+hex);
+				if(!bySetColor){
+					setActiveStyle("fill", '#'+hex);
 				}
 			}
 		});
@@ -949,9 +962,15 @@
 			style[styleName] = value;
 			object.setSelectionStyles(style);
 			object.setCoords();
-		}
-		else {
+			alert(style);
+		} else {
 			object[styleName] = value;
+			if (styleName == "strokeWidth") {
+				if (value == 0)
+					object["stroke"] = null;
+				else if (object["stroke"] == null)
+					object["stroke"] = "#FFFFFF";
+			}
 		}
 
 		object.setCoords();
@@ -1090,11 +1109,16 @@
 			if(activeObj.type=='i-text'){
 				activeObj.lockUniScaling = true;
 				document.getElementById("fontSize").value = activeObj.fontSize;
+				document.getElementById("strokeWidth").value = activeObj.strokeWidth;
 				document.getElementById("infotable1a").style.display = "none";
 				document.getElementById("itext-controls").style.display = "block";
 				if(activeObj.postit){
 					document.getElementById("changePostitColor").style.display = "inline-block";
 					$('#backgroundColor').colpickSetColor(activeObj.get("backgroundColor"),true);
+					if(activeObj.getFill())
+						$('#textColor').colpickSetColor(activeObj.getFill(),true);
+					else
+						$('#textBackgroundColor').colpickSetColor('#ffffff',true);
 					if(activeObj.getTextBackgroundColor())
 						$('#textBackgroundColor').colpickSetColor(activeObj.getTextBackgroundColor(),true);
 					else
