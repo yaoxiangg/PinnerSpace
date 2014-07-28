@@ -81,14 +81,14 @@
 		<div class="jumbotron">
 			<h2 id="pinnerspace" class="title" style="text-align: center">PinnerSpace</h2>
 			
-			<ul class="nav nav-pills pull-left clearfix">
-				<li><a href="./">Home</a></li> <!--stubs-->
-				<li><a href="./boards">Boards</a></li>
-				<li><a href="./settings">Settings</a></li>
+			<ul id="nav-menu" class="nav nav-pills pull-left clearfix">
+				<li><a href="./"><b>Home</b></a></li>
+				<li><a href="./boards"><b>Boards</b></a></li>
+				<li><a href="./settings"><b>Settings</b></a></li>
 			</ul>
-			<ul class="nav nav-pills pull-right"> <!--class="span4 offset8 signin-align"-->
-				<li class="disabled"><a>Welcome back <b>{{ user.usernick }}</b>!</a></li>
-				<li><a href="/logout">Logout</a></li>
+			<ul id="wb-logout" class="nav nav-pills pull-right">
+				<li class="disabled"><a id="wb">Welcome back <b>{{ user.usernick }}</b>!</a></li>
+				<li><a href="/logout"><b>Logout</b></a></li>
 			</ul>
 		</div>
 	</div>
