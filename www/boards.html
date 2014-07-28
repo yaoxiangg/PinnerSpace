@@ -5,6 +5,20 @@
 	<link rel="stylesheet" href="../bootstrap/css/bootstrap.min.css">
 	<link rel="stylesheet" href="../bootstrap/css/bootstrap-theme.min.css">
 	<style>
+	.jumbotron {
+		background-image: url("../images/space1.jpg");
+	}
+	#pinnerspace {
+		font-family: "Trebuchet MS", Helvetica, sans-serif;
+		font-size: 3em;
+		color:white;
+	}
+	#wb {
+		color:white;
+	}
+	#wb-logout, #nav-menu {
+		background-color: rgba(0,0,0,0.2);
+	}
 	.btntext {
 		text-align: left;
 	}
@@ -27,7 +41,7 @@
 <body onload="init({{numBoards}})">
 	<div id="header">
 		<div class="jumbotron">
-			<h2 class="title" style="text-align: center">PinnerSpace</h2>
+			<h2 id="pinnerspace" class="title" style="text-align: center">PinnerSpace</h2>
 			
 			<ul class="nav nav-pills pull-left clearfix">
 				<li><a href="./">Home</a></li> <!--stubs-->
