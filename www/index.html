@@ -220,14 +220,15 @@
 							</span>
 						</p>
 						<div id="imagebox" style="position: fixed;">
-							<div>
+							<div align="center">
 								<p class="close">x</p>
 								<h2>Insert Picture</h2>
-								<input type="text" id="imageurl" onblur="preloadImage()" placeholder="<Image Url>">
+								<input type="text" id="imageurl" onblur="preloadImage()" size="35" placeholder="<Image Url>">
 								<button onclick="addImage()">Add it!</button>
 								<hr>
 								<center><p id="noPreview">No preview available</p>
 								<img id="imageHolder" src="" width="780px"></img></center>
+								<p></p>
 							</div>
 						</div>
 					</div>
@@ -360,7 +361,7 @@
 									<li class="ui-state-default"><img height="120" width="180" id="bgimageHolder" src="../images/bg6.jpg"></img></li>
 								</ul>
 								<center>
-								<p><input type="text" id="bgimageurl" onblur="bgpreloadImage()"size="35" placeholder="Custom Background Image Url"></p>
+								<p><input type="text" id="bgimageurl" onblur="bgpreloadImage()" size="35" placeholder="Custom Background Image Url"></p>
 								<button class="btn btn-default" onclick="changeBGImg()">Change Background</button>
 								<hr>
 								<p id="bgnoPreview">No preview available<p>
