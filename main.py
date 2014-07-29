@@ -643,8 +643,8 @@ class LoginFBHandler(webapp2.RequestHandler):
 				fbuser.get().access_token = access_token
 				fbuser.get().login_type = "facebook"
 				fbuser.get().put()
-				self.response.set_cookie("user", str(profile["email"]), expires=datetime.now() + timedelta(days=1))
-				self.response.set_cookie("token", str(access_token), expires=datetime.now() + timedelta(days=1))
+			self.response.set_cookie("user", str(profile["email"]), expires=datetime.now() + timedelta(days=1))
+			self.response.set_cookie("token", str(access_token), expires=datetime.now() + timedelta(days=1))
 			self.redirect("/")
 		except:
 			self.redirect("/")
