@@ -95,6 +95,10 @@
   	#btnSwitchBoard {
   		float: right;
   	}
+
+  	.input-group {
+  		width: 400px;
+  	}
   	</style>
 </head>
 <body onload="init()">
@@ -223,8 +227,10 @@
 							<div align="center">
 								<p class="close">x</p>
 								<h2>Insert Picture</h2>
-								<input type="text" id="imageurl" onblur="preloadImage()" size="35" placeholder="<Image Url>">
-								<button onclick="addImage()">Add it!</button>
+								<p class="input-group"> 
+									<input type="text" class="form-control" id="imageurl" onblur="preloadImage()" size="35" placeholder="<Image Url>">
+									<span class="input-group-btn"><button class="btn btn-default" onclick="addImage()">Add it!</button></span>
+								</p>
 								<hr>
 								<center><p id="noPreview">No preview available</p>
 								<img id="imageHolder" src="" width="780px"></img></center>
@@ -1053,7 +1059,7 @@
        	image.src = url;
        	$("#bgnoPreview").hide();
        	$("img").error(function(){
-       		image.src = "images/bg6.jpg";
+       		image.src = '../images/bg6.jpg';
     		$("#bgnoPreview").show();
     	});
 	}
