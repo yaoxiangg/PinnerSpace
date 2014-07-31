@@ -291,7 +291,7 @@
 							<div>
 								<span class="btn-group">
 									<!--Not sure what the ng-class should do and whether it works-->
-									<button class="btn-sm btn btn-default"><del><span class="color-box" id="textColor" /></span></del></button>
+									<button class="btn-sm btn btn-default" id="btntextColor"><del><span class="color-box" id="textColor" /></span></del></button>
 									<button type="button" class="btn btn-default" onclick="setActiveStyle('fontWeight', getActiveStyle('fontWeight') === 'bold' ? '' : 'bold');" ng-class="{'btn-inverse': isBold()}"><b>B</b></button>
 									<button type="button" class="btn btn-default" id="text-cmd-italic" onclick="setActiveStyle('fontStyle', getActiveStyle('fontStyle') === 'italic' ? '' : 'italic');" ng-class="{'btn-inverse': isItalic()}"><i>I</i></button>
 									<button type="button" class="btn btn-default" id="text-cmd-underline" onclick="toggleUnderline()" ng-class="{'btn-inverse': isUnderline()}"><u>U</u></button>
@@ -582,12 +582,12 @@
 				}
 			}
 		});
-		$('#textColor').colpick({
+		$('#btntextColor').colpick({
 			colorScheme:'dark',
 			layout:'hex',
 			submit:0,
 			onChange:function(hsb,hex,rgb,el,bySetColor) {
-				$(el).css('background-color','#'+hex);
+				$('#textColor').css('background-color','#'+hex);
 				if(!bySetColor){
 					setActiveStyle("fill", '#'+hex);
 				}
@@ -1128,7 +1128,7 @@
 					document.getElementById("changePostitColor").style.display = "inline-block";
 					$('#backgroundColor').colpickSetColor(activeObj.get("backgroundColor"),true);
 					if(activeObj.getFill())
-						$('#textColor').colpickSetColor(activeObj.getFill(),true);
+						$('#btntextColor').colpickSetColor(activeObj.getFill(),true);
 					else
 						$('#textBackgroundColor').colpickSetColor('#ffffff',true);
 					if(activeObj.getTextBackgroundColor())

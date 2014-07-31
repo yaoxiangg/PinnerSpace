@@ -137,12 +137,6 @@
 						<input type="hidden" name="userGranted" value={{ follower }}>
 						<input type="hidden" name="state" value="editor">
 						<input type="hidden" name="boardID" value={{ board.boardID }}>
-						<button class="dropdown-btn" name="userPermission" type="submit" value="post">Post Only</button>
-					</form></a></li>
-					<li><a><form name="input" action="./updateBoard" method="post">
-						<input type="hidden" name="userGranted" value={{ follower }}>
-						<input type="hidden" name="state" value="editor">
-						<input type="hidden" name="boardID" value={{ board.boardID }}>
 						<button class="dropdown-btn" name="userPermission" type="submit" value="view">View Only</button>
 					</form></a></li>
 					{% elif follower in board.boardPoster %}
@@ -164,12 +158,6 @@
 						<input type="hidden" name="state" value="viewer">
 						<input type="hidden" name="boardID" value={{ board.boardID }}>
 						<button class="dropdown-btn" name="userPermission" type="submit" value="edit">Enable All Edits</button>
-					</form></a></li>
-					<li><a><form name="input" action="./updateBoard" method="post">
-						<input type="hidden" name="userGranted" value={{ follower }}>
-						<input type="hidden" name="state" value="viewer">
-						<input type="hidden" name="boardID" value={{ board.boardID }}>
-						<button class="dropdown-btn" name="userPermission" type="submit" value="post">Post Only</button>
 					</form></a></li>
 					{% endif %}
 				</ul>
