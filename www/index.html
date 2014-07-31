@@ -79,7 +79,7 @@
 
 	.color-box {
 		display: inline-block;
-		vertical-align: bottom;
+		vertical-align: middle;
 		width:22px;
 		height:22px;
 		margin:0px;
@@ -98,6 +98,10 @@
 
   	.input-group {
   		width: 400px;
+  	}
+
+  	#changePostitColor {
+  		vertical-align: middle;
   	}
   	</style>
 </head>
@@ -330,10 +334,10 @@
 							<p></p>
 							<div>
 								<span id="changePostitColor">
-								PostIt Color:
+								PostIt Color:</span>
 								<span class="color-box" id="backgroundColor" />
 								</span>
-								Highlight:
+								<button class="btn btn-xs btn-default" onclick="clearHighlight()">Highlight (Off):</button>
 								<span class="color-box" id="textBackgroundColor"/>
 							</div>
 							<p></p>
@@ -848,6 +852,12 @@
 		$("#imagebox").overlay().close();
 	}
 
+	function clearHighlight() {
+		var obj = canvas.getActiveObject();
+		obj.selectAll();
+		setActiveStyle("textBackgroundColor", '');
+	}
+
 	/************************ OBJECT MODIFIERS *************************/
   	function cloneActive(){
   		var curr = canvas.getActiveGroup() || canvas.getActiveObject();
@@ -974,7 +984,6 @@
 			style[styleName] = value;
 			object.setSelectionStyles(style);
 			object.setCoords();
-			alert(style);
 		} else {
 			object[styleName] = value;
 			if (styleName == "strokeWidth") {
