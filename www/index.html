@@ -334,9 +334,9 @@
 							<p></p>
 							<div>
 								<span id="changePostitColor">
-								PostIt Color:</span>
+								PostIt Color:
 								<span class="color-box" id="backgroundColor" />
-								</span>
+								</span></span>
 								<button class="btn btn-xs btn-default" onclick="clearHighlight()">Highlight (Off):</button>
 								<span class="color-box" id="textBackgroundColor"/>
 							</div>
@@ -854,8 +854,7 @@
 
 	function clearHighlight() {
 		var obj = canvas.getActiveObject();
-		obj.selectAll();
-		setActiveStyle("textBackgroundColor", '');
+		setActiveStyle("textBackgroundColor", 'clear');
 	}
 
 	/************************ OBJECT MODIFIERS *************************/
@@ -979,9 +978,19 @@
 		object = object || canvas.getActiveObject();
 		if (!object) return;
 
-		if (object.setSelectionStyles && object.isEditing) {
+		if (object.setSelectionStyles || value == "clear") {
+			if (value == "clear")
+				value = '';
+			if (!object.isEditing)
+					object.selectAll();
 			var style = { };
 			style[styleName] = value;
+			if (styleName == "strokeWidth") {
+				if (value == 0)
+					style["stroke"] = null;
+				else if (style["stroke"] == null)
+					style["stroke"] = "#FFFFFF";
+			}
 			object.setSelectionStyles(style);
 			object.setCoords();
 		} else {
