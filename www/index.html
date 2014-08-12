@@ -296,8 +296,8 @@
 								<span class="btn-group">
 									<!--Not sure what the ng-class should do and whether it works-->
 									<button class="btn-sm btn btn-default" id="btntextColor"><del><span class="color-box" id="textColor" /></span></del></button>
-									<button type="button" class="btn btn-default" onclick="setActiveStyle('fontWeight', getActiveStyle('fontWeight') === 'bold' ? '' : 'bold');" ng-class="{'btn-inverse': isBold()}"><b>B</b></button>
-									<button type="button" class="btn btn-default" id="text-cmd-italic" onclick="setActiveStyle('fontStyle', getActiveStyle('fontStyle') === 'italic' ? '' : 'italic');" ng-class="{'btn-inverse': isItalic()}"><i>I</i></button>
+									<button type="button" class="btn btn-default" id="text-cmd-bold" onclick="toggleBold()" ng-class="{'btn-inverse': isBold()}"><b>B</b></button>
+									<button type="button" class="btn btn-default" id="text-cmd-italic" onclick="toggleItalic()" ng-class="{'btn-inverse': isItalic()}"><i>I</i></button>
 									<button type="button" class="btn btn-default" id="text-cmd-underline" onclick="toggleUnderline()" ng-class="{'btn-inverse': isUnderline()}"><u>U</u></button>
 									<button type="button" class="btn btn-default" id="text-cmd-linethrough" onclick="toggleLinethrough()" ng-class="{'btn-inverse': isLinethrough()}"><del>S</del></button>
 								</span>
@@ -395,7 +395,7 @@
 	<!--END BODY-->
 	<script src="../scripts/jquery-1.11.1.min.js" type="text/javascript"></script>
 	<script src="../bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
-	<script src="../scripts/fabric.min.js" type="text/javascript"></script>
+	<script src="../scripts/fabric.js" type="text/javascript"></script>
 	<script src="../scripts/jquery.tools.min.js" type="text/javascript"></script>
 	<script src="../scripts/jquery-ui-1.10.4.custom.min.js" type="text/javascript"></script>
 	<script src="../scripts/tinycolor.js" type="text/javascript"></script>
@@ -1019,10 +1019,31 @@
 	function getActiveStyle(styleName, object) {
 		object = object || canvas.getActiveObject();
 		if (!object) return '';
-
+		if (!object.isEditing)
+			object.selectAll();
 		return (object.getSelectionStyles && object.isEditing)
 		? (object.getSelectionStyles()[styleName] || '')
-		: (object[styleName] || '');
+		: (object.getSelectionStyles()[styleName] || '');
+	}
+	function isBold() {
+		return getActiveStyle('fontWeight').indexOf('bold') > -1;
+	}
+	function toggleBold() {
+		var value = isBold()
+		? getActiveStyle('fontWeight').replace('bold', '')
+		: (getActiveStyle('fontWeight') + ' bold');
+
+		setActiveStyle('fontWeight', value);
+	}
+	function isItalic() {
+		return getActiveStyle('fontStyle').indexOf('italic') > -1;
+	}
+	function toggleItalic() {
+		var value = isItalic()
+		? getActiveStyle('fontStyle').replace('italic', '')
+		: (getActiveStyle('fontStyle') + ' italic');
+
+		setActiveStyle('fontStyle', value);
 	}
 	function isUnderline() {
 		return getActiveStyle('textDecoration').indexOf('underline') > -1;

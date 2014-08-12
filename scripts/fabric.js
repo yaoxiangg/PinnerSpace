@@ -19292,6 +19292,8 @@ fabric.util.object.extend(fabric.StaticCanvas.prototype, /** @lends fabric.Stati
         fontSize: style && style.fontSize || this.fontSize,
         fill: style && style.fill || this.fill,
         textBackgroundColor: style && style.textBackgroundColor || this.textBackgroundColor,
+		fontWeight: style && style.fontWeight || this.fontWeight,
+		fontStyle: style && style.fontStyle || this.fontStyle,
         textDecoration: style && style.textDecoration || this.textDecoration,
         fontFamily: style && style.fontFamily || this.fontFamily,
         stroke: style && style.stroke || this.stroke,
@@ -19632,6 +19634,8 @@ fabric.util.object.extend(fabric.StaticCanvas.prototype, /** @lends fabric.Stati
         prevStyle.fontSize !== thisStyle.fontSize ||
         prevStyle.textBackgroundColor !== thisStyle.textBackgroundColor ||
         prevStyle.textDecoration !== thisStyle.textDecoration ||
+		prevStyle.fontWeight !== thisStyle.fontWeight ||
+		prevStyle.fontStyle !== thisStyle.fontStyle ||
         prevStyle.fontFamily !== thisStyle.fontFamily ||
         prevStyle.stroke !== thisStyle.stroke ||
         prevStyle.strokeWidth !== thisStyle.strokeWidth
