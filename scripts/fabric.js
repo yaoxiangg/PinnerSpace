@@ -20928,7 +20928,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    */
    setCursorByClick: function(e) {
     var newSelectionStart = this.getSelectionStartFromPointer(e);
-
+    
     if (e.shiftKey) {
       if (newSelectionStart < this.selectionStart) {
         this.setSelectionEnd(this.selectionStart);
@@ -21008,6 +21008,8 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
       }
 
       if (mouseOffset.y < height) {
+        if (i + 1 == textLines.length)
+          return this.text.length;
         return this._getNewSelectionStartFromOffset(
           mouseOffset, prevWidth, width, charIndex + i, jlen, j);
       }
