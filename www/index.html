@@ -25,6 +25,7 @@
 		background-color: rgba(0,0,0,0.2);
 	}
 	#pinboard {
+		position: relative;
   		border-style: ridge;
   		border-width: 10px;
   		border-color: #E7CAA4;
@@ -103,6 +104,16 @@
   	#changePostitColor {
   		vertical-align: middle;
   	}
+
+  	#loadingText {
+  		z-index: -1;
+  		font-size: 50px;
+  		margin: auto;
+  		top: 40%;
+  		left: 0;
+  		right: 0;
+  		position:absolute;
+  	}
   	</style>
 </head>
 <body onload="init()">
@@ -131,8 +142,9 @@
 				<div id="boardInfo" align="center">
 					You are currently viewing <strong>{{ currBoard.boardName }}</strong>
 				</div>
-				<div id="pinboard" style="width: 920px; height:620px; margin: 0 auto;">
+				<div id="pinboard" style="width: 920px; height:620px; vertical-align: middle; text-align: center;">
 					<!--canvas id must be consistent with js script-->
+					<div id="loadingText">Loading...</div>
 					<canvas id="canvas" width="900" height="600">
 						This text is displayed if your browser does not support HTML5 Canvas.
 					</canvas>
@@ -395,7 +407,7 @@
 	<!--END BODY-->
 	<script src="../scripts/jquery-1.11.1.min.js" type="text/javascript"></script>
 	<script src="../bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
-	<script src="../scripts/fabric.js" type="text/javascript"></script>
+	<script src="../scripts/fabric.min.js" type="text/javascript"></script>
 	<script src="../scripts/jquery.tools.min.js" type="text/javascript"></script>
 	<script src="../scripts/jquery-ui-1.10.4.custom.min.js" type="text/javascript"></script>
 	<script src="../scripts/tinycolor.js" type="text/javascript"></script>
